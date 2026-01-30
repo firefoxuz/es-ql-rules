@@ -1,0 +1,13 @@
+// GDPR Mapping: Article 32(1)(b) - Confidentiality; Article 33 - Breach notification; Article 5(1)(c) - Data minimization
+// GDPR Rule ID: RULE-29
+// Qoida nomi: Database Bulk Export Detected
+// Tavsif: Detects bulk database export commands (mysqldump, pg_dump) or large SELECT queries.
+// MITRE ATT&CK: T1530 (Data from Cloud Storage)
+
+FROM updive-*, updive-*
+| WHERE @timestamp >= NOW() - 15 minutes
+| WHERE process.name IN ("mysqldump", "pg_dump", "mongodump", "sqlcmd", "psql")
+    OR process.args RLIKE ".*(SELECT.*FROM|COPY.*TO|BACKUP DATABASE).*"
+| EVAL rule_name = "RULE-29: Database Bulk Export Detected"
+| EVAL severity = "high"
+| KEEP @timestamp, host.name, user.name, process.name, process.args, rule_name, severity
