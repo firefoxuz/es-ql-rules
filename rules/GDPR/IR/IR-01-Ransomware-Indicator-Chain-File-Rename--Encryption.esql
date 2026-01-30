@@ -12,4 +12,4 @@ FROM updive-*, updive-*
 | WHERE renamed_count >= 10
 | EVAL rule_name = "RULE-43: Ransomware Indicator Chain"
 | EVAL severity = "critical"
-| KEEP @timestamp, user.name, host.name, renamed_count, rule_name, severity
+| KEEP user.name, host.name, renamed_count, rule_name, severity

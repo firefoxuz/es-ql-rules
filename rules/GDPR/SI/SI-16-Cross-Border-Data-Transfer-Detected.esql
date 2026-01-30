@@ -6,10 +6,10 @@
 
 FROM updive-*
 | WHERE @timestamp >= NOW() - 15 minutes
-| WHERE network.direction == "outbound" OR source.ip RLIKE "^10\\.|^172\\.16\\.|^192\\.168\\."
-| WHERE destination.geo.country_iso_code NOT IN ("AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE", "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE", "IS", "LI", "NO")
-| STATS total_bytes = SUM(network.bytes) BY destination.geo.country_name, destination.ip, user.name
+| WHERE host.network.egress.bytes > 0 OR source.ip RLIKE "^10\\.|^172\\.16\\.|^192\\.168\\."
+| WHERE source.geo.geo.country_iso_code NOT IN ("AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE", "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE", "IS", "LI", "NO")
+| STATS total_bytes = SUM(host.network.egress.bytes) BY source.geo.geo.country_name, source.ip, user.name
 | WHERE total_bytes > 10485760
 | EVAL rule_name = "RULE-49: Cross-Border Data Transfer Detected"
 | EVAL severity = "high"
-| KEEP @timestamp, user.name, destination.ip, destination.geo.country_name, total_bytes, rule_name, severity
+| KEEP user.name, source.ip, source.geo.geo.country_name, total_bytes, rule_name, severity

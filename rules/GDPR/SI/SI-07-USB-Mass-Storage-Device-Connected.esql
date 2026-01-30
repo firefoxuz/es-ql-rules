@@ -10,4 +10,4 @@ FROM updive-*, updive-*
     OR (message RLIKE ".*USB.*mass storage.*" AND event.action == "device-connected")
 | EVAL rule_name = "RULE-31: USB Mass Storage Device Connected"
 | EVAL severity = "medium"
-| KEEP @timestamp, host.name, user.name, event.code, winlog.event_data.DeviceName, rule_name, severity
+| KEEP @timestamp, host.name, user.name, event.code, message, rule_name, severity

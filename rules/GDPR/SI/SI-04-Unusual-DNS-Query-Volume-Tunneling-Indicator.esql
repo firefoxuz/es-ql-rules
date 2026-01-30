@@ -6,12 +6,12 @@
 
 FROM updive-*
 | WHERE @timestamp >= NOW() - 5 minutes
-| WHERE network.protocol == "dns" OR destination.port == 53
+| WHERE message RLIKE ".*dns.*" OR source.port == 53
 | STATS 
     dns_count = COUNT(*),
-    unique_domains = COUNT_DISTINCT(dns.question.name)
+    unique_domains = COUNT_DISTINCT(message)
   BY source.ip, host.name
 | WHERE dns_count >= 100
 | EVAL rule_name = "RULE-27: Unusual DNS Query Volume"
 | EVAL severity = "high"
-| KEEP @timestamp, source.ip, host.name, dns_count, unique_domains, rule_name, severity
+| KEEP source.ip, host.name, dns_count, unique_domains, rule_name, severity

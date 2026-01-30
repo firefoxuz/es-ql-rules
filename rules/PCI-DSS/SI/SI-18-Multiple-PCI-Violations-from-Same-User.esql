@@ -10,7 +10,7 @@ FROM updive-*
              OR event.action IN ("accessed", "deleted", "modified")
              OR process.name IN ("sudo", "runas", "net", "chmod")))
   OR (file.path RLIKE ".*(cardholder|chd|payment|audit).*")
-  OR (destination.port NOT IN (22, 80, 443, 3306))
+  OR (source.port NOT IN (22, 80, 443, 3306))
 | WHERE host.name RLIKE ".*(cde|payment).*"
 | STATS 
     violation_types = COUNT_DISTINCT(event.category),
@@ -19,4 +19,4 @@ FROM updive-*
 | WHERE violation_types >= 3 OR total_violations >= 10
 | EVAL rule_name = "PCI-RULE-46: Multiple PCI Violations from Same User"
 | EVAL severity = "high"
-| KEEP @timestamp, user.name, host.name, violation_types, total_violations, rule_name, severity
+| KEEP user.name, host.name, violation_types, total_violations, rule_name, severity

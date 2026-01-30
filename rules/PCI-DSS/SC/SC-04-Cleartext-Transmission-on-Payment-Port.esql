@@ -5,15 +5,15 @@
 
 FROM updive-*
 | WHERE @timestamp >= NOW() - 10 minutes
-| WHERE network.protocol == "http" 
-  AND destination.port IN (80, 8080, 8000, 3000)
-  AND (http.request.body.content RLIKE ".*(card|pan|cvv|expiry).*"
-       OR url.path RLIKE ".*(payment|checkout|transaction).*")
+| WHERE message RLIKE ".*http.*"
+  AND source.port IN (80, 8080, 8000, 3000)
+  AND (message RLIKE ".*(card|pan|cvv|expiry).*"
+       OR message RLIKE ".*(payment|checkout|transaction).*")
 | STATS 
     request_count = COUNT(*),
-    urls = VALUES(url.path)
-  BY source.ip, destination.ip, host.name
+    urls = VALUES(message)
+  BY source.ip, host.name
 | WHERE request_count >= 1
 | EVAL rule_name = "PCI-RULE-13: Cleartext Payment Transmission"
 | EVAL severity = "critical"
-| KEEP @timestamp, source.ip, destination.ip, url.path, urls, request_count, rule_name, severity
+| KEEP source.ip, urls, request_count, rule_name, severity

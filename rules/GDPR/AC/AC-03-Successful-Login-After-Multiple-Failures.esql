@@ -8,8 +8,8 @@ FROM updive-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE event.category == "authentication"
 | STATS 
-    failures = COUNT_IF(event.outcome == "failure"),
-    successes = COUNT_IF(event.outcome == "success"),
+    failures = SUM(CASE(event.outcome == "failure", 1, 0)),
+    successes = SUM(CASE(event.outcome == "success", 1, 0)),
     max_time = MAX(@timestamp)
   BY source.ip, user.name, host.name
 | WHERE failures >= 3 AND successes >= 1

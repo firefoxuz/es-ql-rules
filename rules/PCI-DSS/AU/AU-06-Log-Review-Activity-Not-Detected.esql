@@ -13,4 +13,4 @@ FROM updive-*, updive-*
 | WHERE review_sessions >= 1
 | EVAL rule_name = "PCI-RULE-40: Daily Log Review Completed"
 | EVAL severity = "low"
-| KEEP @timestamp, user.name, review_sessions, rule_name, severity
+| KEEP user.name, review_sessions, rule_name, severity

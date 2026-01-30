@@ -7,8 +7,7 @@
 FROM updive-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE event.code == "4698"
-| WHERE winlog.event_data.TaskContent RLIKE ".*<UserId>S-1-5-18</UserId>.*"
-    OR winlog.event_data.TaskContent RLIKE ".*<UserId>SYSTEM</UserId>.*"
+| WHERE message RLIKE ".*(S-1-5-18|SYSTEM).*"
 | EVAL rule_name = "RULE-16: Scheduled Task Created with SYSTEM Privileges"
 | EVAL severity = "high"
-| KEEP @timestamp, host.name, winlog.event_data.TaskName, winlog.event_data.SubjectUserName, winlog.event_data.TaskContent, rule_name, severity
+| KEEP @timestamp, host.name, user.name, message, rule_name, severity

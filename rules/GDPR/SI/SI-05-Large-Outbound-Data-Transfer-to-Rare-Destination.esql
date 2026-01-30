@@ -6,9 +6,9 @@
 
 FROM updive-*
 | WHERE @timestamp >= NOW() - 15 minutes
-| WHERE network.direction == "outbound" OR source.ip RLIKE "^10\\.|^172\\.16\\.|^192\\.168\\."
-| STATS total_bytes = SUM(network.bytes) BY destination.ip, source.ip, host.name
+| WHERE host.network.egress.bytes > 0 OR source.ip RLIKE "^10\\.|^172\\.16\\.|^192\\.168\\."
+| STATS total_bytes = SUM(host.network.egress.bytes) BY source.ip, host.name
 | WHERE total_bytes >= 104857600
 | EVAL rule_name = "RULE-28: Large Outbound Transfer to Rare Destination"
 | EVAL severity = "high"
-| KEEP @timestamp, source.ip, destination.ip, destination.geo.country_name, host.name, total_bytes, rule_name, severity
+| KEEP source.ip, host.name, total_bytes, rule_name, severity

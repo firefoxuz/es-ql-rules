@@ -14,4 +14,4 @@ FROM updive-*
 | WHERE event_types >= 5
 | EVAL rule_name = "RULE-42: Multiple GDPR-Relevant Events from Same User"
 | EVAL severity = "high"
-| KEEP @timestamp, user.name, host.name, event_types, rule_name, severity
+| KEEP user.name, host.name, event_types, rule_name, severity

@@ -15,4 +15,4 @@ FROM updive-*, updive-*
 | WHERE process_count >= 3
 | EVAL rule_name = "PCI-RULE-08: Unnecessary Service on CDE Host"
 | EVAL severity = "medium"
-| KEEP @timestamp, host.name, services, process_count, rule_name, severity
+| KEEP host.name, services, process_count, rule_name, severity

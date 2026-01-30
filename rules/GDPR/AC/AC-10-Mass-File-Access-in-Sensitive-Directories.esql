@@ -13,4 +13,4 @@ FROM updive-*, updive-*
 | WHERE file_count >= 50
 | EVAL rule_name = "RULE-25: Mass File Access in Sensitive Directories"
 | EVAL severity = "high"
-| KEEP @timestamp, user.name, host.name, file_count, rule_name, severity
+| KEEP user.name, host.name, file_count, rule_name, severity

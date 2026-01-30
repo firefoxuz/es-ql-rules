@@ -6,7 +6,7 @@
 
 FROM updive-*, updive-*
 | WHERE @timestamp >= NOW() - 10 minutes
-| WHERE (event.code == "4720" AND winlog.event_data.MemberSid RLIKE ".*-500") 
+| WHERE (event.code == "4720" AND winlog.event_data.TargetUserName RLIKE ".*(admin|root).*") 
     OR (event.action == "added-user-account" AND user.name RLIKE ".*(admin|root).*")
     OR (process.name == "useradd" AND process.args RLIKE ".*-G (sudo|wheel|admin).*")
 | EVAL rule_name = "RULE-09: New Local Administrator Account Created"

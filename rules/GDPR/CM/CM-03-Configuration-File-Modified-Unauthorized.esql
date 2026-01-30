@@ -7,9 +7,9 @@
 FROM updive-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE event.module == "file_integrity"
-  AND file.path RLIKE ".*(\.conf|\.config|\.ini|\.yaml|\.yml|\.xml)$"
+  AND file.path RLIKE ".*(\\.conf|\\.config|\\.ini|\\.yaml|\\.yml|\\.xml)$"
   AND file.path RLIKE ".*(etc|config|nginx|apache|mysql).*"
   AND event.action IN ("updated", "created")
 | EVAL rule_name = "RULE-38: Configuration File Modified"
 | EVAL severity = "high"
-| KEEP @timestamp, host.name, user.name, file.path, event.action, file.hash.sha256, rule_name, severity
+| KEEP @timestamp, host.name, user.name, file.path, event.action, file.hash.sha1, rule_name, severity

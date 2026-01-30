@@ -6,10 +6,9 @@
 
 FROM updive-*
 | WHERE @timestamp >= NOW() - 5 minutes
-| WHERE monitor.status == "down"
-  AND monitor.name IN ("database-prod", "web-app", "api-gateway", "auth-service")
-| STATS down_duration = MAX(@timestamp) - MIN(@timestamp) BY monitor.name, host.name
-| WHERE down_duration >= 300000
+| WHERE system.service.name IN ("database-prod", "web-app", "api-gateway", "auth-service")
+| STATS down_events = COUNT(*) BY system.service.name, host.name
+| WHERE down_events >= 1
 | EVAL rule_name = "RULE-33: Critical Service Down"
 | EVAL severity = "high"
-| KEEP @timestamp, monitor.name, host.name, monitor.status, down_duration, rule_name, severity
+| KEEP system.service.name, host.name, down_events, rule_name, severity

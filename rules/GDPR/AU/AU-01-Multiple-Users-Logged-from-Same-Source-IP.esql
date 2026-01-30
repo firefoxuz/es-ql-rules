@@ -11,4 +11,4 @@ FROM updive-*
 | WHERE unique_users >= 5
 | EVAL rule_name = "RULE-06: Multiple Users from Same Source IP"
 | EVAL severity = "medium"
-| KEEP @timestamp, source.ip, host.name, unique_users, rule_name, severity
+| KEEP source.ip, host.name, unique_users, rule_name, severity

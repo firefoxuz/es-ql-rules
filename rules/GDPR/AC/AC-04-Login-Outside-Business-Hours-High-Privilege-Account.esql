@@ -8,8 +8,8 @@ FROM updive-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE event.category == "authentication" AND event.outcome == "success"
 | WHERE user.name RLIKE ".*(admin|root|sysadmin).*"
-| EVAL hour = DATE_EXTRACT(@timestamp, "hour")
-| EVAL day_of_week = DATE_EXTRACT(@timestamp, "day_of_week")
+| EVAL hour = DATE_EXTRACT("hour", @timestamp)
+| EVAL day_of_week = DATE_EXTRACT("day_of_week", @timestamp)
 | WHERE (hour < 6 OR hour >= 22) OR (day_of_week IN (6, 7))
 | EVAL rule_name = "RULE-05: Login Outside Business Hours"
 | EVAL severity = "medium"

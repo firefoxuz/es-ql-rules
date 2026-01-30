@@ -12,4 +12,4 @@ FROM updive-*
 | STATS current_hosts = VALUES(host.name) BY user.name, source.ip
 | EVAL rule_name = "RULE-02: Admin Login from Unusual Host"
 | EVAL severity = "high"
-| KEEP @timestamp, user.name, source.ip, current_hosts, rule_name, severity
+| KEEP user.name, source.ip, current_hosts, rule_name, severity

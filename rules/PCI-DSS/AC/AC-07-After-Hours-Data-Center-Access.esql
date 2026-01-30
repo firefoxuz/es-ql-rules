@@ -8,8 +8,8 @@ FROM updive-*, updive-*
 | WHERE message RLIKE ".*(badge|card|access control|door|entry).*"
   AND (message RLIKE ".*(datacenter|server room|cage|rack).*"
        OR host.name RLIKE ".*(badge-reader|access-control).*")
-| EVAL hour = DATE_EXTRACT(@timestamp, "hour")
-| EVAL day_of_week = DATE_EXTRACT(@timestamp, "day_of_week")
+| EVAL hour = DATE_EXTRACT("hour", @timestamp)
+| EVAL day_of_week = DATE_EXTRACT("day_of_week", @timestamp)
 | WHERE (hour < 7 OR hour >= 19) OR (day_of_week IN (6, 7))
 | EVAL rule_name = "PCI-RULE-33: After-Hours Data Center Access"
 | EVAL severity = "medium"

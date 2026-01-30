@@ -7,9 +7,9 @@
 FROM updive-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE event.category == "authentication" AND event.outcome == "success"
-| WHERE source.geo.country_name IS NOT NULL
-| STATS countries = VALUES(source.geo.country_name) BY user.name
+| WHERE source.geo.geo.country_name IS NOT NULL
+| STATS countries = VALUES(source.geo.geo.country_name) BY user.name
 | WHERE LENGTH(countries) >= 2
 | EVAL rule_name = "RULE-07: First-Time Login from Geographic Location"
 | EVAL severity = "medium"
-| KEEP @timestamp, user.name, source.ip, source.geo.country_name, countries, rule_name, severity
+| KEEP user.name, countries, rule_name, severity

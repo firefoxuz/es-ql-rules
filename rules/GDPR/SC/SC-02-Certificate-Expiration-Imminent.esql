@@ -6,9 +6,7 @@
 
 FROM updive-*, updive-*
 | WHERE @timestamp >= NOW() - 24 hours
-| WHERE tls.server.x509.not_after IS NOT NULL
-| EVAL days_until_expiry = (tls.server.x509.not_after - NOW()) / 86400000
-| WHERE days_until_expiry <= 7 AND days_until_expiry >= 0
+| WHERE message RLIKE ".*(certificate|cert).*" AND message RLIKE ".*(expir|expire|expired).*"
 | EVAL rule_name = "RULE-40: Certificate Expiration Imminent"
 | EVAL severity = "medium"
-| KEEP @timestamp, tls.server.x509.subject.common_name, tls.server.x509.not_after, days_until_expiry, destination.ip, rule_name, severity
+| KEEP @timestamp, host.name, source.ip, message, rule_name, severity

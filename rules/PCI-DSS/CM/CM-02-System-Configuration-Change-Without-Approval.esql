@@ -13,4 +13,4 @@ FROM updive-*, updive-*
 | WHERE user.name NOT IN ("ansible", "puppet", "chef", "saltstack")
 | EVAL rule_name = "PCI-RULE-07: Config Change Without Approval"
 | EVAL severity = "medium"
-| KEEP @timestamp, host.name, user.name, file.path, event.action, file.hash.sha256, rule_name, severity
+| KEEP @timestamp, host.name, user.name, file.path, event.action, file.hash.sha1, rule_name, severity

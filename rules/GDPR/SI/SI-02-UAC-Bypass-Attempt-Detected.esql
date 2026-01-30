@@ -4,4 +4,14 @@
 // Tavsif: Identifies attempts to bypass User Account Control (UAC) using known techniques.
 // MITRE ATT&CK: T1548.002 (Abuse Elevation Control: Bypass UAC)
 
-FROM updive-*, updive-* | WHERE @timestamp >= NOW() - 15 minutes | WHERE (process.name IN ("fodhelper.exe", "eventvwr.exe", "computerdefaults.exe") AND process.parent.name != "explorer.exe") OR (registry.path RLIKE "._\mscfile\shell\open\command._" AND event.action == "modified") OR (event.code == "4688" AND process.command_line RLIKE "._bypassuac._") | EVAL rule_name = "RULE-13: UAC Bypass Attempt Detected" | EVAL severity = "high" | KEEP @timestamp, host.name, user.name, process.name, process.parent.name, process.command_line, registry.path, rule_name, severity
+FROM updive-*, updive-*
+| WHERE @timestamp >= NOW() - 15 minutes
+| WHERE (process.name IN ("fodhelper.exe", "eventvwr.exe", "computerdefaults.exe")
+    AND process.parent.name != "explorer.exe")
+    OR (message RLIKE ".*\\\\mscfile\\\\shell\\\\open\\\\command.*"
+        AND event.action == "modified")
+    OR (event.code == "4688"
+        AND process.command_line RLIKE ".*bypassuac.*")
+| EVAL rule_name = "RULE-13: UAC Bypass Attempt Detected"
+| EVAL severity = "high"
+| KEEP @timestamp, host.name, user.name, process.name, process.parent.name, process.command_line, message, rule_name, severity

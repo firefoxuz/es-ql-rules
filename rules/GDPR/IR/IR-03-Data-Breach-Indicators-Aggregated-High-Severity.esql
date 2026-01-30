@@ -17,4 +17,4 @@ FROM updive-*
 | WHERE rule_count >= 3
 | EVAL rule_name = "RULE-45: Data Breach Indicators Aggregated"
 | EVAL severity = "critical"
-| KEEP @timestamp, user.name, host.name, rule_count, event_categories, rule_name, severity
+| KEEP user.name, host.name, rule_count, event_categories, rule_name, severity

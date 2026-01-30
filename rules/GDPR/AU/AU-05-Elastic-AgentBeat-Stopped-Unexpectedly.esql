@@ -6,10 +6,10 @@
 
 FROM updive-*, updive-*
 | WHERE @timestamp >= NOW() - 5 minutes
-| WHERE (monitor.status == "down" AND monitor.name RLIKE ".*(elastic-agent|filebeat|winlogbeat).*")
+| WHERE system.service.name RLIKE ".*(elastic-agent|filebeat|winlogbeat).*"
     OR (message RLIKE ".*(elastic-agent|beat).*stopped.*" AND event.action == "stopped-service")
-| STATS down_count = COUNT(*) BY host.name, monitor.name
+| STATS down_count = COUNT(*) BY host.name, system.service.name
 | WHERE down_count >= 1
 | EVAL rule_name = "RULE-20: Elastic Agent/Beat Stopped Unexpectedly"
 | EVAL severity = "high"
-| KEEP @timestamp, host.name, monitor.name, monitor.status, down_count, rule_name, severity
+| KEEP host.name, system.service.name, down_count, rule_name, severity

@@ -12,4 +12,4 @@ FROM updive-*
 | WHERE failed_attempts >= 5
 | EVAL rule_name = "RULE-01: Multiple Failed Login Attempts"
 | EVAL severity = "medium"
-| KEEP @timestamp, source.ip, user.name, host.name, failed_attempts, rule_name, severity
+| KEEP source.ip, user.name, host.name, failed_attempts, rule_name, severity

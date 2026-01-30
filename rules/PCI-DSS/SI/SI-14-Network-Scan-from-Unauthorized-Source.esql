@@ -5,14 +5,14 @@
 
 FROM updive-*, updive-*
 | WHERE @timestamp >= NOW() - 10 minutes
-| WHERE (destination.port IN (0, 21, 22, 23, 25, 80, 110, 443, 445, 3306, 3389, 8080)
+| WHERE (source.port IN (0, 21, 22, 23, 25, 80, 110, 443, 445, 3306, 3389, 8080)
         OR message RLIKE ".*(port scan|nmap|masscan).*")
   AND source.ip NOT IN ("10.50.100.10", "10.50.100.11", "203.0.113.100")
 | STATS 
-    unique_ports = COUNT_DISTINCT(destination.port),
-    port_list = VALUES(destination.port)
-  BY source.ip, destination.ip, host.name
+    unique_ports = COUNT_DISTINCT(source.port),
+    port_list = VALUES(source.port)
+  BY source.ip, host.name
 | WHERE unique_ports >= 10
 | EVAL rule_name = "PCI-RULE-41: Unauthorized Network Scan"
 | EVAL severity = "medium"
-| KEEP @timestamp, source.ip, destination.ip, host.name, unique_ports, port_list, rule_name, severity
+| KEEP source.ip, host.name, unique_ports, port_list, rule_name, severity

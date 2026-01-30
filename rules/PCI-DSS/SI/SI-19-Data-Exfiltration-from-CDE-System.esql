@@ -5,12 +5,12 @@
 
 FROM updive-*
 | WHERE @timestamp >= NOW() - 15 minutes
-| WHERE network.direction == "outbound"
+| WHERE host.network.egress.bytes > 0
   AND host.name RLIKE ".*(cde|payment|cardholder).*"
-  AND destination.ip NOT RLIKE "^10\\.|^172\\.(1[6-9]|2[0-9]|3[0-1])\\.|^192\\.168\\."
-| WHERE destination.ip NOT IN ("203.0.113.10", "198.51.100.50")
-| STATS total_bytes = SUM(network.bytes) BY source.ip, destination.ip, host.name, destination.geo.country_name
+  AND source.ip NOT RLIKE "^10\\.|^172\\.(1[6-9]|2[0-9]|3[0-1])\\.|^192\\.168\\."
+| WHERE source.ip NOT IN ("203.0.113.10", "198.51.100.50")
+| STATS total_bytes = SUM(host.network.egress.bytes) BY source.ip, host.name, source.geo.geo.country_name
 | WHERE total_bytes >= 104857600
 | EVAL rule_name = "PCI-RULE-47: Data Exfiltration from CDE"
 | EVAL severity = "critical"
-| KEEP @timestamp, source.ip, destination.ip, destination.geo.country_name, host.name, total_bytes, rule_name, severity
+| KEEP source.ip, source.geo.geo.country_name, host.name, total_bytes, rule_name, severity

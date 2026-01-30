@@ -6,12 +6,12 @@
 FROM updive-*, updive-*, updive-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE (process.name IN ("metasploit", "burpsuite", "sqlmap", "nikto", "dirb")
-        OR http.request.headers.user-agent RLIKE ".*(sqlmap|nikto|burp|metasploit).*"
-        OR url.path RLIKE ".*(\\.\\./|union select|<script>).*")
+        OR message RLIKE ".*(sqlmap|nikto|burp|metasploit).*"
+        OR url.path RLIKE ".*(\\.\\./|union select).*")
   AND host.name RLIKE ".*(cde|payment).*"
-| WHERE @timestamp NOT BETWEEN "2024-03-01T00:00:00" AND "2024-03-07T23:59:59"
+| WHERE @timestamp < "2024-03-01T00:00:00" OR @timestamp > "2024-03-07T23:59:59"
 | STATS attack_count = COUNT(*) BY source.ip, host.name, process.name
 | WHERE attack_count >= 5
 | EVAL rule_name = "PCI-RULE-42: Pentest Activity Outside Window"
 | EVAL severity = "high"
-| KEEP @timestamp, source.ip, host.name, process.name, http.request.headers.user-agent, attack_count, rule_name, severity
+| KEEP source.ip, host.name, process.name, attack_count, rule_name, severity

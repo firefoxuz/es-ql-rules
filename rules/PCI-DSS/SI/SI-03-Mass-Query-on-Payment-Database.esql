@@ -12,4 +12,4 @@ FROM updive-*, updive-*
 | WHERE query_count >= 5
 | EVAL rule_name = "PCI-RULE-12: Mass Query on Payment DB"
 | EVAL severity = "high"
-| KEEP @timestamp, user.name, host.name, query_count, message, rule_name, severity
+| KEEP user.name, host.name, query_count, rule_name, severity

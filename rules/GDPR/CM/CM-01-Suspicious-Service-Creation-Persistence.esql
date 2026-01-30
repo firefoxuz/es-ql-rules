@@ -7,8 +7,8 @@
 FROM updive-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE event.code == "7045"
-| WHERE winlog.event_data.ImagePath RLIKE ".*(temp|appdata|programdata|public).*"
-    OR winlog.event_data.ServiceName RLIKE ".*(update|defender|chrome|svchost).*"
+| WHERE message RLIKE ".*(temp|appdata|programdata|public).*"
+    OR message RLIKE ".*(update|defender|chrome|svchost).*"
 | EVAL rule_name = "RULE-12: Suspicious Service Creation"
 | EVAL severity = "high"
-| KEEP @timestamp, host.name, winlog.event_data.ServiceName, winlog.event_data.ImagePath, winlog.event_data.ServiceType, user.name, rule_name, severity
+| KEEP @timestamp, host.name, user.name, message, rule_name, severity

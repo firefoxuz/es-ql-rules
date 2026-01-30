@@ -12,4 +12,4 @@ FROM updive-*
 | WHERE file.path NOT RLIKE ".*(log|tmp|cache).*"
 | EVAL rule_name = "PCI-RULE-44: File Integrity Monitoring Alert"
 | EVAL severity = "high"
-| KEEP @timestamp, host.name, user.name, file.path, file.hash.sha256, event.action, rule_name, severity
+| KEEP @timestamp, host.name, user.name, file.path, file.hash.sha1, event.action, rule_name, severity

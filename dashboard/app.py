@@ -3,6 +3,7 @@ import re
 
 import urllib3
 from elasticsearch import Elasticsearch
+from elasticsearch import ApiError
 from flask import Flask, jsonify, render_template, request
 
 # Suppress insecure request warnings for self-signed certs
@@ -14,9 +15,9 @@ RULES_BASE_DIR = os.path.abspath(os.path.join(
     os.path.dirname(__file__), "..", "rules"))
 
 # Elasticsearch Configuration
-ELASTIC_URL = ""
-ELASTIC_USER = ""
-ELASTIC_PASS = ""
+ELASTIC_URL = "http://139.28.47.17:9908/"
+ELASTIC_USER = "elastic"
+ELASTIC_PASS = "elasticpassword"
 
 es = Elasticsearch(
     ELASTIC_URL,
@@ -96,7 +97,10 @@ def get_rules():
 @app.route("/api/test_rule", methods=["POST"])
 def test_rule():
     data = request.json
-    query = data.get("query")
+    query = data.get("query") if isinstance(data, dict) else None
+
+    if not query or not isinstance(query, str):
+        return jsonify({"status": "error", "message": "Query is missing or invalid."}), 400
 
     try:
         # Execute ES|QL query
@@ -110,9 +114,15 @@ def test_rule():
                 "details": res.get("values", [])[:10],
             }
         )
+    except ApiError as e:
+        app.logger.exception("ES|QL query failed")
+        status = e.status_code if isinstance(e.status_code, int) else 500
+        return jsonify({"status": "error", "message": str(e)}), status
     except Exception as e:
+        app.logger.exception("Unexpected error while executing ES|QL query")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    debug = os.getenv("FLASK_DEBUG", "0") == "1"
+    app.run(debug=debug, port=5000, use_reloader=debug)

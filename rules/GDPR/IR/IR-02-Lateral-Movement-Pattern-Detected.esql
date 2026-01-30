@@ -8,8 +8,8 @@ FROM updive-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE event.category == "authentication" AND event.outcome == "success"
   AND event.action IN ("logon", "network_logon")
-| STATS unique_destinations = COUNT_DISTINCT(destination.ip) BY user.name, source.ip
+| STATS unique_destinations = COUNT_DISTINCT(host.name) BY user.name, source.ip
 | WHERE unique_destinations >= 5
 | EVAL rule_name = "RULE-44: Lateral Movement Pattern Detected"
 | EVAL severity = "high"
-| KEEP @timestamp, user.name, source.ip, unique_destinations, rule_name, severity
+| KEEP user.name, source.ip, unique_destinations, rule_name, severity

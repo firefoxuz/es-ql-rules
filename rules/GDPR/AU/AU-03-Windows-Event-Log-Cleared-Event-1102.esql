@@ -9,4 +9,4 @@ FROM updive-*
 | WHERE event.code == "1102"
 | EVAL rule_name = "RULE-18: Windows Event Log Cleared"
 | EVAL severity = "critical"
-| KEEP @timestamp, host.name, user.name, winlog.event_data.SubjectUserName, winlog.channel, rule_name, severity
+| KEEP @timestamp, host.name, user.name, winlog.channel, rule_name, severity

@@ -16,4 +16,4 @@ FROM updive-*
 | WHERE unique_sources >= 3
 | EVAL rule_name = "PCI-RULE-26: Shared Account Usage on CDE"
 | EVAL severity = "high"
-| KEEP @timestamp, user.name, unique_sources, unique_hosts, source_ips, rule_name, severity
+| KEEP user.name, unique_sources, unique_hosts, source_ips, rule_name, severity

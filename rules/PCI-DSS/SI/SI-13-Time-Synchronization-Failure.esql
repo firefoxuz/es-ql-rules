@@ -12,4 +12,4 @@ FROM updive-*, updive-*
 | WHERE sync_failures >= 3
 | EVAL rule_name = "PCI-RULE-39: Time Synchronization Failure"
 | EVAL severity = "medium"
-| KEEP @timestamp, host.name, sync_failures, message, rule_name, severity
+| KEEP host.name, sync_failures, rule_name, severity

@@ -7,7 +7,7 @@
 FROM updive-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE (event.code == "1102")
-    OR (process.name IN ("zip", "tar") AND network.bytes > 10485760)
+    OR (process.name IN ("zip", "tar") AND host.network.egress.bytes > 10485760)
     OR (file.path RLIKE ".*\\.(encrypted|locked)$" AND event.action == "renamed")
     OR (event.action == "stopped-service" AND process.name RLIKE ".*(audit|elastic-agent).*")
     OR (user.name RLIKE ".*admin.*" AND event.outcome == "failure" AND event.category == "authentication")
@@ -19,4 +19,4 @@ FROM updive-*
 | WHERE critical_signals >= 2
 | EVAL rule_name = "RULE-50: EMERGENCY BREACH RESPONSE TRIGGER"
 | EVAL severity = "critical"
-| KEEP @timestamp, host.name, critical_signals, hosts_affected, users_involved, rule_name, severity
+| KEEP host.name, critical_signals, hosts_affected, users_involved, rule_name, severity

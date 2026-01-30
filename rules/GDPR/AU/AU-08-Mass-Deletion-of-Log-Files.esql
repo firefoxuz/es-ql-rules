@@ -12,4 +12,4 @@ FROM updive-*, updive-*
 | WHERE deleted_count >= 10
 | EVAL rule_name = "RULE-23: Mass Deletion of Log Files"
 | EVAL severity = "critical"
-| KEEP @timestamp, user.name, host.name, deleted_count, rule_name, severity
+| KEEP user.name, host.name, deleted_count, rule_name, severity

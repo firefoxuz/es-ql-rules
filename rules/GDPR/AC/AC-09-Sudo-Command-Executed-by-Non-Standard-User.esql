@@ -12,4 +12,4 @@ FROM updive-*, updive-*
 | WHERE sudo_count >= 1
 | EVAL rule_name = "RULE-14: Sudo Command Executed by Non-Standard User"
 | EVAL severity = "medium"
-| KEEP @timestamp, user.name, host.name, process.args, sudo_count, rule_name, severity
+| KEEP user.name, host.name, process.args, sudo_count, rule_name, severity

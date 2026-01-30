@@ -10,4 +10,4 @@ FROM updive-*
     OR (message RLIKE ".*(system.*reboot|shutdown -r).*" AND event.action == "shutdown")
 | EVAL rule_name = "RULE-36: Unexpected System Reboot"
 | EVAL severity = "medium"
-| KEEP @timestamp, host.name, user.name, event.code, winlog.event_data.Reason, message, rule_name, severity
+| KEEP @timestamp, host.name, user.name, event.code, message, rule_name, severity

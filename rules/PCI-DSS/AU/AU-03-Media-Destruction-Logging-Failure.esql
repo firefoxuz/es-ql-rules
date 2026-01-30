@@ -11,8 +11,7 @@ FROM updive-*
     last_log = MAX(@timestamp)
   BY host.name
 | WHERE destruction_events < 1
-| EVAL days_since_last = (@timestamp - last_log) / 86400000
-| WHERE days_since_last > 7
+| WHERE last_log < NOW() - 7 days
 | EVAL rule_name = "PCI-RULE-36: Media Destruction Logging Failure"
 | EVAL severity = "medium"
-| KEEP @timestamp, host.name, destruction_events, last_log, days_since_last, rule_name, severity
+| KEEP host.name, destruction_events, last_log, rule_name, severity
