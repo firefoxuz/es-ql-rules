@@ -3,12 +3,13 @@
 // Qoida nomi: Known Malicious Process Execution
 // Tavsif: Detects execution of processes matching known malware indicators.
 
-FROM updive-*, updive-*
+FROM updive-*-file-*
 | WHERE @timestamp >= NOW() - 5 minutes
+| WHERE event.dataset == "updive-file.system.syslog"
 | WHERE process.name IN ("mimikatz.exe", "psexec.exe", "netcat.exe", "nc.exe", "powershell.exe", "cmd.exe")
-  AND (process.args RLIKE ".*(invoke-mimikatz|sekurlsa|dump|lsass).*"
-       OR process.args RLIKE ".*(-enc|-e |bypass|hidden).*")
+  AND (process.command_line RLIKE ".*(invoke-mimikatz|sekurlsa|dump|lsass).*"
+       OR process.command_line RLIKE ".*(-enc|-e |bypass|hidden).*")
 | WHERE host.name RLIKE ".*(cde|payment|prod).*"
 | EVAL rule_name = "PCI-RULE-20: Known Malicious Process Execution"
 | EVAL severity = "critical"
-| KEEP @timestamp, host.name, user.name, process.name, process.args, process.executable, rule_name, severity
+| KEEP @timestamp, host.name, user.name, process.name, process.command_line, rule_name, severity

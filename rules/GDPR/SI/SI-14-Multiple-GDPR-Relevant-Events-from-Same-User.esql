@@ -4,8 +4,9 @@
 // Tavsif: Aggregates 5+ different GDPR-relevant security events from same user in 1 hour.
 // MITRE ATT&CK: Multiple TTPs
 
-FROM updive-*
+FROM updive-*-file-*
 | WHERE @timestamp >= NOW() - 1 hour
+| WHERE event.dataset == "updive-file.system.syslog"
 | WHERE event.category IN ("authentication", "file", "process", "network")
   AND (event.outcome == "failure" 
        OR event.action IN ("accessed", "modified", "deleted", "created")

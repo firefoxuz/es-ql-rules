@@ -3,8 +3,9 @@
 // Qoida nomi: Unencrypted Payment Gateway Connection
 // Tavsif: Identifies connections to payment gateway without TLS encryption.
 
-FROM updive-*
+FROM updive-*-file-*
 | WHERE @timestamp >= NOW() - 10 minutes
+| WHERE event.dataset == "updive-file.system.syslog"
 | WHERE (message RLIKE ".*(paypal|stripe|authorize\\.net|firstdata).*"
         OR source.ip IN ("64.14.227.5", "64.4.250.37"))
   AND message NOT RLIKE ".*(tls|https).*"

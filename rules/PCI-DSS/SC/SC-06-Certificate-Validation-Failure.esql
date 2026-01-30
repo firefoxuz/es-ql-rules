@@ -3,8 +3,9 @@
 // Qoida nomi: Certificate Validation Failure
 // Tavsif: Detects TLS connections with invalid, expired, or self-signed certificates on payment systems.
 
-FROM updive-*, updive-*
+FROM updive-*-file-*
 | WHERE @timestamp >= NOW() - 15 minutes
+| WHERE event.dataset == "updive-file.system.syslog"
 | WHERE message RLIKE ".*(certificate|cert).*"
   AND message RLIKE ".*(invalid|expired|self-signed|untrusted).*"
   AND source.port IN (443, 8443)

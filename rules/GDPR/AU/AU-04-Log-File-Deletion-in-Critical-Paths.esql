@@ -4,10 +4,11 @@
 // Tavsif: Detects deletion of log files in /var/log or C:\Windows\System32\winevt\Logs.
 // MITRE ATT&CK: T1070.004 (Indicator Removal: File Deletion)
 
-FROM updive-*, updive-*
+FROM updive-*-audit-*
 | WHERE @timestamp >= NOW() - 10 minutes
+| WHERE event.dataset == "file"
 | WHERE event.action IN ("deleted", "file_deletion") 
   AND (file.path RLIKE ".*/var/log/.*" OR file.path RLIKE ".*Windows.*winevt.*Logs.*")
 | EVAL rule_name = "RULE-19: Log File Deletion in Critical Paths"
 | EVAL severity = "high"
-| KEEP @timestamp, host.name, user.name, file.path, process.name, event.action, rule_name, severity
+| KEEP @timestamp, host.name, file.path, event.action, rule_name, severity

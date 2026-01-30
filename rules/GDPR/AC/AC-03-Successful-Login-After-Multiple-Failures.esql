@@ -4,8 +4,9 @@
 // Tavsif: Detects successful authentication following 3+ failed attempts within 10 minutes, indicating potential brute force success.
 // MITRE ATT&CK: T1110.001 (Password Guessing)
 
-FROM updive-*
+FROM updive-*-file-*
 | WHERE @timestamp >= NOW() - 10 minutes
+| WHERE event.dataset == "updive-file.system.auth"
 | WHERE event.category == "authentication"
 | STATS 
     failures = SUM(CASE(event.outcome == "failure", 1, 0)),

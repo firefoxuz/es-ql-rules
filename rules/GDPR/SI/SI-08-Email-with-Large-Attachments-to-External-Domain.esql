@@ -4,11 +4,9 @@
 // Tavsif: Detects emails sent with attachments >10MB to external domains.
 // MITRE ATT&CK: T1048.002 (Exfiltration Over Alternative Protocol: Email)
 
-FROM updive-*, updive-*
+FROM updive-*-metric-*
 | WHERE @timestamp >= NOW() - 15 minutes
-| WHERE (message RLIKE ".*smtp.*" AND host.network.egress.bytes > 10485760)
-    OR (message RLIKE ".*attachment.*size.*" AND message RLIKE ".*external.*")
-| WHERE message NOT RLIKE ".*(company\\.com|company\\.net).*"
+| WHERE event.dataset == "system.network"
 | EVAL rule_name = "RULE-32: Email with Large Attachments to External Domain"
 | EVAL severity = "medium"
-| KEEP @timestamp, user.name, source.ip, host.network.egress.bytes, message, rule_name, severity
+| KEEP @timestamp, user.name, host.network.egress.bytes, rule_name, severity

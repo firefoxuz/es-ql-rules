@@ -3,8 +3,9 @@
 // Qoida nomi: Cleartext Transmission on Payment Port
 // Tavsif: Detects unencrypted HTTP traffic on ports designated for payment data transmission.
 
-FROM updive-*
+FROM updive-*-file-*
 | WHERE @timestamp >= NOW() - 10 minutes
+| WHERE event.dataset == "updive-file.system.syslog"
 | WHERE message RLIKE ".*http.*"
   AND source.port IN (80, 8080, 8000, 3000)
   AND (message RLIKE ".*(card|pan|cvv|expiry).*"

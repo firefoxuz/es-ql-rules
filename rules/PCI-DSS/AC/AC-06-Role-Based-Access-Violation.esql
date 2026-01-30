@@ -3,13 +3,14 @@
 // Qoida nomi: Role-Based Access Violation
 // Tavsif: Detects permission elevation attempts or role changes without approval.
 
-FROM updive-*, updive-*
+FROM updive-*-file-*
 | WHERE @timestamp >= NOW() - 15 minutes
-| WHERE (event.code IN ("4728", "4732", "4756")
-        OR process.name == "usermod" AND process.args RLIKE ".*-a -G.*")
-  AND (winlog.event_data.TargetUserName RLIKE ".*(Administrators|Domain Admins|Payment_Access).*"
-       OR process.args RLIKE ".*(sudo|wheel|payment_admins).*")
+| WHERE event.dataset == "updive-file.system.syslog"
+| WHERE (message RLIKE ".*(4728|4732|4756).*"
+        OR process.name == "usermod" AND process.command_line RLIKE ".*-a -G.*")
+  AND (message RLIKE ".*(Administrators|Domain Admins|Payment_Access).*"
+       OR process.command_line RLIKE ".*(sudo|wheel|payment_admins).*")
 | WHERE host.name RLIKE ".*(cde|payment).*"
 | EVAL rule_name = "PCI-RULE-28: Role-Based Access Violation"
 | EVAL severity = "medium"
-| KEEP @timestamp, host.name, user.name, winlog.event_data.TargetUserName, process.args, event.code, rule_name, severity
+| KEEP @timestamp, host.name, user.name, message, process.command_line, rule_name, severity

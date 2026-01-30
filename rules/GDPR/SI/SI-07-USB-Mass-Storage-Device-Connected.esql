@@ -4,10 +4,11 @@
 // Tavsif: Detects connection of USB mass storage devices on endpoints.
 // MITRE ATT&CK: T1091 (Replication Through Removable Media)
 
-FROM updive-*, updive-*
+FROM updive-*-file-*
 | WHERE @timestamp >= NOW() - 10 minutes
-| WHERE (event.code == "2003" OR event.code == "2100")
+| WHERE event.dataset == "updive-file.system.syslog"
+| WHERE (message RLIKE ".*2003.*" OR message RLIKE ".*2100.*")
     OR (message RLIKE ".*USB.*mass storage.*" AND event.action == "device-connected")
 | EVAL rule_name = "RULE-31: USB Mass Storage Device Connected"
 | EVAL severity = "medium"
-| KEEP @timestamp, host.name, user.name, event.code, message, rule_name, severity
+| KEEP @timestamp, host.name, user.name, message, rule_name, severity

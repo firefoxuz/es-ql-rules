@@ -4,8 +4,9 @@
 // Tavsif: Detects memory usage >95% on critical production hosts.
 // MITRE ATT&CK: T1499 (Resource Exhaustion)
 
-FROM updive-*
+FROM updive-*-metric-*
 | WHERE @timestamp >= NOW() - 5 minutes
+| WHERE event.dataset == "system.memory"
 | WHERE system.memory.actual.used.pct >= 0.95
   AND host.name IN ("db-prod-01", "web-prod-01", "app-prod-01")
 | EVAL memory_used_pct = system.memory.actual.used.pct * 100

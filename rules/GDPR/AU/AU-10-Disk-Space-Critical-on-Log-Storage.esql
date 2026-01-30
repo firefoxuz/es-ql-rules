@@ -4,8 +4,9 @@
 // Tavsif: Detects disk usage >90% on partitions storing logs, risking log loss.
 // MITRE ATT&CK: T1499 (Resource Exhaustion)
 
-FROM updive-*
+FROM updive-*-metric-*
 | WHERE @timestamp >= NOW() - 5 minutes
+| WHERE event.dataset == "system.filesystem"
 | WHERE system.filesystem.mount_point RLIKE ".*(var|log|audit).*"
 | EVAL disk_used_pct = system.filesystem.used.pct * 100
 | WHERE disk_used_pct >= 90

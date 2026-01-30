@@ -3,16 +3,17 @@
 // Qoida nomi: Multi-Factor Authentication Bypass Attempt
 // Tavsif: Detects successful authentication without MFA on systems requiring multi-factor.
 
-FROM updive-*
+FROM updive-*-file-*
 | WHERE @timestamp >= NOW() - 10 minutes
+| WHERE event.dataset == "updive-file.system.auth"
 | WHERE event.category == "authentication" 
   AND event.outcome == "success"
   AND host.name RLIKE ".*(cde|payment|gateway).*"
-| WHERE (event.code == "4624" AND winlog.event_data.LogonType IN ("3", "10")
-        AND winlog.event_data.AuthenticationPackageName != "Negotiate")
+| WHERE (message RLIKE ".*4624.*" AND message IN ("3", "10")
+        AND message != "Negotiate")
     OR (message RLIKE ".*Accepted password.*" 
         AND message NOT RLIKE ".*publickey|keyboard-interactive.*")
 | WHERE source.ip NOT RLIKE "^10\\.|^172\\.16\\.|^192\\.168\\."
 | EVAL rule_name = "PCI-RULE-29: MFA Bypass Attempt"
 | EVAL severity = "critical"
-| KEEP @timestamp, user.name, source.ip, host.name, event.code, winlog.event_data.LogonType, rule_name, severity
+| KEEP @timestamp, user.name, source.ip, host.name, message, rule_name, severity

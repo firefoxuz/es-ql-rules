@@ -4,11 +4,12 @@
 // Tavsif: Detects creation of new local administrator accounts on Windows or Unix systems.
 // MITRE ATT&CK: T1136.001 (Create Account: Local Account)
 
-FROM updive-*, updive-*
+FROM updive-*-file-*
 | WHERE @timestamp >= NOW() - 10 minutes
-| WHERE (event.code == "4720" AND winlog.event_data.TargetUserName RLIKE ".*(admin|root).*") 
+| WHERE event.dataset == "updive-file.system.syslog"
+| WHERE (message RLIKE ".*4720.*" AND message RLIKE ".*(admin|root).*") 
     OR (event.action == "added-user-account" AND user.name RLIKE ".*(admin|root).*")
-    OR (process.name == "useradd" AND process.args RLIKE ".*-G (sudo|wheel|admin).*")
+    OR (process.name == "useradd" AND process.command_line RLIKE ".*-G (sudo|wheel|admin).*")
 | EVAL rule_name = "RULE-09: New Local Administrator Account Created"
 | EVAL severity = "high"
-| KEEP @timestamp, host.name, user.name, event.action, process.name, process.args, rule_name, severity
+| KEEP @timestamp, host.name, user.name, event.action, process.name, process.command_line, rule_name, severity

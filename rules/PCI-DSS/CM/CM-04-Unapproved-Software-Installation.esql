@@ -3,13 +3,14 @@
 // Qoida nomi: Unapproved Software Installation
 // Tavsif: Detects installation of software not in approved application whitelist.
 
-FROM updive-*, updive-*
+FROM updive-*-file-*
 | WHERE @timestamp >= NOW() - 15 minutes
+| WHERE event.dataset == "updive-file.system.syslog"
 | WHERE (process.name IN ("yum", "apt", "dpkg", "rpm", "msiexec.exe")
-        AND process.args RLIKE ".*(install|add|setup).*")
-    OR event.code == "11707"
+        AND process.command_line RLIKE ".*(install|add|setup).*")
+    OR message RLIKE ".*11707.*"
 | WHERE host.name RLIKE ".*(cde|payment|prod).*"
   AND user.name NOT IN ("ansible", "puppet", "sccm-agent")
 | EVAL rule_name = "PCI-RULE-23: Unapproved Software Installation"
 | EVAL severity = "medium"
-| KEEP @timestamp, host.name, user.name, process.name, process.args, event.code, rule_name, severity
+| KEEP @timestamp, host.name, user.name, process.name, process.command_line, rule_name, severity

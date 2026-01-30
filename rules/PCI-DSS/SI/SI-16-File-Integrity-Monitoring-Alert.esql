@@ -3,8 +3,9 @@
 // Qoida nomi: File Integrity Monitoring Alert
 // Tavsif: Detects changes to critical payment application files via FIM.
 
-FROM updive-*
+FROM updive-*-audit-*
 | WHERE @timestamp >= NOW() - 10 minutes
+| WHERE event.dataset == "file"
 | WHERE event.module == "file_integrity"
   AND event.action IN ("updated", "deleted", "attributes_modified")
   AND (file.path RLIKE ".*/opt/payment-app/.*"
@@ -12,4 +13,4 @@ FROM updive-*
 | WHERE file.path NOT RLIKE ".*(log|tmp|cache).*"
 | EVAL rule_name = "PCI-RULE-44: File Integrity Monitoring Alert"
 | EVAL severity = "high"
-| KEEP @timestamp, host.name, user.name, file.path, file.hash.sha1, event.action, rule_name, severity
+| KEEP @timestamp, host.name, file.path, file.hash.sha1, event.action, rule_name, severity

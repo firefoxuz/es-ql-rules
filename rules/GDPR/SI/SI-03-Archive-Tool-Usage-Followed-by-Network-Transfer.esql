@@ -4,10 +4,10 @@
 // Tavsif: Detects compression tools (zip, tar, 7z) followed by network connections within 5 minutes, indicating data exfiltration.
 // MITRE ATT&CK: T1560.001 (Archive via Utility) + T1041 (Exfiltration Over C2)
 
-FROM updive-*, updive-*, updive-*
+FROM updive-*-metric-*
 | WHERE @timestamp >= NOW() - 5 minutes
+| WHERE event.dataset == "system.network"
 | WHERE process.name IN ("zip", "tar", "7z", "rar", "gzip", "7z.exe", "WinRAR.exe")
-    OR (message RLIKE ".*(http|https|ftp).*" AND host.network.egress.bytes > 1048576)
 | STATS 
     archive_count = SUM(CASE(process.name IN ("zip", "tar", "7z", "rar"), 1, 0)),
     network_count = SUM(CASE(host.network.egress.bytes > 0, 1, 0)),

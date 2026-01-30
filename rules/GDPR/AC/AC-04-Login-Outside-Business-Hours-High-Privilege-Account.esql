@@ -4,8 +4,9 @@
 // Tavsif: Alerts on privileged account logins during non-business hours (22:00-06:00 weekdays, all weekend).
 // MITRE ATT&CK: T1078 (Valid Accounts)
 
-FROM updive-*
+FROM updive-*-file-*
 | WHERE @timestamp >= NOW() - 15 minutes
+| WHERE event.dataset == "updive-file.system.auth"
 | WHERE event.category == "authentication" AND event.outcome == "success"
 | WHERE user.name RLIKE ".*(admin|root|sysadmin).*"
 | EVAL hour = DATE_EXTRACT("hour", @timestamp)

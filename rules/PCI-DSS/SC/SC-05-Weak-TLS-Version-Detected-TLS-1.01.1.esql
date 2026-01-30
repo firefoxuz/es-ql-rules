@@ -3,8 +3,9 @@
 // Qoida nomi: Weak TLS Version Detected (TLS 1.0/1.1)
 // Tavsif: Identifies TLS connections using deprecated versions (TLS 1.0 or 1.1).
 
-FROM updive-*
+FROM updive-*-file-*
 | WHERE @timestamp >= NOW() - 15 minutes
+| WHERE event.dataset == "updive-file.system.syslog"
 | WHERE message RLIKE ".*(TLS 1\\.0|TLS 1\\.1|SSLv2|SSLv3).*"
   AND source.port IN (443, 8443, 9443)
 | STATS 

@@ -4,8 +4,9 @@
 // Tavsif: Detects database integrity check failures indicating corruption or tampering.
 // MITRE ATT&CK: T1565.001 (Data Manipulation)
 
-FROM updive-*
+FROM updive-*-file-*
 | WHERE @timestamp >= NOW() - 15 minutes
+| WHERE event.dataset == "updive-file.system.syslog"
 | WHERE message RLIKE ".*(integrity check failed|corruption detected|checksum mismatch).*"
     OR (process.name IN ("mysqlcheck", "pg_checksums") AND message RLIKE ".*error.*")
 | EVAL rule_name = "RULE-39: Database Integrity Check Failure"

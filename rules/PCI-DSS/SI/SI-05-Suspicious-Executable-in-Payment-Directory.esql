@@ -3,8 +3,9 @@
 // Qoida nomi: Suspicious Executable in Payment Directory
 // Tavsif: Detects new executable files in payment application directories.
 
-FROM updive-*, updive-*
+FROM updive-*-audit-*
 | WHERE @timestamp >= NOW() - 10 minutes
+| WHERE event.dataset == "file"
 | WHERE event.action IN ("created", "renamed", "moved")
   AND (file.extension IN ("exe", "dll", "so", "sh", "bat", "ps1", "vbs")
        OR file.path RLIKE ".*\\.(exe|dll|so|sh|bat|ps1)$")
@@ -12,4 +13,4 @@ FROM updive-*, updive-*
 | WHERE file.path NOT RLIKE ".*(Program Files|application|bin).*"
 | EVAL rule_name = "PCI-RULE-19: Suspicious Executable in Payment Dir"
 | EVAL severity = "high"
-| KEEP @timestamp, host.name, user.name, file.path, file.hash.sha1, event.action, rule_name, severity
+| KEEP @timestamp, host.name, file.path, file.hash.sha1, event.action, rule_name, severity

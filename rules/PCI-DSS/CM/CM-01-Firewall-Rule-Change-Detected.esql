@@ -3,13 +3,11 @@
 // Qoida nomi: Firewall Rule Change Detected
 // Tavsif: Detects modifications to firewall rules or iptables configurations on CDE systems.
 
-FROM updive-*, updive-*, updive-*
+FROM updive-*-audit-*
 | WHERE @timestamp >= NOW() - 10 minutes
-| WHERE (process.name IN ("iptables", "firewall-cmd", "ufw", "netsh") 
-        AND process.args RLIKE ".*(add|delete|modify|allow|deny).*")
+| WHERE event.dataset == "file"
     OR (file.path RLIKE ".*/etc/sysconfig/iptables.*" AND event.action == "modified")
-    OR (event.code == "4946" OR event.code == "4947")
 | WHERE host.name RLIKE ".*(cde|payment|firewall).*"
 | EVAL rule_name = "PCI-RULE-03: Firewall Rule Change Detected"
 | EVAL severity = "high"
-| KEEP @timestamp, host.name, user.name, process.name, process.args, file.path, event.code, rule_name, severity
+| KEEP @timestamp, host.name, file.path, rule_name, severity

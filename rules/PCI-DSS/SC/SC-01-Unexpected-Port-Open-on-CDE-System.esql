@@ -3,8 +3,9 @@
 // Qoida nomi: Unexpected Port Open on CDE System
 // Tavsif: Detects new listening ports on cardholder data environment (CDE) systems that are not in approved baseline.
 
-FROM updive-*, updive-*
+FROM updive-*-file-*
 | WHERE @timestamp >= NOW() - 10 minutes
+| WHERE event.dataset == "updive-file.system.syslog"
 | WHERE source.port IS NOT NULL
   AND host.name RLIKE ".*(cde|payment|pos|gateway).*"
 | WHERE source.port NOT IN (22, 443, 3306, 5432, 8443)

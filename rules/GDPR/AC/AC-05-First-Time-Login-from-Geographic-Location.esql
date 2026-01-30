@@ -4,8 +4,9 @@
 // Tavsif: Identifies first-ever successful login from a new country/region for a user account.
 // MITRE ATT&CK: T1078 (Valid Accounts)
 
-FROM updive-*
+FROM updive-*-file-*
 | WHERE @timestamp >= NOW() - 15 minutes
+| WHERE event.dataset == "updive-file.system.auth"
 | WHERE event.category == "authentication" AND event.outcome == "success"
 | WHERE source.geo.geo.country_name IS NOT NULL
 | STATS countries = VALUES(source.geo.geo.country_name) BY user.name

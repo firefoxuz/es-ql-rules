@@ -4,12 +4,13 @@
 // Tavsif: Detects modifications to critical system binaries (/bin, /sbin, C:\Windows\System32).
 // MITRE ATT&CK: T1565.001 (Data Manipulation: Stored Data)
 
-FROM updive-*
+FROM updive-*-audit-*
 | WHERE @timestamp >= NOW() - 10 minutes
+| WHERE event.dataset == "file"
 | WHERE event.module == "file_integrity"
   AND (file.path RLIKE ".*(/bin/|/sbin/|Windows\\\\System32\\\\).*"
        OR file.path RLIKE ".*\\.(exe|dll|so|dylib)$")
   AND event.action IN ("updated", "created", "attributes_modified")
 | EVAL rule_name = "RULE-35: File Integrity Change in System Binaries"
 | EVAL severity = "critical"
-| KEEP @timestamp, host.name, file.path, file.hash.sha1, event.action, user.name, rule_name, severity
+| KEEP @timestamp, host.name, file.path, file.hash.sha1, event.action, rule_name, severity

@@ -4,10 +4,10 @@
 // Tavsif: Detects when Elastic Agent or Beats services stop outside of maintenance windows.
 // MITRE ATT&CK: T1562.001 (Impair Defenses)
 
-FROM updive-*, updive-*
+FROM updive-*-metric-*
 | WHERE @timestamp >= NOW() - 5 minutes
+| WHERE event.dataset == "system.service"
 | WHERE system.service.name RLIKE ".*(elastic-agent|filebeat|winlogbeat).*"
-    OR (message RLIKE ".*(elastic-agent|beat).*stopped.*" AND event.action == "stopped-service")
 | STATS down_count = COUNT(*) BY host.name, system.service.name
 | WHERE down_count >= 1
 | EVAL rule_name = "RULE-20: Elastic Agent/Beat Stopped Unexpectedly"

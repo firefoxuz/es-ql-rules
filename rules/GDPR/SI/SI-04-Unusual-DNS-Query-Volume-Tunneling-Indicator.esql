@@ -4,8 +4,9 @@
 // Tavsif: Detects abnormally high DNS query count (100+ in 5 minutes) from single host, potential DNS tunneling.
 // MITRE ATT&CK: T1071.004 (Application Layer Protocol: DNS)
 
-FROM updive-*
+FROM updive-*-file-*
 | WHERE @timestamp >= NOW() - 5 minutes
+| WHERE event.dataset == "updive-file.system.syslog"
 | WHERE message RLIKE ".*dns.*" OR source.port == 53
 | STATS 
     dns_count = COUNT(*),

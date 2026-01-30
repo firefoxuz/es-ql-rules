@@ -3,14 +3,13 @@
 // Qoida nomi: Access to Cardholder Data Outside Business Need
 // Tavsif: Detects users accessing cardholder data when their role doesn't require it.
 
-FROM updive-*, updive-*
+FROM updive-*-audit-*
 | WHERE @timestamp >= NOW() - 15 minutes
+| WHERE event.dataset == "file"
 | WHERE event.action IN ("accessed", "read", "opened")
   AND file.path RLIKE ".*(cardholder|chd|pan|payment_data).*"
-| WHERE user.name NOT IN ("payment-app-service", "finance-admin", "compliance-auditor")
-| WHERE user.name NOT RLIKE ".*(payment|billing|finance).*"
-| STATS access_count = COUNT(*) BY user.name, host.name, file.path
+| STATS access_count = COUNT(*) BY host.name, file.path
 | WHERE access_count >= 1
 | EVAL rule_name = "PCI-RULE-27: CHD Access Outside Business Need"
 | EVAL severity = "high"
-| KEEP user.name, host.name, file.path, access_count, rule_name, severity
+| KEEP host.name, file.path, access_count, rule_name, severity

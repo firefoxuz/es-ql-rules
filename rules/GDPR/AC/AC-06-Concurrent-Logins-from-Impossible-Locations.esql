@@ -4,8 +4,9 @@
 // Tavsif: Detects logins from two different geographic locations within 1 hour where travel is physically impossible (>500km apart).
 // MITRE ATT&CK: T1078 (Valid Accounts)
 
-FROM updive-*
+FROM updive-*-file-*
 | WHERE @timestamp >= NOW() - 1 hour
+| WHERE event.dataset == "updive-file.system.auth"
 | WHERE event.category == "authentication" AND event.outcome == "success"
 | WHERE source.geo.geo.country_name IS NOT NULL
 | STATS 

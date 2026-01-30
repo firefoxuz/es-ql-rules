@@ -3,8 +3,9 @@
 // Qoida nomi: Time Synchronization Failure
 // Tavsif: Detects NTP synchronization failures on systems in CDE.
 
-FROM updive-*, updive-*
+FROM updive-*-file-*
 | WHERE @timestamp >= NOW() - 30 minutes
+| WHERE event.dataset == "updive-file.system.syslog"
 | WHERE (message RLIKE ".*(ntp.*fail|time sync.*error|chronyd.*unreachable).*"
         OR message RLIKE ".*(clock.*skew|time.*offset).*")
   AND host.name RLIKE ".*(cde|payment).*"

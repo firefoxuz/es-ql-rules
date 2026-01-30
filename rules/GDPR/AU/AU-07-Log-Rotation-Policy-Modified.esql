@@ -4,10 +4,11 @@
 // Tavsif: Detects changes to log rotation configuration files (logrotate.conf, logrotate.d).
 // MITRE ATT&CK: T1070 (Indicator Removal)
 
-FROM updive-*, updive-*
+FROM updive-*-audit-*
 | WHERE @timestamp >= NOW() - 10 minutes
+| WHERE event.dataset == "file"
 | WHERE file.path RLIKE ".*/etc/logrotate.*" 
   AND event.action IN ("modified", "created", "deleted")
 | EVAL rule_name = "RULE-22: Log Rotation Policy Modified"
 | EVAL severity = "medium"
-| KEEP @timestamp, host.name, user.name, file.path, event.action, process.name, rule_name, severity
+| KEEP @timestamp, host.name, file.path, event.action, rule_name, severity

@@ -4,9 +4,10 @@
 // Tavsif: Detects scheduled tasks created with SYSTEM account privileges, common persistence mechanism.
 // MITRE ATT&CK: T1053.005 (Scheduled Task/Job)
 
-FROM updive-*
+FROM updive-*-file-*
 | WHERE @timestamp >= NOW() - 10 minutes
-| WHERE event.code == "4698"
+| WHERE event.dataset == "updive-file.system.syslog"
+| WHERE message RLIKE ".*4698.*"
 | WHERE message RLIKE ".*(S-1-5-18|SYSTEM).*"
 | EVAL rule_name = "RULE-16: Scheduled Task Created with SYSTEM Privileges"
 | EVAL severity = "high"

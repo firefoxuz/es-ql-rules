@@ -3,8 +3,9 @@
 // Qoida nomi: After-Hours Data Center Access
 // Tavsif: Detects physical access to data center outside business hours (logged via badge systems).
 
-FROM updive-*, updive-*
+FROM updive-*-file-*
 | WHERE @timestamp >= NOW() - 15 minutes
+| WHERE event.dataset == "updive-file.system.syslog"
 | WHERE message RLIKE ".*(badge|card|access control|door|entry).*"
   AND (message RLIKE ".*(datacenter|server room|cage|rack).*"
        OR host.name RLIKE ".*(badge-reader|access-control).*")

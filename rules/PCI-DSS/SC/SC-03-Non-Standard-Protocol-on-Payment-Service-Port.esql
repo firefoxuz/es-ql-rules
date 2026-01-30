@@ -3,8 +3,9 @@
 // Qoida nomi: Non-Standard Protocol on Payment Service Port
 // Tavsif: Detects non-HTTPS/TLS traffic on ports designated for payment processing.
 
-FROM updive-*
+FROM updive-*-file-*
 | WHERE @timestamp >= NOW() - 10 minutes
+| WHERE event.dataset == "updive-file.system.syslog"
 | WHERE source.port IN (443, 8443, 8444, 9443)
   AND message NOT RLIKE ".*(tls|https).*"
   AND host.name RLIKE ".*(payment|gateway|pos).*"

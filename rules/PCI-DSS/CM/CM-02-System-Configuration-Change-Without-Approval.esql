@@ -3,14 +3,14 @@
 // Qoida nomi: System Configuration Change Without Approval
 // Tavsif: Detects modifications to critical configuration files without corresponding change ticket.
 
-FROM updive-*, updive-*
+FROM updive-*-audit-*
 | WHERE @timestamp >= NOW() - 15 minutes
+| WHERE event.dataset == "file"
 | WHERE event.module == "file_integrity"
   AND event.action IN ("updated", "modified")
   AND (file.path RLIKE ".*/etc/(ssh|pam\\.d|security|nginx|apache2|mysql).*"
        OR file.path RLIKE ".*\\\\(inetpub|system32|config).*")
   AND host.name RLIKE ".*(cde|payment|prod).*"
-| WHERE user.name NOT IN ("ansible", "puppet", "chef", "saltstack")
 | EVAL rule_name = "PCI-RULE-07: Config Change Without Approval"
 | EVAL severity = "medium"
-| KEEP @timestamp, host.name, user.name, file.path, event.action, file.hash.sha1, rule_name, severity
+| KEEP @timestamp, host.name, file.path, event.action, file.hash.sha1, rule_name, severity

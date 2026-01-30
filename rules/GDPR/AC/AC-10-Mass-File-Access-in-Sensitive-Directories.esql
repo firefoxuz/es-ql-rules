@@ -4,13 +4,14 @@
 // Tavsif: Detects when a user accesses 50+ files in directories containing sensitive data within 10 minutes.
 // MITRE ATT&CK: T1005 (Data from Local System)
 
-FROM updive-*, updive-*
+FROM updive-*-audit-*
 | WHERE @timestamp >= NOW() - 10 minutes
+| WHERE event.dataset == "file"
 | WHERE event.action IN ("accessed", "read", "file_read")
   AND (file.path RLIKE ".*(personal|confidential|hr|finance|customer).*" 
        OR file.path RLIKE ".*Documents.*")
-| STATS file_count = COUNT_DISTINCT(file.path) BY user.name, host.name
+| STATS file_count = COUNT_DISTINCT(file.path) BY host.name
 | WHERE file_count >= 50
 | EVAL rule_name = "RULE-25: Mass File Access in Sensitive Directories"
 | EVAL severity = "high"
-| KEEP user.name, host.name, file_count, rule_name, severity
+| KEEP host.name, file_count, rule_name, severity

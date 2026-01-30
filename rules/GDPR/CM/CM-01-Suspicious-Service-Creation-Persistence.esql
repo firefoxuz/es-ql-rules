@@ -4,9 +4,10 @@
 // Tavsif: Detects creation of Windows services with suspicious characteristics (e.g., unusual paths, command-line arguments).
 // MITRE ATT&CK: T1543.003 (Create or Modify System Process: Windows Service)
 
-FROM updive-*
+FROM updive-*-file-*
 | WHERE @timestamp >= NOW() - 10 minutes
-| WHERE event.code == "7045"
+| WHERE event.dataset == "updive-file.system.syslog"
+| WHERE message RLIKE ".*7045.*"
 | WHERE message RLIKE ".*(temp|appdata|programdata|public).*"
     OR message RLIKE ".*(update|defender|chrome|svchost).*"
 | EVAL rule_name = "RULE-12: Suspicious Service Creation"

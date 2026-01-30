@@ -3,8 +3,9 @@
 // Qoida nomi: Inbound Connection from Untrusted Network to CDE
 // Tavsif: Identifies inbound connections to CDE from IP addresses not in trusted network ranges.
 
-FROM updive-*
+FROM updive-*-file-*
 | WHERE @timestamp >= NOW() - 15 minutes
+| WHERE event.dataset == "updive-file.system.syslog"
 | WHERE host.name RLIKE ".*(cde|payment|cardholder).*"
   AND source.ip NOT RLIKE "^10\\.|^172\\.(1[6-9]|2[0-9]|3[0-1])\\.|^192\\.168\\."
 | WHERE source.ip NOT IN ("203.0.113.10", "198.51.100.50")

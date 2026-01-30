@@ -4,12 +4,13 @@
 // Tavsif: Detects deletion of 10+ log files within 5 minutes.
 // MITRE ATT&CK: T1070.004 (File Deletion)
 
-FROM updive-*, updive-*
+FROM updive-*-audit-*
 | WHERE @timestamp >= NOW() - 5 minutes
+| WHERE event.dataset == "file"
 | WHERE event.action IN ("deleted", "file_deletion")
   AND (file.path RLIKE ".*\\.log$" OR file.extension == "log" OR file.extension == "evtx")
-| STATS deleted_count = COUNT(*) BY user.name, host.name
+| STATS deleted_count = COUNT(*) BY host.name
 | WHERE deleted_count >= 10
 | EVAL rule_name = "RULE-23: Mass Deletion of Log Files"
 | EVAL severity = "critical"
-| KEEP user.name, host.name, deleted_count, rule_name, severity
+| KEEP host.name, deleted_count, rule_name, severity

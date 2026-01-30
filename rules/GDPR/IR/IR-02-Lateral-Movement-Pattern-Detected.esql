@@ -4,8 +4,9 @@
 // Tavsif: Detects authentication from one host to multiple other hosts within 10 minutes (lateral movement).
 // MITRE ATT&CK: T1021 (Remote Services)
 
-FROM updive-*
+FROM updive-*-file-*
 | WHERE @timestamp >= NOW() - 10 minutes
+| WHERE event.dataset == "updive-file.system.auth"
 | WHERE event.category == "authentication" AND event.outcome == "success"
   AND event.action IN ("logon", "network_logon")
 | STATS unique_destinations = COUNT_DISTINCT(host.name) BY user.name, source.ip

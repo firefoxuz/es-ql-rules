@@ -3,11 +3,12 @@
 // Qoida nomi: Penetration Test Activity Outside Window
 // Tavsif: Detects penetration testing tools/activity outside approved testing windows.
 
-FROM updive-*, updive-*, updive-*
+FROM updive-*-file-*
 | WHERE @timestamp >= NOW() - 15 minutes
+| WHERE event.dataset == "updive-file.system.syslog"
 | WHERE (process.name IN ("metasploit", "burpsuite", "sqlmap", "nikto", "dirb")
         OR message RLIKE ".*(sqlmap|nikto|burp|metasploit).*"
-        OR url.path RLIKE ".*(\\.\\./|union select).*")
+        OR message RLIKE ".*(\\.\\./|union select).*")
   AND host.name RLIKE ".*(cde|payment).*"
 | WHERE @timestamp < "2024-03-01T00:00:00" OR @timestamp > "2024-03-07T23:59:59"
 | STATS attack_count = COUNT(*) BY source.ip, host.name, process.name

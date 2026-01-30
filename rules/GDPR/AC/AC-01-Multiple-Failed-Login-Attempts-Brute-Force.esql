@@ -4,8 +4,9 @@
 // Tavsif: Detects brute force login attempts by counting failed authentication events from the same source IP within 5 minutes.
 // MITRE ATT&CK: T1110 (Brute Force)
 
-FROM updive-*
+FROM updive-*-file-*
 | WHERE @timestamp >= NOW() - 5 minutes
+| WHERE event.dataset == "updive-file.system.auth"
 | WHERE event.category == "authentication" 
   AND event.outcome == "failure"
 | STATS failed_attempts = COUNT(*) BY source.ip, user.name, host.name

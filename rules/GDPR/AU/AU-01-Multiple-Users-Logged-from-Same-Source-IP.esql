@@ -4,8 +4,9 @@
 // Tavsif: Detects multiple unique user accounts authenticating from a single source IP within 5 minutes, indicating session hijacking or shared credentials.
 // MITRE ATT&CK: T1078 (Valid Accounts)
 
-FROM updive-*
+FROM updive-*-file-*
 | WHERE @timestamp >= NOW() - 5 minutes
+| WHERE event.dataset == "updive-file.system.auth"
 | WHERE event.category == "authentication" AND event.outcome == "success"
 | STATS unique_users = COUNT_DISTINCT(user.name) BY source.ip, host.name
 | WHERE unique_users >= 5

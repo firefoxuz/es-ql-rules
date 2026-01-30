@@ -4,9 +4,10 @@
 // Tavsif: Detects when Windows Security event log is cleared, a classic anti-forensics technique.
 // MITRE ATT&CK: T1070.001 (Indicator Removal: Clear Windows Event Logs)
 
-FROM updive-*
+FROM updive-*-file-*
 | WHERE @timestamp >= NOW() - 5 minutes
-| WHERE event.code == "1102"
+| WHERE event.dataset == "updive-file.system.syslog"
+| WHERE message RLIKE ".*1102.*"
 | EVAL rule_name = "RULE-18: Windows Event Log Cleared"
 | EVAL severity = "critical"
-| KEEP @timestamp, host.name, user.name, winlog.channel, rule_name, severity
+| KEEP @timestamp, host.name, user.name, rule_name, severity

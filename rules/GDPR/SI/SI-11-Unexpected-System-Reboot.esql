@@ -4,10 +4,11 @@
 // Tavsif: Detects system reboots not preceded by documented maintenance.
 // MITRE ATT&CK: T1529 (System Shutdown/Reboot)
 
-FROM updive-*
+FROM updive-*-file-*
 | WHERE @timestamp >= NOW() - 15 minutes
-| WHERE (event.code == "1074" OR event.code == "6008")
+| WHERE event.dataset == "updive-file.system.syslog"
+| WHERE (message RLIKE ".*1074.*" OR message RLIKE ".*6008.*")
     OR (message RLIKE ".*(system.*reboot|shutdown -r).*" AND event.action == "shutdown")
 | EVAL rule_name = "RULE-36: Unexpected System Reboot"
 | EVAL severity = "medium"
-| KEEP @timestamp, host.name, user.name, event.code, message, rule_name, severity
+| KEEP @timestamp, host.name, user.name, message, rule_name, severity

@@ -4,11 +4,12 @@
 // Tavsif: Detects when the Linux audit daemon (auditd) is stopped or disabled, indicating potential log tampering.
 // MITRE ATT&CK: T1562.001 (Impair Defenses: Disable or Modify Tools)
 
-FROM updive-*, updive-*
+FROM updive-*-file-*
 | WHERE @timestamp >= NOW() - 5 minutes
+| WHERE event.dataset == "updive-file.system.syslog"
 | WHERE (message RLIKE ".*(auditd.*stopped|audit.*disabled).*" 
-        OR process.args RLIKE ".*(systemctl stop auditd|service auditd stop).*"
+        OR process.command_line RLIKE ".*(systemctl stop auditd|service auditd stop).*"
         OR event.action == "stopped-service" AND process.name RLIKE ".*audit.*")
 | EVAL rule_name = "RULE-17: Auditd Service Stopped or Disabled"
 | EVAL severity = "critical"
-| KEEP @timestamp, host.name, user.name, process.name, process.args, message, rule_name, severity
+| KEEP @timestamp, host.name, user.name, process.name, process.command_line, message, rule_name, severity

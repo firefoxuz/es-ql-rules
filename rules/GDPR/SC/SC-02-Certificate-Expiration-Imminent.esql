@@ -4,8 +4,9 @@
 // Tavsif: Detects SSL/TLS certificates expiring within 7 days.
 // MITRE ATT&CK: N/A (Operational)
 
-FROM updive-*, updive-*
+FROM updive-*-file-*
 | WHERE @timestamp >= NOW() - 24 hours
+| WHERE event.dataset == "updive-file.system.syslog"
 | WHERE message RLIKE ".*(certificate|cert).*" AND message RLIKE ".*(expir|expire|expired).*"
 | EVAL rule_name = "RULE-40: Certificate Expiration Imminent"
 | EVAL severity = "medium"

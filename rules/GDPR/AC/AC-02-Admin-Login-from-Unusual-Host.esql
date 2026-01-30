@@ -4,8 +4,9 @@
 // Tavsif: Identifies administrative account logins from hosts not previously seen in the last 30 days, indicating potential credential compromise.
 // MITRE ATT&CK: T1078.002 (Valid Accounts: Domain Accounts)
 
-FROM updive-*
+FROM updive-*-file-*
 | WHERE @timestamp >= NOW() - 15 minutes
+| WHERE event.dataset == "updive-file.system.auth"
 | WHERE event.category == "authentication" 
   AND event.outcome == "success"
   AND (user.name RLIKE ".*admin.*" OR user.name IN ("root", "administrator", "sysadmin"))

@@ -3,8 +3,9 @@
 // Qoida nomi: Wireless Access Point Detected in CDE
 // Tavsif: Detects unauthorized wireless access points in cardholder data environment.
 
-FROM updive-*, updive-*
+FROM updive-*-file-*
 | WHERE @timestamp >= NOW() - 30 minutes
+| WHERE event.dataset == "updive-file.system.syslog"
 | WHERE (message RLIKE ".*(SSID|wireless|802\\.11|access point).*"
         OR message RLIKE ".*ieee80211.*")
   AND (host.name RLIKE ".*(cde|payment|datacenter).*"

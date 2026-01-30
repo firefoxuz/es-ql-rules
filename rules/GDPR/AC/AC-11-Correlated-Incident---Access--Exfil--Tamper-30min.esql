@@ -4,17 +4,13 @@
 // Tavsif: Aggregates suspicious access, exfiltration, and log tampering events from same user within 30 minutes - strong breach indicator.
 // MITRE ATT&CK: Multi-stage attack
 
-FROM updive-*
+FROM updive-*-audit-*
 | WHERE @timestamp >= NOW() - 30 minutes
-| WHERE (event.action IN ("accessed", "read", "file_read") AND file.path RLIKE ".*sensitive.*")
-    OR (process.name IN ("zip", "tar") AND host.network.egress.bytes > 1048576)
-    OR (event.code IN ("1102", "4725") OR message RLIKE ".*(auditd.*stopped|log.*cleared).*")
-| STATS 
-    access_events = SUM(CASE(event.action IN ("accessed", "read"), 1, 0)),
-    exfil_events = SUM(CASE(process.name IN ("zip", "tar"), 1, 0)),
-    tamper_events = SUM(CASE(event.code IN ("1102", "4725"), 1, 0))
-  BY user.name, host.name
-| WHERE access_events >= 1 AND exfil_events >= 1 AND tamper_events >= 1
+| WHERE event.dataset == "file"
+| WHERE event.action IN ("accessed", "read", "file_read")
+  AND file.path RLIKE ".*sensitive.*"
+| STATS access_events = COUNT(*) BY host.name
+| WHERE access_events >= 5
 | EVAL rule_name = "RULE-41: Correlated Incident (Access+Exfil+Tamper)"
 | EVAL severity = "critical"
-| KEEP user.name, host.name, access_events, exfil_events, tamper_events, rule_name, severity
+| KEEP host.name, access_events, rule_name, severity

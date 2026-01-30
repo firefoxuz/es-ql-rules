@@ -3,15 +3,11 @@
 // Qoida nomi: Excessive Permission Grant Detected
 // Tavsif: Detects granting of overly broad permissions on cardholder data directories.
 
-FROM updive-*, updive-*
+FROM updive-*-audit-*
 | WHERE @timestamp >= NOW() - 15 minutes
-| WHERE (process.name IN ("chmod", "chown", "setfacl", "icacls.exe")
-        AND process.args RLIKE ".*(777|666|Everyone|Authenticated Users).*")
-    OR (event.code == "4670"
-        AND message RLIKE ".*cardholder.*"
-        AND message RLIKE ".*(FULL|0x1f01ff).*")
+| WHERE event.dataset == "file"
 | WHERE file.path RLIKE ".*(cardholder|chd|payment|card_data).*"
     OR host.name RLIKE ".*(cde|payment).*"
 | EVAL rule_name = "PCI-RULE-25: Excessive Permission Grant"
 | EVAL severity = "high"
-| KEEP @timestamp, host.name, user.name, process.name, process.args, file.path, event.code, rule_name, severity
+| KEEP @timestamp, host.name, file.path, rule_name, severity

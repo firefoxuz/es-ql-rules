@@ -3,12 +3,13 @@
 // Qoida nomi: Log Review Activity Not Detected
 // Tavsif: Identifies missing daily log review activity (no analyst access to SIEM/logs).
 
-FROM updive-*, updive-*
+FROM updive-*-file-*
 | WHERE @timestamp >= NOW() - 24 hours
+| WHERE event.dataset == "updive-file.system.syslog"
 | WHERE (message RLIKE ".*(kibana|elasticsearch|siem).*"
         AND user.name IN ("security-analyst", "log-reviewer", "soc-team"))
-    OR (url.path RLIKE ".*/app/kibana.*" 
-        AND http.request.method IN ("GET", "POST"))
+    OR (message RLIKE ".*/app/kibana.*" 
+        AND message RLIKE ".*(GET|POST).*")
 | STATS review_sessions = COUNT(*) BY user.name
 | WHERE review_sessions >= 1
 | EVAL rule_name = "PCI-RULE-40: Daily Log Review Completed"
