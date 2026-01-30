@@ -10,7 +10,7 @@ FROM updive-*-audit-*
 | WHERE event.module == "file_integrity"
   AND file.path RLIKE ".*(\\.conf|\\.config|\\.ini|\\.yaml|\\.yml|\\.xml)$"
   AND file.path RLIKE ".*(etc|config|nginx|apache|mysql).*"
-  AND event.action IN ("updated", "created")
+  AND (MV_CONTAINS(event.action, "updated") OR MV_CONTAINS(event.action, "created"))
 | EVAL rule_name = "RULE-38: Configuration File Modified"
 | EVAL severity = "high"
 | KEEP @timestamp, host.name, file.path, event.action, file.hash.sha1, rule_name, severity

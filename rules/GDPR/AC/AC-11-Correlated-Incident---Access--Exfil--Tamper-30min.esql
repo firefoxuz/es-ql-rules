@@ -7,7 +7,7 @@
 FROM updive-*-audit-*
 | WHERE @timestamp >= NOW() - 30 minutes
 | WHERE event.dataset == "file"
-| WHERE event.action IN ("accessed", "read", "file_read")
+| WHERE (MV_CONTAINS(event.action, "accessed") OR MV_CONTAINS(event.action, "read") OR MV_CONTAINS(event.action, "file_read"))
   AND file.path RLIKE ".*sensitive.*"
 | STATS access_events = COUNT(*) BY host.name
 | WHERE access_events >= 5

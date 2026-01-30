@@ -8,6 +8,8 @@ FROM updive-*-file-*
 | WHERE @timestamp >= NOW() - 5 minutes
 | WHERE event.dataset == "updive-file.system.syslog"
 | WHERE message RLIKE ".*1102.*"
+  AND message RLIKE ".*(Event Log|Security log|log (was )?cleared|cleared the Security log).*"
+  AND message NOT RLIKE ".*UFW BLOCK.*"
 | EVAL rule_name = "RULE-18: Windows Event Log Cleared"
 | EVAL severity = "critical"
 | KEEP @timestamp, host.name, user.name, rule_name, severity

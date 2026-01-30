@@ -6,7 +6,7 @@
 FROM updive-*-audit-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE event.dataset == "file"
-| WHERE event.action IN ("accessed", "read", "opened")
+| WHERE (MV_CONTAINS(event.action, "accessed") OR MV_CONTAINS(event.action, "read") OR MV_CONTAINS(event.action, "opened"))
   AND (file.path RLIKE ".*(cardholder|chd|pan|card_data).*"
        OR file.path RLIKE ".*/opt/payment/data/.*")
   AND file.extension NOT IN ("enc", "aes", "pgp", "gpg")

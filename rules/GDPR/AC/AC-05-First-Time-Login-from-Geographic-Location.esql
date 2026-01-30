@@ -9,8 +9,11 @@ FROM updive-*-file-*
 | WHERE event.dataset == "updive-file.system.auth"
 | WHERE event.category == "authentication" AND event.outcome == "success"
 | WHERE source.geo.geo.country_name IS NOT NULL
-| STATS countries = VALUES(source.geo.geo.country_name) BY user.name
-| WHERE LENGTH(countries) >= 2
+| STATS 
+    countries = VALUES(source.geo.geo.country_name),
+    country_count = COUNT_DISTINCT(source.geo.geo.country_name)
+  BY user.name
+| WHERE country_count >= 2
 | EVAL rule_name = "RULE-07: First-Time Login from Geographic Location"
 | EVAL severity = "medium"
-| KEEP user.name, countries, rule_name, severity
+| KEEP user.name, countries, country_count, rule_name, severity

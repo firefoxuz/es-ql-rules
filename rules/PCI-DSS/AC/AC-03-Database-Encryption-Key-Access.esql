@@ -8,7 +8,7 @@ FROM updive-*-audit-*
 | WHERE event.dataset == "file"
 | WHERE (file.path RLIKE ".*(keystore|keys|master\\.key|encryption\\.key).*"
         OR file.path RLIKE ".*/etc/ssl/private/.*")
-  AND event.action IN ("accessed", "read", "copied", "modified")
+  AND (MV_CONTAINS(event.action, "accessed") OR MV_CONTAINS(event.action, "read") OR MV_CONTAINS(event.action, "copied") OR MV_CONTAINS(event.action, "modified"))
 | EVAL rule_name = "PCI-RULE-11: Encryption Key Access"
 | EVAL severity = "critical"
 | KEEP @timestamp, host.name, file.path, event.action, rule_name, severity

@@ -10,7 +10,7 @@ FROM updive-*-audit-*
 | WHERE event.module == "file_integrity"
   AND (file.path RLIKE ".*(/bin/|/sbin/|Windows\\\\System32\\\\).*"
        OR file.path RLIKE ".*\\.(exe|dll|so|dylib)$")
-  AND event.action IN ("updated", "created", "attributes_modified")
+  AND (MV_CONTAINS(event.action, "updated") OR MV_CONTAINS(event.action, "created") OR MV_CONTAINS(event.action, "attributes_modified"))
 | EVAL rule_name = "RULE-35: File Integrity Change in System Binaries"
 | EVAL severity = "critical"
 | KEEP @timestamp, host.name, file.path, file.hash.sha1, event.action, rule_name, severity

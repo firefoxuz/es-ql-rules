@@ -9,7 +9,7 @@ FROM updive-*-file-*
 | WHERE event.dataset == "updive-file.system.syslog"
 | WHERE event.category IN ("authentication", "file", "process", "network")
   AND (event.outcome == "failure" 
-       OR event.action IN ("accessed", "modified", "deleted", "created")
+       OR (MV_CONTAINS(event.action, "accessed") OR MV_CONTAINS(event.action, "modified") OR MV_CONTAINS(event.action, "deleted") OR MV_CONTAINS(event.action, "created"))
        OR process.name IN ("sudo", "runas", "net"))
 | STATS event_types = COUNT_DISTINCT(event.action) BY user.name, host.name
 | WHERE event_types >= 5

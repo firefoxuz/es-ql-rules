@@ -6,7 +6,7 @@
 FROM updive-*-audit-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE event.dataset == "file"
-| WHERE event.action IN ("accessed", "read", "opened")
+| WHERE (MV_CONTAINS(event.action, "accessed") OR MV_CONTAINS(event.action, "read") OR MV_CONTAINS(event.action, "opened"))
   AND file.path RLIKE ".*(cardholder|chd|pan|payment_data).*"
 | STATS access_count = COUNT(*) BY host.name, file.path
 | WHERE access_count >= 1

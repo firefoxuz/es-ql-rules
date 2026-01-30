@@ -7,8 +7,8 @@
 FROM updive-*-file-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE event.dataset == "updive-file.system.syslog"
-| WHERE (message RLIKE ".*2003.*" OR message RLIKE ".*2100.*")
-    OR (message RLIKE ".*USB.*mass storage.*" AND event.action == "device-connected")
+| WHERE message RLIKE ".*(USB|usb).*"
+  AND message RLIKE ".*(mass storage|usb-storage|USB Storage|SCSI disk|sd[a-z]).*"
 | EVAL rule_name = "RULE-31: USB Mass Storage Device Connected"
 | EVAL severity = "medium"
 | KEEP @timestamp, host.name, user.name, message, rule_name, severity

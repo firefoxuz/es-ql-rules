@@ -6,7 +6,7 @@
 FROM updive-*-audit-*
 | WHERE @timestamp >= NOW() - 5 minutes
 | WHERE event.dataset == "file"
-        OR file.path RLIKE ".*/var/log/(audit|secure|auth\\.log).*" AND event.action IN ("deleted", "modified")
+        OR file.path RLIKE ".*/var/log/(audit|secure|auth\\.log).*" AND (MV_CONTAINS(event.action, "deleted") OR MV_CONTAINS(event.action, "modified"))
   AND host.name RLIKE ".*(cde|payment|prod).*"
 | EVAL rule_name = "PCI-RULE-37: Audit Log Tampering"
 | EVAL severity = "critical"

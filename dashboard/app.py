@@ -98,13 +98,30 @@ def get_rules():
 def test_rule():
     data = request.json
     query = data.get("query") if isinstance(data, dict) else None
+    all_time = bool(data.get("all_time")) if isinstance(data, dict) else False
 
     if not query or not isinstance(query, str):
         return jsonify({"status": "error", "message": "Query is missing or invalid."}), 400
 
+    if all_time:
+        # Remove standalone time filters for full-history scans.
+        lines = query.splitlines()
+        lines = [ln for ln in lines if not re.search(r"^\s*\|\s*WHERE\s+@timestamp\s*>=\s*NOW\(\)\s*-", ln)]
+        query = "\n".join(lines)
+        # Remove inline time filter segments (one-line queries).
+        query = re.sub(
+            r"\|\s*WHERE\s+@timestamp\s*>=\s*NOW\(\)\s*-[^|\n]+",
+            "",
+            query,
+        )
+
     try:
+        # Ensure a limit to avoid huge scans.
+        if " LIMIT " not in query.upper():
+            query = f"{query}\n| LIMIT 1000"
         # Execute ES|QL query
-        res = es.esql.query(query=query)
+        client = es.options(request_timeout=180 if all_time else 60)
+        res = client.esql.query(query=query)
         hits_count = len(res.get("values", []))
         return jsonify(
             {

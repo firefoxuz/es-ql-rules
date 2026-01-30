@@ -10,9 +10,10 @@ FROM updive-*-file-*
 | WHERE event.category == "authentication" AND event.outcome == "success"
 | WHERE source.geo.geo.country_name IS NOT NULL
 | STATS 
-    countries = VALUES(source.geo.geo.country_name)
+    countries = VALUES(source.geo.geo.country_name),
+    country_count = COUNT_DISTINCT(source.geo.geo.country_name)
   BY user.name
-| WHERE LENGTH(countries) >= 2
+| WHERE country_count >= 2
 | EVAL rule_name = "RULE-08: Concurrent Logins from Impossible Locations"
 | EVAL severity = "high"
-| KEEP user.name, countries, rule_name, severity
+| KEEP user.name, countries, country_count, rule_name, severity

@@ -6,6 +6,49 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
 });
 
+function escapeHtml(value) {
+    if (value === null || value === undefined) return '';
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function renderDetailsTable(details) {
+    if (!Array.isArray(details) || details.length === 0) {
+        return '<div style="color: var(--text-dim);">No sample hits to display.</div>';
+    }
+
+    const rows = details.map((row, idx) => {
+        const cells = Array.isArray(row) ? row : [row];
+        return `
+            <tr>
+                <td style="padding: 6px 8px; color: var(--text-dim);">${idx + 1}</td>
+                ${cells.map(cell => `<td style="padding: 6px 8px;">${escapeHtml(cell)}</td>`).join('')}
+            </tr>
+        `;
+    }).join('');
+
+    const maxCols = Math.max(...details.map(r => Array.isArray(r) ? r.length : 1));
+    const headers = Array.from({ length: maxCols }, (_, i) => `<th style="text-align:left; padding: 6px 8px; color: var(--text-dim);">Col ${i + 1}</th>`).join('');
+
+    return `
+        <div style="overflow:auto; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px;">
+            <table style="width:100%; border-collapse: collapse;">
+                <thead>
+                    <tr>
+                        <th style="text-align:left; padding: 6px 8px; color: var(--text-dim);">#</th>
+                        ${headers}
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>
+    `;
+}
+
 async function fetchRules() {
     try {
         const response = await fetch('/api/rules');
@@ -81,6 +124,8 @@ function showRuleDetails(rule) {
                 </div>
                 ${rule.mitre ? `<div><h5>MITRE ATT&CK</h5><p>${rule.mitre}</p></div>` : ''}
             </div>
+            <h5>Sample Hits (Top 10)</h5>
+            ${renderDetailsTable(rule.details)}
             <h5>ES|QL Soya (Query)</h5>
             <div class="code-block">${rule.query}</div>
         </div>
@@ -208,7 +253,7 @@ function setupEventListeners() {
                 const response = await fetch('/api/test_rule', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query: rule.query })
+                    body: JSON.stringify({ query: rule.query, all_time: true })
                 });
                 const result = await response.json();
 
@@ -218,6 +263,7 @@ function setupEventListeners() {
                 if (result.status === 'success') {
                     rule.status = 'success';
                     rule.hits = result.hits;
+                    rule.details = result.details || [];
                     rule.error_msg = null;
                 } else {
                     rule.status = 'error';

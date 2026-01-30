@@ -7,7 +7,7 @@
 FROM updive-*-audit-*
 | WHERE @timestamp >= NOW() - 24 hours
 | WHERE event.dataset == "file"
-| WHERE event.action IN ("accessed", "read")
+| WHERE (MV_CONTAINS(event.action, "accessed") OR MV_CONTAINS(event.action, "read"))
   AND file.path RLIKE ".*(archive|backup|old_data|20[0-1][0-7]).*"
 | WHERE file.mtime < NOW() - 2555 days
 | EVAL rule_name = "RULE-48: Data Retention Policy Violation"

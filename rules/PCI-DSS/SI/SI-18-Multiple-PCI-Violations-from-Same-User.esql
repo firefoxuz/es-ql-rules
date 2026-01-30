@@ -6,7 +6,7 @@
 FROM updive-*-audit-*
 | WHERE @timestamp >= NOW() - 1 hour
 | WHERE event.dataset == "file"
-| WHERE event.action IN ("accessed", "deleted", "modified")
+| WHERE (MV_CONTAINS(event.action, "accessed") OR MV_CONTAINS(event.action, "deleted") OR MV_CONTAINS(event.action, "modified"))
   AND file.path RLIKE ".*(cardholder|chd|payment|audit).*"
 | WHERE host.name RLIKE ".*(cde|payment).*"
 | STATS 

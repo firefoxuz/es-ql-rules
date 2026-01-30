@@ -9,8 +9,8 @@ FROM updive-*-file-*
 | WHERE event.dataset == "updive-file.system.auth"
 | WHERE event.category == "authentication" AND event.outcome == "success"
 | WHERE user.name RLIKE ".*(admin|root|sysadmin).*"
-| EVAL hour = DATE_EXTRACT("hour", @timestamp)
-| EVAL day_of_week = DATE_EXTRACT("day_of_week", @timestamp)
+| EVAL hour = DATE_EXTRACT("HOUR_OF_DAY", @timestamp)
+| EVAL day_of_week = DATE_EXTRACT("DAY_OF_WEEK", @timestamp)
 | WHERE (hour < 6 OR hour >= 22) OR (day_of_week IN (6, 7))
 | EVAL rule_name = "RULE-05: Login Outside Business Hours"
 | EVAL severity = "medium"

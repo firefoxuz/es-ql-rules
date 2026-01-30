@@ -8,7 +8,7 @@ FROM updive-*-file-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE event.dataset == "updive-file.system.auth"
 | WHERE event.category == "authentication" AND event.outcome == "success"
-  AND event.action IN ("logon", "network_logon")
+  AND (MV_CONTAINS(event.action, "logon") OR MV_CONTAINS(event.action, "network_logon"))
 | STATS unique_destinations = COUNT_DISTINCT(host.name) BY user.name, source.ip
 | WHERE unique_destinations >= 5
 | EVAL rule_name = "RULE-44: Lateral Movement Pattern Detected"

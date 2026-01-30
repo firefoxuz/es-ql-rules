@@ -7,7 +7,7 @@ FROM updive-*-audit-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE event.dataset == "file"
 | WHERE file.path RLIKE ".*(cardholder|chd).*"
-  AND event.action IN ("accessed", "deleted")
+  AND (MV_CONTAINS(event.action, "accessed") OR MV_CONTAINS(event.action, "deleted"))
   AND host.name RLIKE ".*(cde|payment|cardholder).*"
 | STATS 
     critical_signals = COUNT_DISTINCT(event.action),

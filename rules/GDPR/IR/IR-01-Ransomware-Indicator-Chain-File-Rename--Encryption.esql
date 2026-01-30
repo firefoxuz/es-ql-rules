@@ -7,7 +7,7 @@
 FROM updive-*-audit-*
 | WHERE @timestamp >= NOW() - 5 minutes
 | WHERE event.dataset == "file"
-| WHERE event.action IN ("renamed", "created", "file_rename")
+| WHERE (MV_CONTAINS(event.action, "renamed") OR MV_CONTAINS(event.action, "created") OR MV_CONTAINS(event.action, "file_rename"))
   AND file.path RLIKE ".*\\.(encrypted|locked|crypted|crypt|enc|locky|cerber)$"
 | STATS renamed_count = COUNT(*) BY host.name
 | WHERE renamed_count >= 10

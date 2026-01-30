@@ -6,7 +6,7 @@
 FROM updive-*-audit-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE event.dataset == "file"
-| WHERE event.action IN ("created", "renamed", "moved")
+| WHERE (MV_CONTAINS(event.action, "created") OR MV_CONTAINS(event.action, "renamed") OR MV_CONTAINS(event.action, "moved"))
   AND (file.extension IN ("exe", "dll", "so", "sh", "bat", "ps1", "vbs")
        OR file.path RLIKE ".*\\.(exe|dll|so|sh|bat|ps1)$")
   AND file.path RLIKE ".*(payment|pos|gateway|cardholder).*"

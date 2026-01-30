@@ -7,7 +7,7 @@ FROM updive-*-audit-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE event.dataset == "file"
 | WHERE event.module == "file_integrity"
-  AND event.action IN ("updated", "modified")
+  AND (MV_CONTAINS(event.action, "updated") OR MV_CONTAINS(event.action, "modified"))
   AND (file.path RLIKE ".*/etc/(ssh|pam\\.d|security|nginx|apache2|mysql).*"
        OR file.path RLIKE ".*\\\\(inetpub|system32|config).*")
   AND host.name RLIKE ".*(cde|payment|prod).*"
