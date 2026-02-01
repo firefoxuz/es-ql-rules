@@ -4,11 +4,9 @@
 // Tavsif: Detects bulk database export commands (mysqldump, pg_dump) or large SELECT queries.
 // MITRE ATT&CK: T1530 (Data from Cloud Storage)
 
-FROM updive-*-file-*
+FROM auditbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 15 minutes
-| WHERE event.dataset == "updive-file.system.syslog"
 | WHERE process.name IN ("mysqldump", "pg_dump", "mongodump", "sqlcmd", "psql")
-    OR process.command_line RLIKE ".*(SELECT.*FROM|COPY.*TO|BACKUP DATABASE).*"
-| EVAL rule_name = "RULE-29: Database Bulk Export Detected"
+    OR process.args RLIKE ".*(SELECT.*FROM|COPY.*TO|BACKUP DATABASE).*"
 | EVAL severity = "high"
-| KEEP @timestamp, host.name, user.name, process.name, process.command_line, rule_name, severity
+| KEEP @timestamp, host.name, user.name, process.name, process.args, severity

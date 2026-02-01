@@ -3,13 +3,11 @@
 // Qoida nomi: Antivirus Disabled or Stopped
 // Tavsif: Detects when antivirus/anti-malware software is disabled or stopped on CDE systems.
 
-FROM updive-*-file-*
+FROM winlogbeat-*, filebeat-*, auditbeat-*
 | WHERE @timestamp >= NOW() - 5 minutes
-| WHERE event.dataset == "updive-file.system.syslog"
-| WHERE (message RLIKE ".*(5001|1116|1117).*"
+| WHERE (event.code IN ("5001", "1116", "1117")
         OR message RLIKE ".*(antivirus|malware|defender).*stopped.*"
-        OR process.command_line RLIKE ".*(sc stop|systemctl stop).*(av|clamav|defender).*")
+        OR process.args RLIKE ".*(sc stop|systemctl stop).*(av|clamav|defender).*")
   AND host.name RLIKE ".*(cde|payment|prod).*"
-| EVAL rule_name = "PCI-RULE-17: Antivirus Disabled or Stopped"
 | EVAL severity = "critical"
-| KEEP @timestamp, host.name, user.name, message, process.command_line, rule_name, severity
+| KEEP @timestamp, host.name, user.name, event.code, message, process.args, severity

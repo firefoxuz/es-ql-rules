@@ -2,8 +2,7 @@ import os
 import re
 
 import urllib3
-from elasticsearch import Elasticsearch
-from elasticsearch import ApiError
+from elasticsearch import ApiError, Elasticsearch
 from flask import Flask, jsonify, render_template, request
 
 # Suppress insecure request warnings for self-signed certs
@@ -15,9 +14,9 @@ RULES_BASE_DIR = os.path.abspath(os.path.join(
     os.path.dirname(__file__), "..", "rules"))
 
 # Elasticsearch Configuration
-ELASTIC_URL = ""
-ELASTIC_USER = ""
-ELASTIC_PASS = ""
+ELASTIC_URL = "http://139.28.47.17:9908/"
+ELASTIC_USER = "elastic"
+ELASTIC_PASS = "elasticpassword"
 
 es = Elasticsearch(
     ELASTIC_URL,
@@ -101,12 +100,19 @@ def test_rule():
     all_time = bool(data.get("all_time")) if isinstance(data, dict) else False
 
     if not query or not isinstance(query, str):
-        return jsonify({"status": "error", "message": "Query is missing or invalid."}), 400
+        return (
+            jsonify({"status": "error", "message": "Query is missing or invalid."}),
+            400,
+        )
 
     if all_time:
         # Remove standalone time filters for full-history scans.
         lines = query.splitlines()
-        lines = [ln for ln in lines if not re.search(r"^\s*\|\s*WHERE\s+@timestamp\s*>=\s*NOW\(\)\s*-", ln)]
+        lines = [
+            ln
+            for ln in lines
+            if not re.search(r"^\s*\|\s*WHERE\s+@timestamp\s*>=\s*NOW\(\)\s*-", ln)
+        ]
         query = "\n".join(lines)
         # Remove inline time filter segments (one-line queries).
         query = re.sub(

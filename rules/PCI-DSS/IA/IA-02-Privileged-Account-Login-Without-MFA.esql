@@ -3,17 +3,15 @@
 // Qoida nomi: Privileged Account Login Without MFA
 // Tavsif: Detects administrative account logins without multi-factor authentication.
 
-FROM updive-*-file-*
+FROM winlogbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
-| WHERE event.dataset == "updive-file.system.auth"
 | WHERE event.category == "authentication" 
   AND event.outcome == "success"
   AND (user.name RLIKE ".*(admin|root|sa|dba).*"
-       OR message IN ("Administrator", "Domain Admin"))
+       OR winlog.event_data.TargetUserName IN ("Administrator", "Domain Admin"))
 | WHERE (message NOT RLIKE ".*(publickey|duo|mfa|2fa|totp).*"
-        AND message NOT IN ("Negotiate", "Kerberos"))
-    OR message RLIKE ".*4624.*" AND message == "2"
+        AND winlog.event_data.AuthenticationPackageName NOT IN ("Negotiate", "Kerberos"))
+    OR event.code == "4624" AND winlog.event_data.LogonType == "2"
 | WHERE host.name RLIKE ".*(cde|payment).*"
-| EVAL rule_name = "PCI-RULE-32: Privileged Login Without MFA"
 | EVAL severity = "critical"
-| KEEP @timestamp, user.name, source.ip, host.name, message, rule_name, severity
+| KEEP @timestamp, user.name, source.ip, host.name, event.code, winlog.event_data.LogonType, severity

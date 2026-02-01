@@ -3,14 +3,12 @@
 // Qoida nomi: Time Synchronization Failure
 // Tavsif: Detects NTP synchronization failures on systems in CDE.
 
-FROM updive-*-file-*
+FROM filebeat-*, metricbeat-*
 | WHERE @timestamp >= NOW() - 30 minutes
-| WHERE event.dataset == "updive-file.system.syslog"
 | WHERE (message RLIKE ".*(ntp.*fail|time sync.*error|chronyd.*unreachable).*"
         OR message RLIKE ".*(clock.*skew|time.*offset).*")
   AND host.name RLIKE ".*(cde|payment).*"
 | STATS sync_failures = COUNT(*) BY host.name
 | WHERE sync_failures >= 3
-| EVAL rule_name = "PCI-RULE-39: Time Synchronization Failure"
 | EVAL severity = "medium"
-| KEEP host.name, sync_failures, rule_name, severity
+| KEEP @timestamp, host.name, sync_failures, message, severity

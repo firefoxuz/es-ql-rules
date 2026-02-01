@@ -3,12 +3,12 @@
 // Qoida nomi: PAN-Like Pattern Detected in Logs
 // Tavsif: Identifies potential Primary Account Numbers (PAN) in log files or network traffic.
 
-FROM updive-*-audit-*
+FROM filebeat-*, metricbeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
-| WHERE event.dataset == "file"
-| WHERE file.path RLIKE ".*(log|audit|syslog).*"
-| STATS pan_occurrences = COUNT(*) BY host.name, file.path
+| WHERE message RLIKE ".*[0-9]{4}[- ]?[0-9]{4}[- ]?[0-9]{4}[- ]?[0-9]{4}.*"
+  OR http.request.body.content RLIKE ".*[0-9]{13,19}.*"
+| WHERE message NOT RLIKE ".*(XXXX|\\*\\*\\*\\*|masked).*"
+| STATS pan_occurrences = COUNT(*) BY host.name, log.file.path
 | WHERE pan_occurrences >= 1
-| EVAL rule_name = "PCI-RULE-09: PAN-Like Pattern in Logs"
 | EVAL severity = "critical"
-| KEEP host.name, file.path, pan_occurrences, rule_name, severity
+| KEEP @timestamp, host.name, log.file.path, pan_occurrences, severity

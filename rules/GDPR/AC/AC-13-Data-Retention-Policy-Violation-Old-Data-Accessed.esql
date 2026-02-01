@@ -4,12 +4,11 @@
 // Tavsif: Detects access to data older than retention policy allows (e.g., >7 years for financial data).
 // MITRE ATT&CK: N/A (Compliance)
 
-FROM updive-*-audit-*
+FROM auditbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 24 hours
-| WHERE event.dataset == "file"
-| WHERE (MV_CONTAINS(event.action, "accessed") OR MV_CONTAINS(event.action, "read"))
+| WHERE event.action IN ("accessed", "read")
   AND file.path RLIKE ".*(archive|backup|old_data|20[0-1][0-7]).*"
-| WHERE file.mtime < NOW() - 2555 days
-| EVAL rule_name = "RULE-48: Data Retention Policy Violation"
+| EVAL file_age_days = (@timestamp - file.created) / 86400000
+| WHERE file_age_days > 2555
 | EVAL severity = "medium"
-| KEEP file.path, file.mtime, rule_name, severity
+| KEEP @timestamp, user.name, file.path, file.created, file_age_days, severity

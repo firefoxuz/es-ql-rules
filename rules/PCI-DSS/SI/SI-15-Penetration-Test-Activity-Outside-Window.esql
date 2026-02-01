@@ -3,16 +3,14 @@
 // Qoida nomi: Penetration Test Activity Outside Window
 // Tavsif: Detects penetration testing tools/activity outside approved testing windows.
 
-FROM updive-*-file-*
+FROM metricbeat-*, auditbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 15 minutes
-| WHERE event.dataset == "updive-file.system.syslog"
 | WHERE (process.name IN ("metasploit", "burpsuite", "sqlmap", "nikto", "dirb")
-        OR message RLIKE ".*(sqlmap|nikto|burp|metasploit).*"
-        OR message RLIKE ".*(\\.\\./|union select).*")
+        OR http.request.headers.user-agent RLIKE ".*(sqlmap|nikto|burp|metasploit|acunetix).*"
+        OR url.path RLIKE ".*(\\.\\./|union select|<script>).*")
   AND host.name RLIKE ".*(cde|payment).*"
-| WHERE @timestamp < "2024-03-01T00:00:00" OR @timestamp > "2024-03-07T23:59:59"
+| WHERE labels.pentest_window != true OR labels.pentest_window IS NULL
 | STATS attack_count = COUNT(*) BY source.ip, host.name, process.name
 | WHERE attack_count >= 5
-| EVAL rule_name = "PCI-RULE-42: Pentest Activity Outside Window"
 | EVAL severity = "high"
-| KEEP source.ip, host.name, process.name, attack_count, rule_name, severity
+| KEEP @timestamp, source.ip, host.name, process.name, http.request.headers.user-agent, attack_count, severity

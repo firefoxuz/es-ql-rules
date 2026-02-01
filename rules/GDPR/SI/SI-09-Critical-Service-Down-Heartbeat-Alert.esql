@@ -4,12 +4,11 @@
 // Tavsif: Detects when a critical service (database, web server, etc.) fails heartbeat check.
 // MITRE ATT&CK: T1499 (Endpoint Denial of Service)
 
-FROM updive-*-metric-*
+FROM metricbeat-*
 | WHERE @timestamp >= NOW() - 5 minutes
-| WHERE event.dataset == "system.service"
-| WHERE system.service.name IN ("database-prod", "web-app", "api-gateway", "auth-service")
-| STATS down_events = COUNT(*) BY system.service.name, host.name
-| WHERE down_events >= 1
-| EVAL rule_name = "RULE-33: Critical Service Down"
+| WHERE monitor.status == "down"
+  AND monitor.name IN ("database-prod", "web-app", "api-gateway", "auth-service")
+| STATS down_duration = MAX(@timestamp) - MIN(@timestamp) BY monitor.name, host.name
+| WHERE down_duration >= 300000
 | EVAL severity = "high"
-| KEEP system.service.name, host.name, down_events, rule_name, severity
+| KEEP @timestamp, monitor.name, host.name, monitor.status, down_duration, severity

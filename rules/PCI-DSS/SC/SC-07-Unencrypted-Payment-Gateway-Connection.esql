@@ -3,17 +3,16 @@
 // Qoida nomi: Unencrypted Payment Gateway Connection
 // Tavsif: Identifies connections to payment gateway without TLS encryption.
 
-FROM updive-*-file-*
+FROM metricbeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
-| WHERE event.dataset == "updive-file.system.syslog"
-| WHERE (message RLIKE ".*(paypal|stripe|authorize\\.net|firstdata).*"
-        OR source.ip IN ("64.14.227.5", "64.4.250.37"))
-  AND message NOT RLIKE ".*(tls|https).*"
-  AND source.port NOT IN (443, 8443)
+| WHERE (destination.domain RLIKE ".*(paypal|stripe|authorize\\.net|firstdata).*"
+        OR destination.ip IN ("64.14.227.5", "64.4.250.37"))
+  AND network.protocol != "tls"
+  AND destination.port NOT IN (443, 8443)
 | STATS 
-    connection_count = COUNT(*)
-  BY source.ip, host.name
+    connection_count = COUNT(*),
+    protocols = VALUES(network.protocol)
+  BY source.ip, destination.domain, host.name
 | WHERE connection_count >= 1
-| EVAL rule_name = "PCI-RULE-16: Unencrypted Payment Gateway Connection"
 | EVAL severity = "critical"
-| KEEP source.ip, host.name, connection_count, rule_name, severity
+| KEEP @timestamp, source.ip, destination.domain, destination.ip, network.protocol, protocols, connection_count, severity

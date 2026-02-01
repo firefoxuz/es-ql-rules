@@ -4,11 +4,10 @@
 // Tavsif: Detects outbound transfers >100MB to destinations not seen in past 30 days.
 // MITRE ATT&CK: T1041 (Exfiltration Over C2 Channel)
 
-FROM updive-*-metric-*
+FROM metricbeat-*
 | WHERE @timestamp >= NOW() - 15 minutes
-| WHERE event.dataset == "system.network"
-| STATS total_bytes = SUM(host.network.egress.bytes) BY host.name
+| WHERE network.direction == "outbound" OR source.ip RLIKE "^10\\.|^172\\.16\\.|^192\\.168\\."
+| STATS total_bytes = SUM(network.bytes) BY destination.ip, source.ip, host.name
 | WHERE total_bytes >= 104857600
-| EVAL rule_name = "RULE-28: Large Outbound Transfer to Rare Destination"
 | EVAL severity = "high"
-| KEEP host.name, total_bytes, rule_name, severity
+| KEEP @timestamp, source.ip, destination.ip, destination.geo.country_name, host.name, total_bytes, severity

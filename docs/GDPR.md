@@ -84,7 +84,7 @@
 
 **Objective:** Detects brute force login attempts by counting failed authentication events from the same source IP within 5 minutes.
 
-**Data sources:** `updive-win-*`, `updive-file-*` (Linux auth.log)
+**Data sources:** `winlogbeat-*`, `filebeat-*` (Linux auth.log)
 
 **GDPR mapping:** Article 32(1)(b) - Ability to ensure confidentiality; Article 32(2) - Security of processing
 
@@ -93,7 +93,7 @@
 **Query (ES|QL):**
 
 ```esql
-FROM updive-win-*, updive-file-*
+FROM winlogbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 5 minutes
 | WHERE event.category == "authentication" 
   AND event.outcome == "failure"
@@ -124,7 +124,7 @@ FROM updive-win-*, updive-file-*
 
 **Objective:** Identifies administrative account logins from hosts not previously seen in the last 30 days, indicating potential credential compromise.
 
-**Data sources:** `updive-win-*`, `updive-file-*`
+**Data sources:** `winlogbeat-*`, `filebeat-*`
 
 **GDPR mapping:** Article 32(1)(b) - Confidentiality controls; Article 25 - Data protection by design
 
@@ -133,7 +133,7 @@ FROM updive-win-*, updive-file-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-win-*, updive-file-*
+FROM winlogbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE event.category == "authentication" 
   AND event.outcome == "success"
@@ -164,7 +164,7 @@ FROM updive-win-*, updive-file-*
 
 **Objective:** Detects login attempts using disabled or expired accounts, indicating reconnaissance or compromise.
 
-**Data sources:** `updive-win-*`
+**Data sources:** `winlogbeat-*`
 
 **GDPR mapping:** Article 32(1)(d) - Ability to restore availability; Article 5(1)(f) - Integrity and confidentiality
 
@@ -173,7 +173,7 @@ FROM updive-win-*, updive-file-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-win-*
+FROM winlogbeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE event.code == "4625" 
   AND (winlog.event_data.SubStatusCode == "0xC0000072" 
@@ -204,7 +204,7 @@ FROM updive-win-*
 
 **Objective:** Detects successful authentication following 3+ failed attempts within 10 minutes, indicating potential brute force success.
 
-**Data sources:** `updive-win-*`, `updive-file-*`
+**Data sources:** `winlogbeat-*`, `filebeat-*`
 
 **GDPR mapping:** Article 32(1)(b) - Confidentiality; Article 33 - Breach notification (early warning)
 
@@ -213,7 +213,7 @@ FROM updive-win-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-win-*, updive-file-*
+FROM winlogbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE event.category == "authentication"
 | STATS 
@@ -247,7 +247,7 @@ FROM updive-win-*, updive-file-*
 
 **Objective:** Alerts on privileged account logins during non-business hours (22:00-06:00 weekdays, all weekend).
 
-**Data sources:** `updive-win-*`, `updive-file-*`
+**Data sources:** `winlogbeat-*`, `filebeat-*`
 
 **GDPR mapping:** Article 32(1) - Security measures; Article 5(1)(f) - Confidentiality
 
@@ -256,7 +256,7 @@ FROM updive-win-*, updive-file-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-win-*, updive-file-*
+FROM winlogbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE event.category == "authentication" AND event.outcome == "success"
 | WHERE user.name RLIKE ".*(admin|root|sysadmin).*"
@@ -288,7 +288,7 @@ FROM updive-win-*, updive-file-*
 
 **Objective:** Detects multiple unique user accounts authenticating from a single source IP within 5 minutes, indicating session hijacking or shared credentials.
 
-**Data sources:** `updive-win-*`, `updive-file-*`
+**Data sources:** `winlogbeat-*`, `filebeat-*`
 
 **GDPR mapping:** Article 32(1)(b) - Confidentiality; Article 25 - Accountability
 
@@ -297,7 +297,7 @@ FROM updive-win-*, updive-file-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-win-*, updive-file-*
+FROM winlogbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 5 minutes
 | WHERE event.category == "authentication" AND event.outcome == "success"
 | STATS unique_users = COUNT_DISTINCT(user.name) BY source.ip, host.name
@@ -327,7 +327,7 @@ FROM updive-win-*, updive-file-*
 
 **Objective:** Identifies first-ever successful login from a new country/region for a user account.
 
-**Data sources:** `updive-win-*`, `updive-file-*`
+**Data sources:** `winlogbeat-*`, `filebeat-*`
 
 **GDPR mapping:** Article 32(1) - Security measures; Article 44 - International data transfers
 
@@ -336,7 +336,7 @@ FROM updive-win-*, updive-file-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-win-*, updive-file-*
+FROM winlogbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE event.category == "authentication" AND event.outcome == "success"
 | WHERE source.geo.country_name IS NOT NULL
@@ -367,7 +367,7 @@ FROM updive-win-*, updive-file-*
 
 **Objective:** Detects logins from two different geographic locations within 1 hour where travel is physically impossible (>500km apart).
 
-**Data sources:** `updive-win-*`, `updive-file-*`
+**Data sources:** `winlogbeat-*`, `filebeat-*`
 
 **GDPR mapping:** Article 32(1)(b) - Confidentiality; Article 33 - Breach early warning
 
@@ -376,7 +376,7 @@ FROM updive-win-*, updive-file-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-win-*, updive-file-*
+FROM winlogbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 1 hour
 | WHERE event.category == "authentication" AND event.outcome == "success"
 | WHERE source.geo.location IS NOT NULL
@@ -413,7 +413,7 @@ FROM updive-win-*, updive-file-*
 
 **Objective:** Detects creation of new local administrator accounts on Windows or Unix systems.
 
-**Data sources:** `updive-win-*`, `updive-file-*`, `updive-audit-*`
+**Data sources:** `winlogbeat-*`, `filebeat-*`, `auditbeat-*`
 
 **GDPR mapping:** Article 32(1) - Access control; Article 5(1)(f) - Integrity and confidentiality
 
@@ -422,7 +422,7 @@ FROM updive-win-*, updive-file-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-win-*, updive-file-*, updive-audit-*
+FROM winlogbeat-*, filebeat-*, auditbeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE (event.code == "4720" AND winlog.event_data.MemberSid RLIKE ".*-500") 
     OR (event.action == "added-user-account" AND user.name RLIKE ".*(admin|root).*")
@@ -452,7 +452,7 @@ FROM updive-win-*, updive-file-*, updive-audit-*
 
 **Objective:** Detects unauthorized modifications to `/etc/sudoers` or `/etc/sudoers.d/` files on Linux systems.
 
-**Data sources:** `updive-audit-*`, `updive-file-*`
+**Data sources:** `auditbeat-*`, `filebeat-*`
 
 **GDPR mapping:** Article 32(1) - Access control; Article 25 - Secure by design
 
@@ -461,7 +461,7 @@ FROM updive-win-*, updive-file-*, updive-audit-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-audit-*, updive-file-*
+FROM auditbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 5 minutes
 | WHERE file.path RLIKE ".*/etc/sudoers.*" 
   AND (event.action IN ("modified", "created", "deleted") 
@@ -491,7 +491,7 @@ FROM updive-audit-*, updive-file-*
 
 **Objective:** Detects additions or removals from the local Administrators group on Windows systems.
 
-**Data sources:** `updive-win-*`
+**Data sources:** `winlogbeat-*`
 
 **GDPR mapping:** Article 32(1) - Access control; Article 5(2) - Accountability
 
@@ -500,7 +500,7 @@ FROM updive-audit-*, updive-file-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-win-*
+FROM winlogbeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE event.code IN ("4732", "4733") 
   AND winlog.event_data.TargetUserName == "Administrators"
@@ -531,7 +531,7 @@ FROM updive-win-*
 
 **Objective:** Detects creation of Windows services with suspicious characteristics (e.g., unusual paths, command-line arguments).
 
-**Data sources:** `updive-win-*`
+**Data sources:** `winlogbeat-*`
 
 **GDPR mapping:** Article 32(1)(d) - Ability to restore availability; Article 32(2) - Regular testing
 
@@ -540,7 +540,7 @@ FROM updive-win-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-win-*
+FROM winlogbeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE event.code == "7045"
 | WHERE winlog.event_data.ImagePath RLIKE ".*(temp|appdata|programdata|public).*"
@@ -570,7 +570,7 @@ FROM updive-win-*
 
 **Objective:** Identifies attempts to bypass User Account Control (UAC) using known techniques.
 
-**Data sources:** `updive-win-*`, `updive-audit-*`
+**Data sources:** `winlogbeat-*`, `auditbeat-*`
 
 **GDPR mapping:** Article 32(1) - Access control; Article 25 - Privacy by design
 
@@ -578,7 +578,7 @@ FROM updive-win-*
 
 **Query (ES|QL):** 
 ```
-FROM updive-win-_, updive-audit-_ | WHERE @timestamp >= NOW() - 15 minutes | WHERE (process.name IN ("fodhelper.exe", "eventvwr.exe", "computerdefaults.exe") AND process.parent.name != "explorer.exe") OR (registry.path RLIKE "._\mscfile\shell\open\command._" AND event.action == "modified") OR (event.code == "4688" AND process.command_line RLIKE "._bypassuac._") | EVAL rule_name = "RULE-13: UAC Bypass Attempt Detected" | EVAL severity = "high" | KEEP @timestamp, host.name, user.name, process.name, process.parent.name, process.command_line, registry.path, rule_name, severity
+FROM winlogbeat-*, auditbeat-* | WHERE @timestamp >= NOW() - 15 minutes | WHERE (process.name IN ("fodhelper.exe", "eventvwr.exe", "computerdefaults.exe") AND process.parent.name != "explorer.exe") OR (registry.path RLIKE "._\mscfile\shell\open\command._" AND event.action == "modified") OR (event.code == "4688" AND process.command_line RLIKE "._bypassuac._") | EVAL rule_name = "RULE-13: UAC Bypass Attempt Detected" | EVAL severity = "high" | KEEP @timestamp, host.name, user.name, process.name, process.parent.name, process.command_line, registry.path, rule_name, severity
 
 ````
 
@@ -601,7 +601,7 @@ FROM updive-win-_, updive-audit-_ | WHERE @timestamp >= NOW() - 15 minutes | WHE
 
 **Objective:** Detects sudo usage by users not in approved administrator list.
 
-**Data sources:** `updive-file-*`, `updive-audit-*`
+**Data sources:** `filebeat-*`, `auditbeat-*`
 
 **GDPR mapping:** Article 32(1) - Access control; Article 5(1)(f) - Integrity
 
@@ -609,7 +609,7 @@ FROM updive-win-_, updive-audit-_ | WHERE @timestamp >= NOW() - 15 minutes | WHE
 
 **Query (ES|QL):**
 ```esql
-FROM updive-file-*, updive-audit-*
+FROM filebeat-*, auditbeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE (process.name == "sudo" OR message RLIKE ".*sudo:.*COMMAND.*")
 | WHERE user.name NOT IN ("sysadmin", "root", "ansible", "puppet")
@@ -641,7 +641,7 @@ FROM updive-file-*, updive-audit-*
 
 **Objective:** Detects modifications to domain or local password policy settings.
 
-**Data sources:** `updive-win-*`
+**Data sources:** `winlogbeat-*`
 
 **GDPR mapping:** Article 32(1)(b) - Confidentiality; Article 25 - Security by design
 
@@ -650,7 +650,7 @@ FROM updive-file-*, updive-audit-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-win-*
+FROM winlogbeat-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE event.code IN ("4713", "4739", "4670")
 | EVAL rule_name = "RULE-15: Password Policy Changed"
@@ -680,7 +680,7 @@ FROM updive-win-*
 
 **Objective:** Detects scheduled tasks created with SYSTEM account privileges, common persistence mechanism.
 
-**Data sources:** `updive-win-*`
+**Data sources:** `winlogbeat-*`
 
 **GDPR mapping:** Article 32(1) - Access control; Article 32(2) - Regular testing
 
@@ -689,7 +689,7 @@ FROM updive-win-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-win-*
+FROM winlogbeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE event.code == "4698"
 | WHERE winlog.event_data.TaskContent RLIKE ".*<UserId>S-1-5-18</UserId>.*"
@@ -722,7 +722,7 @@ FROM updive-win-*
 
 **Objective:** Detects when the Linux audit daemon (auditd) is stopped or disabled, indicating potential log tampering.
 
-**Data sources:** `updive-file-*`, `updive-audit-*`
+**Data sources:** `filebeat-*`, `auditbeat-*`
 
 **GDPR mapping:** Article 5(1)(f) - Integrity; Article 32(1)(d) - Ability to restore; Article 33 - Breach notification
 
@@ -731,7 +731,7 @@ FROM updive-win-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-file-*, updive-audit-*
+FROM filebeat-*, auditbeat-*
 | WHERE @timestamp >= NOW() - 5 minutes
 | WHERE (message RLIKE ".*(auditd.*stopped|audit.*disabled).*" 
         OR process.args RLIKE ".*(systemctl stop auditd|service auditd stop).*"
@@ -762,7 +762,7 @@ FROM updive-file-*, updive-audit-*
 
 **Objective:** Detects when Windows Security event log is cleared, a classic anti-forensics technique.
 
-**Data sources:** `updive-win-*`
+**Data sources:** `winlogbeat-*`
 
 **GDPR mapping:** Article 5(1)(f) - Integrity; Article 32(1) - Security measures; Article 33 - Breach notification
 
@@ -771,7 +771,7 @@ FROM updive-file-*, updive-audit-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-win-*
+FROM winlogbeat-*
 | WHERE @timestamp >= NOW() - 5 minutes
 | WHERE event.code == "1102"
 | EVAL rule_name = "RULE-18: Windows Event Log Cleared"
@@ -799,7 +799,7 @@ FROM updive-win-*
 
 **Objective:** Detects deletion of log files in /var/log or C:\Windows\System32\winevt\Logs.
 
-**Data sources:** `updive-audit-*`, `updive-win-*`
+**Data sources:** `auditbeat-*`, `winlogbeat-*`
 
 **GDPR mapping:** Article 5(1)(f) - Integrity; Article 32(1) - Security measures; Article 5(2) - Accountability
 
@@ -808,7 +808,7 @@ FROM updive-win-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-audit-*, updive-win-*
+FROM auditbeat-*, winlogbeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE event.action IN ("deleted", "file_deletion") 
   AND (file.path RLIKE ".*/var/log/.*" OR file.path RLIKE ".*Windows.*winevt.*Logs.*")
@@ -838,7 +838,7 @@ FROM updive-audit-*, updive-win-*
 
 **Objective:** Detects when Elastic Agent or Beats services stop outside of maintenance windows.
 
-**Data sources:** `updive-heart-*`, `updive-file-*`
+**Data sources:** `metricbeat-*`, `filebeat-*`
 
 **GDPR mapping:** Article 5(1)(f) - Integrity; Article 32(1)(d) - Ability to restore
 
@@ -847,7 +847,7 @@ FROM updive-audit-*, updive-win-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-heart-*, updive-file-*
+FROM metricbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 5 minutes
 | WHERE (monitor.status == "down" AND monitor.name RLIKE ".*(elastic-agent|filebeat|winlogbeat).*")
     OR (message RLIKE ".*(elastic-agent|beat).*stopped.*" AND event.action == "stopped-service")
@@ -879,7 +879,7 @@ FROM updive-heart-*, updive-file-*
 
 **Objective:** Detects when syslog/rsyslog service stops on Linux systems.
 
-**Data sources:** `updive-file-*`, `updive-audit-*`
+**Data sources:** `filebeat-*`, `auditbeat-*`
 
 **GDPR mapping:** Article 5(1)(f) - Integrity; Article 32(1) - Security measures
 
@@ -888,7 +888,7 @@ FROM updive-heart-*, updive-file-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-file-*, updive-audit-*
+FROM filebeat-*, auditbeat-*
 | WHERE @timestamp >= NOW() - 5 minutes
 | WHERE (message RLIKE ".*(rsyslogd|syslog).*stopped.*" 
         OR process.args RLIKE ".*(systemctl stop rsyslog|service rsyslog stop).*")
@@ -918,7 +918,7 @@ FROM updive-file-*, updive-audit-*
 
 **Objective:** Detects changes to log rotation configuration files (logrotate.conf, logrotate.d).
 
-**Data sources:** `updive-audit-*`, `updive-file-*`
+**Data sources:** `auditbeat-*`, `filebeat-*`
 
 **GDPR mapping:** Article 5(1)(f) - Integrity; Article 32(1) - Security measures
 
@@ -927,7 +927,7 @@ FROM updive-file-*, updive-audit-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-audit-*, updive-file-*
+FROM auditbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE file.path RLIKE ".*/etc/logrotate.*" 
   AND event.action IN ("modified", "created", "deleted")
@@ -956,7 +956,7 @@ FROM updive-audit-*, updive-file-*
 
 **Objective:** Detects deletion of 10+ log files within 5 minutes.
 
-**Data sources:** `updive-audit-*`, `updive-win-*`
+**Data sources:** `auditbeat-*`, `winlogbeat-*`
 
 **GDPR mapping:** Article 5(1)(f) - Integrity; Article 33 - Breach notification
 
@@ -965,7 +965,7 @@ FROM updive-audit-*, updive-file-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-audit-*, updive-win-*
+FROM auditbeat-*, winlogbeat-*
 | WHERE @timestamp >= NOW() - 5 minutes
 | WHERE event.action IN ("deleted", "file_deletion")
   AND (file.path RLIKE ".*\\.log$" OR file.extension == "log" OR file.extension == "evtx")
@@ -997,7 +997,7 @@ FROM updive-audit-*, updive-win-*
 
 **Objective:** Detects changes to auditd rules in /etc/audit/audit.rules or via auditctl.
 
-**Data sources:** `updive-audit-*`, `updive-file-*`
+**Data sources:** `auditbeat-*`, `filebeat-*`
 
 **GDPR mapping:** Article 5(1)(f) - Integrity; Article 32(1) - Security measures
 
@@ -1006,7 +1006,7 @@ FROM updive-audit-*, updive-win-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-audit-*, updive-file-*
+FROM auditbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 5 minutes
 | WHERE (file.path RLIKE ".*/etc/audit/.*" AND event.action IN ("modified", "deleted"))
     OR (process.name == "auditctl" AND process.args RLIKE ".* -D .*")
@@ -1038,7 +1038,7 @@ FROM updive-audit-*, updive-file-*
 
 **Objective:** Detects when a user accesses 50+ files in directories containing sensitive data within 10 minutes.
 
-**Data sources:** `updive-audit-*`, `updive-win-*`
+**Data sources:** `auditbeat-*`, `winlogbeat-*`
 
 **GDPR mapping:** Article 32(1)(b) - Confidentiality; Article 33 - Breach notification; Article 5(1)(c) - Data minimization
 
@@ -1047,7 +1047,7 @@ FROM updive-audit-*, updive-file-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-audit-*, updive-win-*
+FROM auditbeat-*, winlogbeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE event.action IN ("accessed", "read", "file_read")
   AND (file.path RLIKE ".*(personal|confidential|hr|finance|customer).*" 
@@ -1080,7 +1080,7 @@ FROM updive-audit-*, updive-win-*
 
 **Objective:** Detects compression tools (zip, tar, 7z) followed by network connections within 5 minutes, indicating data exfiltration.
 
-**Data sources:** `updive-audit-*`, `updive-packet-*`, `updive-win-*`
+**Data sources:** `auditbeat-*`, `metricbeat-*`, `winlogbeat-*`
 
 **GDPR mapping:** Article 32(1)(b) - Confidentiality; Article 33 - Breach notification
 
@@ -1089,7 +1089,7 @@ FROM updive-audit-*, updive-win-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-audit-*, updive-packet-*, updive-win-*
+FROM auditbeat-*, metricbeat-*, winlogbeat-*
 | WHERE @timestamp >= NOW() - 5 minutes
 | WHERE process.name IN ("zip", "tar", "7z", "rar", "gzip", "7z.exe", "WinRAR.exe")
     OR network.protocol IN ("http", "https", "ftp") AND network.bytes > 1048576
@@ -1125,7 +1125,7 @@ FROM updive-audit-*, updive-packet-*, updive-win-*
 
 **Objective:** Detects abnormally high DNS query count (100+ in 5 minutes) from single host, potential DNS tunneling.
 
-**Data sources:** `updive-packet-*`
+**Data sources:** `metricbeat-*`
 
 **GDPR mapping:** Article 32(1)(b) - Confidentiality; Article 33 - Breach notification
 
@@ -1134,7 +1134,7 @@ FROM updive-audit-*, updive-packet-*, updive-win-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-packet-*
+FROM metricbeat-*
 | WHERE @timestamp >= NOW() - 5 minutes
 | WHERE network.protocol == "dns" OR destination.port == 53
 | STATS 
@@ -1167,7 +1167,7 @@ FROM updive-packet-*
 
 **Objective:** Detects outbound transfers >100MB to destinations not seen in past 30 days.
 
-**Data sources:** `updive-packet-*`
+**Data sources:** `metricbeat-*`
 
 **GDPR mapping:** Article 32(1)(b) - Confidentiality; Article 33 - Breach notification; Article 44 - International transfers
 
@@ -1176,7 +1176,7 @@ FROM updive-packet-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-packet-*
+FROM metricbeat-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE network.direction == "outbound" OR source.ip RLIKE "^10\\.|^172\\.16\\.|^192\\.168\\."
 | STATS total_bytes = SUM(network.bytes) BY destination.ip, source.ip, host.name
@@ -1206,7 +1206,7 @@ FROM updive-packet-*
 
 **Objective:** Detects bulk database export commands (mysqldump, pg_dump) or large SELECT queries.
 
-**Data sources:** `updive-audit-*`, `updive-file-*`
+**Data sources:** `auditbeat-*`, `filebeat-*`
 
 **GDPR mapping:** Article 32(1)(b) - Confidentiality; Article 33 - Breach notification; Article 5(1)(c) - Data minimization
 
@@ -1215,7 +1215,7 @@ FROM updive-packet-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-audit-*, updive-file-*
+FROM auditbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE process.name IN ("mysqldump", "pg_dump", "mongodump", "sqlcmd", "psql")
     OR process.args RLIKE ".*(SELECT.*FROM|COPY.*TO|BACKUP DATABASE).*"
@@ -1244,7 +1244,7 @@ FROM updive-audit-*, updive-file-*
 
 **Objective:** Detects installation or execution of cloud sync tools (Dropbox, Google Drive, OneDrive) on unapproved hosts.
 
-**Data sources:** `updive-audit-*`, `updive-win-*`
+**Data sources:** `auditbeat-*`, `winlogbeat-*`
 
 **GDPR mapping:** Article 32(1)(b) - Confidentiality; Article 28 - Processor obligations; Article 44 - International transfers
 
@@ -1253,7 +1253,7 @@ FROM updive-audit-*, updive-file-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-audit-*, updive-win-*
+FROM auditbeat-*, winlogbeat-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE process.name RLIKE ".*(dropbox|googledrive|onedrive|box|mega).*"
     OR file.path RLIKE ".*(Dropbox|Google Drive|OneDrive).*"
@@ -1284,7 +1284,7 @@ FROM updive-audit-*, updive-win-*
 
 **Objective:** Detects connection of USB mass storage devices on endpoints.
 
-**Data sources:** `updive-win-*`, `updive-audit-*`
+**Data sources:** `winlogbeat-*`, `auditbeat-*`
 
 **GDPR mapping:** Article 32(1)(b) - Confidentiality; Article 25 - Data protection by design
 
@@ -1293,7 +1293,7 @@ FROM updive-audit-*, updive-win-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-win-*, updive-audit-*
+FROM winlogbeat-*, auditbeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE (event.code == "2003" OR event.code == "2100")
     OR (message RLIKE ".*USB.*mass storage.*" AND event.action == "device-connected")
@@ -1323,7 +1323,7 @@ FROM updive-win-*, updive-audit-*
 
 **Objective:** Detects emails sent with attachments >10MB to external domains.
 
-**Data sources:** `updive-file-*`, `updive-packet-*`
+**Data sources:** `filebeat-*`, `metricbeat-*`
 
 **GDPR mapping:** Article 32(1)(b) - Confidentiality; Article 33 - Breach notification
 
@@ -1332,7 +1332,7 @@ FROM updive-win-*, updive-audit-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-file-*, updive-packet-*
+FROM filebeat-*, metricbeat-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE (network.protocol == "smtp" AND network.bytes > 10485760)
     OR (message RLIKE ".*attachment.*size.*" AND message RLIKE ".*external.*")
@@ -1365,7 +1365,7 @@ FROM updive-file-*, updive-packet-*
 
 **Objective:** Detects when a critical service (database, web server, etc.) fails heartbeat check.
 
-**Data sources:** `updive-heart-*`
+**Data sources:** `metricbeat-*`
 
 **GDPR mapping:** Article 32(1)(c) - Resilience; Article 32(1)(d) - Ability to restore
 
@@ -1374,7 +1374,7 @@ FROM updive-file-*, updive-packet-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-heart-*
+FROM metricbeat-*
 | WHERE @timestamp >= NOW() - 5 minutes
 | WHERE monitor.status == "down"
   AND monitor.name IN ("database-prod", "web-app", "api-gateway", "auth-service")
@@ -1405,7 +1405,7 @@ FROM updive-heart-*
 
 **Objective:** Detects disk usage >90% on partitions storing logs, risking log loss.
 
-**Data sources:** `updive-metric-*`
+**Data sources:** `metricbeat-*`
 
 **GDPR mapping:** Article 5(1)(f) - Integrity; Article 32(1)(d) - Ability to restore
 
@@ -1414,7 +1414,7 @@ FROM updive-heart-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-metric-*
+FROM metricbeat-*
 | WHERE @timestamp >= NOW() - 5 minutes
 | WHERE system.filesystem.mount_point RLIKE ".*(var|log|audit).*"
 | EVAL disk_used_pct = system.filesystem.used.pct * 100
@@ -1444,7 +1444,7 @@ FROM updive-metric-*
 
 **Objective:** Detects modifications to critical system binaries (/bin, /sbin, C:\Windows\System32).
 
-**Data sources:** `updive-audit-*`
+**Data sources:** `auditbeat-*`
 
 **GDPR mapping:** Article 32(1) - Security measures; Article 32(2) - Regular testing; Article 25 - Security by design
 
@@ -1453,7 +1453,7 @@ FROM updive-metric-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-audit-*
+FROM auditbeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE event.module == "file_integrity"
   AND (file.path RLIKE ".*(\/bin\/|\/sbin\/|Windows\\\\System32\\\\).*"
@@ -1484,7 +1484,7 @@ FROM updive-audit-*
 
 **Objective:** Detects system reboots not preceded by documented maintenance.
 
-**Data sources:** `updive-win-*`, `updive-file-*`
+**Data sources:** `winlogbeat-*`, `filebeat-*`
 
 **GDPR mapping:** Article 32(1)(c) - Resilience; Article 32(1)(d) - Ability to restore
 
@@ -1493,7 +1493,7 @@ FROM updive-audit-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-win-*, updive-file-*
+FROM winlogbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE (event.code == "1074" OR event.code == "6008")
     OR (message RLIKE ".*(system.*reboot|shutdown -r).*" AND event.action == "shutdown")
@@ -1523,7 +1523,7 @@ FROM updive-win-*, updive-file-*
 
 **Objective:** Detects memory usage >95% on critical production hosts.
 
-**Data sources:** `updive-metric-*`
+**Data sources:** `metricbeat-*`
 
 **GDPR mapping:** Article 32(1)(c) - Resilience; Article 32(1)(d) - Ability to restore
 
@@ -1532,7 +1532,7 @@ FROM updive-win-*, updive-file-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-metric-*
+FROM metricbeat-*
 | WHERE @timestamp >= NOW() - 5 minutes
 | WHERE system.memory.actual.used.pct >= 0.95
   AND host.name IN ("db-prod-01", "web-prod-01", "app-prod-01")
@@ -1562,7 +1562,7 @@ FROM updive-metric-*
 
 **Objective:** Detects modifications to critical configuration files without authorization.
 
-**Data sources:** `updive-audit-*`
+**Data sources:** `auditbeat-*`
 
 **GDPR mapping:** Article 32(1) - Security measures; Article 25 - Data protection by design
 
@@ -1571,7 +1571,7 @@ FROM updive-metric-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-audit-*
+FROM auditbeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE event.module == "file_integrity"
   AND file.path RLIKE ".*(\.conf|\.config|\.ini|\.yaml|\.yml|\.xml)$"
@@ -1602,7 +1602,7 @@ FROM updive-audit-*
 
 **Objective:** Detects database integrity check failures indicating corruption or tampering.
 
-**Data sources:** `updive-file-*`
+**Data sources:** `filebeat-*`
 
 **GDPR mapping:** Article 5(1)(f) - Integrity; Article 32(1) - Security measures
 
@@ -1611,7 +1611,7 @@ FROM updive-audit-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-file-*
+FROM filebeat-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE message RLIKE ".*(integrity check failed|corruption detected|checksum mismatch).*"
     OR (process.name IN ("mysqlcheck", "pg_checksums") AND message RLIKE ".*error.*")
@@ -1641,7 +1641,7 @@ FROM updive-file-*
 
 **Objective:** Detects SSL/TLS certificates expiring within 7 days.
 
-**Data sources:** `updive-packet-*`, `updive-file-*`
+**Data sources:** `metricbeat-*`, `filebeat-*`
 
 **GDPR mapping:** Article 32(1)(b) - Confidentiality; Article 32(1)(c) - Resilience
 
@@ -1650,7 +1650,7 @@ FROM updive-file-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-packet-*, updive-file-*
+FROM metricbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 24 hours
 | WHERE tls.server.x509.not_after IS NOT NULL
 | EVAL days_until_expiry = (tls.server.x509.not_after - NOW()) / 86400000
@@ -1682,7 +1682,7 @@ FROM updive-packet-*, updive-file-*
 
 **Objective:** Aggregates suspicious access, exfiltration, and log tampering events from same user within 30 minutes - strong breach indicator.
 
-**Data sources:** `updive-*` (all indices)
+**Data sources:** `auditbeat-*, metricbeat-*, filebeat-*, winlogbeat-*` (all indices)
 
 **GDPR mapping:** Article 33 - Breach notification; Article 32(1) - Security measures; Article 5(1)(f) - Integrity
 
@@ -1691,7 +1691,7 @@ FROM updive-packet-*, updive-file-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-*
+FROM auditbeat-*, metricbeat-*, filebeat-*, winlogbeat-*
 | WHERE @timestamp >= NOW() - 30 minutes
 | WHERE (event.action IN ("accessed", "read", "file_read") AND file.path RLIKE ".*sensitive.*")
     OR (process.name IN ("zip", "tar") AND network.bytes > 1048576)
@@ -1727,7 +1727,7 @@ FROM updive-*
 
 **Objective:** Aggregates 5+ different GDPR-relevant security events from same user in 1 hour.
 
-**Data sources:** `updive-*`
+**Data sources:** `auditbeat-*, metricbeat-*, filebeat-*, winlogbeat-*`
 
 **GDPR mapping:** Article 33 - Breach notification; Article 5(2) - Accountability
 
@@ -1736,7 +1736,7 @@ FROM updive-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-*
+FROM auditbeat-*, metricbeat-*, filebeat-*, winlogbeat-*
 | WHERE @timestamp >= NOW() - 1 hour
 | WHERE event.category IN ("authentication", "file", "process", "network")
   AND (event.outcome == "failure" 
@@ -1769,7 +1769,7 @@ FROM updive-*
 
 **Objective:** Detects mass file renaming with suspicious extensions (.encrypted, .locked, .crypted) indicating ransomware.
 
-**Data sources:** `updive-audit-*`, `updive-win-*`
+**Data sources:** `auditbeat-*`, `winlogbeat-*`
 
 **GDPR mapping:** Article 32(1)(c) - Resilience; Article 33 - Breach notification
 
@@ -1778,7 +1778,7 @@ FROM updive-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-audit-*, updive-win-*
+FROM auditbeat-*, winlogbeat-*
 | WHERE @timestamp >= NOW() - 5 minutes
 | WHERE event.action IN ("renamed", "created", "file_rename")
   AND file.path RLIKE ".*\\.(encrypted|locked|crypted|crypt|enc|locky|cerber)$"
@@ -1809,7 +1809,7 @@ FROM updive-audit-*, updive-win-*
 
 **Objective:** Detects authentication from one host to multiple other hosts within 10 minutes (lateral movement).
 
-**Data sources:** `updive-win-*`, `updive-file-*`
+**Data sources:** `winlogbeat-*`, `filebeat-*`
 
 **GDPR mapping:** Article 32(1) - Security measures; Article 33 - Breach notification
 
@@ -1818,7 +1818,7 @@ FROM updive-audit-*, updive-win-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-win-*, updive-file-*
+FROM winlogbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE event.category == "authentication" AND event.outcome == "success"
   AND event.action IN ("logon", "network_logon")
@@ -1850,7 +1850,7 @@ FROM updive-win-*, updive-file-*
 
 **Objective:** Aggregates all high/critical severity rules triggered by same user/host in 1 hour.
 
-**Data sources:** `updive-*`
+**Data sources:** `auditbeat-*, metricbeat-*, filebeat-*, winlogbeat-*`
 
 **GDPR mapping:** Article 33 - Breach notification; Article 5(2) - Accountability
 
@@ -1859,7 +1859,7 @@ FROM updive-win-*, updive-file-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-*
+FROM auditbeat-*, metricbeat-*, filebeat-*, winlogbeat-*
 | WHERE @timestamp >= NOW() - 1 hour
 | WHERE (event.code IN ("4720", "4732", "1102") 
         OR process.name IN ("zip", "tar", "mysqldump")
@@ -1895,7 +1895,7 @@ FROM updive-*
 
 **Objective:** Detects access to PII/personal data from systems not designated for data processing.
 
-**Data sources:** `updive-audit-*`, `updive-win-*`
+**Data sources:** `auditbeat-*`, `winlogbeat-*`
 
 **GDPR mapping:** Article 5(1)(b) - Purpose limitation; Article 32(1) - Security measures; Article 35 - DPIA
 
@@ -1904,7 +1904,7 @@ FROM updive-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-audit-*, updive-win-*
+FROM auditbeat-*, winlogbeat-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE event.action IN ("accessed", "read", "opened")
   AND (file.path RLIKE ".*(PII|personal|customer|GDPR|SSN|passport).*"
@@ -1936,7 +1936,7 @@ FROM updive-audit-*, updive-win-*
 
 **Objective:** Detects batch processing or automated scripts accessing personal data without documented purpose.
 
-**Data sources:** `updive-audit-*`, `updive-file-*`
+**Data sources:** `auditbeat-*`, `filebeat-*`
 
 **GDPR mapping:** Article 5(1)(a) - Lawfulness; Article 6 - Lawfulness of processing; Article 30 - Records of processing
 
@@ -1945,7 +1945,7 @@ FROM updive-audit-*, updive-win-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-audit-*, updive-file-*
+FROM auditbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 30 minutes
 | WHERE (process.name IN ("python", "perl", "ruby", "node", "powershell.exe", "cmd.exe")
         AND process.args RLIKE ".*(SELECT|INSERT|UPDATE|DELETE).*")
@@ -1979,7 +1979,7 @@ FROM updive-audit-*, updive-file-*
 
 **Objective:** Detects access to data older than retention policy allows (e.g., >7 years for financial data).
 
-**Data sources:** `updive-audit-*`, `updive-file-*`
+**Data sources:** `auditbeat-*`, `filebeat-*`
 
 **GDPR mapping:** Article 5(1)(e) - Storage limitation; Article 17 - Right to erasure
 
@@ -1988,7 +1988,7 @@ FROM updive-audit-*, updive-file-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-audit-*, updive-file-*
+FROM auditbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 24 hours
 | WHERE event.action IN ("accessed", "read")
   AND file.path RLIKE ".*(archive|backup|old_data|20[0-1][0-7]).*"
@@ -2020,7 +2020,7 @@ FROM updive-audit-*, updive-file-*
 
 **Objective:** Detects data transfers to destinations outside the EU/EEA without documented adequacy decision.
 
-**Data sources:** `updive-packet-*`
+**Data sources:** `metricbeat-*`
 
 **GDPR mapping:** Article 44 - General principle for transfers; Article 45 - Transfers based on adequacy decision
 
@@ -2029,7 +2029,7 @@ FROM updive-audit-*, updive-file-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-packet-*
+FROM metricbeat-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE network.direction == "outbound" OR source.ip RLIKE "^10\\.|^172\\.16\\.|^192\\.168\\."
 | WHERE destination.geo.country_iso_code NOT IN ("AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE", "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE", "IS", "LI", "NO")
@@ -2060,7 +2060,7 @@ FROM updive-packet-*
 
 **Objective:** Master rule aggregating critical signals - triggers incident response playbook if 2+ critical rules fire within 15 minutes.
 
-**Data sources:** `updive-*`
+**Data sources:** `auditbeat-*, metricbeat-*, filebeat-*, winlogbeat-*`
 
 **GDPR mapping:** Article 33 - Notification of breach; Article 34 - Communication to data subjects
 
@@ -2069,7 +2069,7 @@ FROM updive-packet-*
 **Query (ES|QL):**
 
 ```esql
-FROM updive-*
+FROM auditbeat-*, metricbeat-*, filebeat-*, winlogbeat-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE (event.code == "1102")
     OR (process.name IN ("zip", "tar") AND network.bytes > 10485760)
@@ -2208,12 +2208,12 @@ FROM updive-*
 ## 1. Index Configuration
 
 - [ ] Create index patterns in Kibana:
-    - `updive-file-*`
-    - `updive-win-*`
-    - `updive-audit-*`
-    - `updive-metric-*`
-    - `updive-packet-*`
-    - `updive-heart-*`
+    - `filebeat-*`
+    - `winlogbeat-*`
+    - `auditbeat-*`
+    - `metricbeat-*`
+    - `metricbeat-*`
+    - `metricbeat-*`
 - [ ] Set `@timestamp` as time field for all patterns
 - [ ] Verify index templates have ECS mappings
 
@@ -2308,7 +2308,7 @@ FROM updive-*
 ### Linux-Specific (SSH Failed Logins)
 
 ```esql
-FROM updive-file-*
+FROM filebeat-*
 | WHERE @timestamp >= NOW() - 5 minutes
 | WHERE message RLIKE ".*sshd.*Failed password.*"
 | EVAL user_name = SUBSTRING(message, INDEXOF(message, "for ") + 4, INDEXOF(message, " from") - INDEXOF(message, "for ") - 4)
@@ -2323,7 +2323,7 @@ FROM updive-file-*
 ### Windows-Specific (RDP/Network Logon Failures)
 
 ```esql
-FROM updive-win-*
+FROM winlogbeat-*
 | WHERE @timestamp >= NOW() - 5 minutes
 | WHERE event.code == "4625"
 | WHERE winlog.event_data.LogonType IN ("3", "10")
@@ -2341,7 +2341,7 @@ FROM updive-win-*
 ### Linux-Specific (useradd with admin groups)
 
 ```esql
-FROM updive-audit-*
+FROM auditbeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE process.name == "useradd" 
   AND (process.args RLIKE ".*-G (sudo|wheel|admin).*" OR process.args RLIKE ".*--groups (sudo|wheel|admin).*")
@@ -2353,7 +2353,7 @@ FROM updive-audit-*
 ### Windows-Specific (Event 4720 + 4732)
 
 ```esql
-FROM updive-win-*
+FROM winlogbeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE (event.code == "4720" OR event.code == "4732")
 | STATS 
@@ -2373,7 +2373,7 @@ FROM updive-win-*
 ### Systemd-based Linux
 
 ```esql
-FROM updive-file-*
+FROM filebeat-*
 | WHERE @timestamp >= NOW() - 5 minutes
 | WHERE message RLIKE ".*(systemctl stop auditd|auditd.*stopped).*"
     OR (process.name == "systemctl" AND process.args RLIKE ".*stop auditd.*")
@@ -2385,7 +2385,7 @@ FROM updive-file-*
 ### SysV Init-based Linux
 
 ```esql
-FROM updive-file-*
+FROM filebeat-*
 | WHERE @timestamp >= NOW() - 5 minutes
 | WHERE message RLIKE ".*(service auditd stop|/etc/init\\.d/auditd stop).*"
     OR (process.name IN ("service", "init.d") AND process.args RLIKE ".*auditd stop.*")
@@ -2401,7 +2401,7 @@ FROM updive-file-*
 ### Linux-Specific (auditd file access)
 
 ```esql
-FROM updive-audit-*
+FROM auditbeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE event.action IN ("opened-file", "read-file")
   AND file.path RLIKE ".*(home|opt|var)/(confidential|personal|sensitive).*"
@@ -2415,7 +2415,7 @@ FROM updive-audit-*
 ### Windows-Specific (Event 4663 object access)
 
 ```esql
-FROM updive-win-*
+FROM winlogbeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE event.code == "4663"
   AND winlog.event_data.AccessMask RLIKE ".*(READ|0x1).*"
@@ -2434,7 +2434,7 @@ FROM updive-win-*
 ### High-Sensitivity Environment (Shorter Time Window)
 
 ```esql
-FROM updive-*
+FROM auditbeat-*, metricbeat-*, filebeat-*, winlogbeat-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE (event.action IN ("accessed", "read") AND file.path RLIKE ".*sensitive.*")
     OR (process.name IN ("zip", "tar", "7z") AND network.bytes > 1048576)
@@ -2454,7 +2454,7 @@ FROM updive-*
 ### Multi-Host Correlation
 
 ```esql
-FROM updive-*
+FROM auditbeat-*, metricbeat-*, filebeat-*, winlogbeat-*
 | WHERE @timestamp >= NOW() - 30 minutes
 | WHERE (event.action IN ("accessed", "read") AND file.path RLIKE ".*sensitive.*")
     OR (process.name IN ("zip", "tar") AND network.bytes > 1048576)

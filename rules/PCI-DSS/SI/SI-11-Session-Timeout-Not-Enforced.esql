@@ -3,17 +3,16 @@
 // Qoida nomi: Session Timeout Not Enforced
 // Tavsif: Detects active sessions exceeding 15-minute idle timeout on CDE systems.
 
-FROM updive-*-file-*
+FROM winlogbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 30 minutes
-| WHERE event.dataset == "updive-file.system.syslog"
 | WHERE event.category == "session"
   AND host.name RLIKE ".*(cde|payment).*"
 | STATS 
     session_start = MIN(@timestamp),
     last_activity = MAX(@timestamp),
     activity_count = COUNT(*)
-  BY user.name, host.name
-| WHERE session_start <= NOW() - 15 minutes AND activity_count <= 3
-| EVAL rule_name = "PCI-RULE-31: Session Timeout Not Enforced"
+  BY user.name, host.name, winlog.event_data.LogonId
+| EVAL session_duration = (last_activity - session_start) / 60000
+| WHERE session_duration >= 15 AND activity_count <= 3
 | EVAL severity = "medium"
-| KEEP session_start, last_activity, user.name, host.name, activity_count, rule_name, severity
+| KEEP session_start, last_activity, user.name, host.name, session_duration, activity_count, severity

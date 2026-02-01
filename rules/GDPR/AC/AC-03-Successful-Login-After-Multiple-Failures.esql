@@ -4,16 +4,14 @@
 // Tavsif: Detects successful authentication following 3+ failed attempts within 10 minutes, indicating potential brute force success.
 // MITRE ATT&CK: T1110.001 (Password Guessing)
 
-FROM updive-*-file-*
+FROM winlogbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
-| WHERE event.dataset == "updive-file.system.auth"
 | WHERE event.category == "authentication"
 | STATS 
-    failures = SUM(CASE(event.outcome == "failure", 1, 0)),
-    successes = SUM(CASE(event.outcome == "success", 1, 0)),
+    failures = COUNT_IF(event.outcome == "failure"),
+    successes = COUNT_IF(event.outcome == "success"),
     max_time = MAX(@timestamp)
   BY source.ip, user.name, host.name
 | WHERE failures >= 3 AND successes >= 1
-| EVAL rule_name = "RULE-04: Successful Login After Multiple Failures"
 | EVAL severity = "high"
-| KEEP max_time, source.ip, user.name, host.name, failures, successes, rule_name, severity
+| KEEP max_time, source.ip, user.name, host.name, failures, successes, severity

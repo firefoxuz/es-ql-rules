@@ -4,11 +4,9 @@
 // Tavsif: Detects when syslog/rsyslog service stops on Linux systems.
 // MITRE ATT&CK: T1562.001 (Impair Defenses)
 
-FROM updive-*-file-*
+FROM filebeat-*, auditbeat-*
 | WHERE @timestamp >= NOW() - 5 minutes
-| WHERE event.dataset == "updive-file.system.syslog"
 | WHERE (message RLIKE ".*(rsyslogd|syslog).*stopped.*" 
-        OR process.command_line RLIKE ".*(systemctl stop rsyslog|service rsyslog stop).*")
-| EVAL rule_name = "RULE-21: Syslog Service Interruption"
+        OR process.args RLIKE ".*(systemctl stop rsyslog|service rsyslog stop).*")
 | EVAL severity = "high"
-| KEEP @timestamp, host.name, user.name, process.name, process.command_line, message, rule_name, severity
+| KEEP @timestamp, host.name, user.name, process.name, process.args, message, severity

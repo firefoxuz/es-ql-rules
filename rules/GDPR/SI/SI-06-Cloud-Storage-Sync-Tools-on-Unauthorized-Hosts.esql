@@ -4,12 +4,10 @@
 // Tavsif: Detects installation or execution of cloud sync tools (Dropbox, Google Drive, OneDrive) on unapproved hosts.
 // MITRE ATT&CK: T1567.002 (Exfiltration to Cloud Storage)
 
-FROM updive-*-audit-*
+FROM auditbeat-*, winlogbeat-*
 | WHERE @timestamp >= NOW() - 15 minutes
-| WHERE event.dataset == "file"
-| WHERE file.path RLIKE ".*(Dropbox|[Gg]oogle[ _-]?Drive|OneDrive|[Dd]ropbox|onedrive|dropbox).*"
-  AND MV_CONTAINS(event.action, "created")
+| WHERE process.name RLIKE ".*(dropbox|googledrive|onedrive|box|mega).*"
+    OR file.path RLIKE ".*(Dropbox|Google Drive|OneDrive).*"
 | WHERE host.name NOT IN ("approved-workstation-001", "approved-workstation-002")
-| EVAL rule_name = "RULE-30: Cloud Storage Sync Tools on Unauthorized Hosts"
 | EVAL severity = "medium"
-| KEEP @timestamp, host.name, file.path, rule_name, severity
+| KEEP @timestamp, host.name, user.name, process.name, file.path, severity

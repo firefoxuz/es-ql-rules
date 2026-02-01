@@ -3,16 +3,15 @@
 // Qoida nomi: Non-Standard Protocol on Payment Service Port
 // Tavsif: Detects non-HTTPS/TLS traffic on ports designated for payment processing.
 
-FROM updive-*-file-*
+FROM metricbeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
-| WHERE event.dataset == "updive-file.system.syslog"
-| WHERE source.port IN (443, 8443, 8444, 9443)
-  AND message NOT RLIKE ".*(tls|https).*"
+| WHERE destination.port IN (443, 8443, 8444, 9443)
+  AND network.protocol NOT IN ("tls", "https")
   AND host.name RLIKE ".*(payment|gateway|pos).*"
 | STATS 
-    packet_count = COUNT(*)
-  BY source.ip, source.port, host.name
+    packet_count = COUNT(*),
+    protocols_seen = VALUES(network.protocol)
+  BY source.ip, destination.ip, destination.port, host.name
 | WHERE packet_count >= 5
-| EVAL rule_name = "PCI-RULE-04: Non-Standard Protocol on Payment Port"
 | EVAL severity = "high"
-| KEEP source.ip, source.port, packet_count, rule_name, severity
+| KEEP @timestamp, source.ip, destination.ip, destination.port, network.protocol, protocols_seen, packet_count, severity

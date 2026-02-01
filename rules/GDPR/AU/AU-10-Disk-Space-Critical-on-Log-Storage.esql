@@ -4,12 +4,10 @@
 // Tavsif: Detects disk usage >90% on partitions storing logs, risking log loss.
 // MITRE ATT&CK: T1499 (Resource Exhaustion)
 
-FROM updive-*-metric-*
+FROM metricbeat-*
 | WHERE @timestamp >= NOW() - 5 minutes
-| WHERE event.dataset == "system.filesystem"
 | WHERE system.filesystem.mount_point RLIKE ".*(var|log|audit).*"
 | EVAL disk_used_pct = system.filesystem.used.pct * 100
 | WHERE disk_used_pct >= 90
-| EVAL rule_name = "RULE-34: Disk Space Critical on Log Storage"
 | EVAL severity = "high"
-| KEEP @timestamp, host.name, system.filesystem.mount_point, disk_used_pct, rule_name, severity
+| KEEP @timestamp, host.name, system.filesystem.mount_point, disk_used_pct, severity

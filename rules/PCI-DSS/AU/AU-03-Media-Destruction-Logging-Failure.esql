@@ -3,16 +3,15 @@
 // Qoida nomi: Media Destruction Logging Failure
 // Tavsif: Identifies gaps in media destruction logging for devices containing CHD.
 
-FROM updive-*-file-*
+FROM filebeat-*
 | WHERE @timestamp >= NOW() - 7 days
-| WHERE event.dataset == "updive-file.system.syslog"
 | WHERE message RLIKE ".*(media destruction|hard drive|disk shred|degauss).*"
 | STATS 
     destruction_events = COUNT(*),
     last_log = MAX(@timestamp)
   BY host.name
 | WHERE destruction_events < 1
-| WHERE last_log < NOW() - 7 days
-| EVAL rule_name = "PCI-RULE-36: Media Destruction Logging Failure"
+| EVAL days_since_last = (@timestamp - last_log) / 86400000
+| WHERE days_since_last > 7
 | EVAL severity = "medium"
-| KEEP host.name, destruction_events, last_log, rule_name, severity
+| KEEP @timestamp, host.name, destruction_events, last_log, days_since_last, severity

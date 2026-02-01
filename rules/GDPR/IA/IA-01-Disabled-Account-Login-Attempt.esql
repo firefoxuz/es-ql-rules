@@ -4,12 +4,11 @@
 // Tavsif: Detects login attempts using disabled or expired accounts, indicating reconnaissance or compromise.
 // MITRE ATT&CK: T1078 (Valid Accounts)
 
-FROM updive-*-file-*
+FROM winlogbeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
-| WHERE event.dataset == "updive-file.system.syslog"
-| WHERE message RLIKE ".*4625.*"
-  AND message RLIKE ".*(0xC0000072|0xC0000234).*"
+| WHERE event.code == "4625" 
+  AND (winlog.event_data.SubStatusCode == "0xC0000072" 
+       OR winlog.event_data.SubStatusCode == "0xC0000234")
 | STATS attempt_count = COUNT(*) BY user.name, source.ip, host.name
-| EVAL rule_name = "RULE-03: Disabled Account Login Attempt"
 | EVAL severity = "high"
-| KEEP user.name, source.ip, host.name, attempt_count, rule_name, severity
+| KEEP @timestamp, user.name, source.ip, host.name, attempt_count, severity

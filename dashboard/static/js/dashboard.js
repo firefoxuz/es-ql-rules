@@ -1,5 +1,6 @@
 let allRules = [];
 let healthChart, categoryChart;
+let rulesLoaded = false;
 
 document.addEventListener('DOMContentLoaded', () => {
     fetchRules();
@@ -53,19 +54,41 @@ async function fetchRules() {
     try {
         const response = await fetch('/api/rules');
         allRules = await response.json();
+        rulesLoaded = Array.isArray(allRules) && allRules.length > 0;
         updateDashboard(allRules);
         renderRules(allRules);
         setupCharts(allRules);
+        const runBtn = document.getElementById('run-test');
+        if (runBtn) {
+            runBtn.disabled = !rulesLoaded;
+            if (!rulesLoaded) {
+                runBtn.innerHTML = '<i class="fas fa-circle-exclamation"></i> No Rules';
+            } else {
+                runBtn.innerHTML = '<i class="fas fa-play"></i> Test Run';
+            }
+        }
     } catch (err) {
         console.error('Error fetching rules:', err);
+        rulesLoaded = false;
+        const runBtn = document.getElementById('run-test');
+        if (runBtn) {
+            runBtn.disabled = true;
+            runBtn.innerHTML = '<i class="fas fa-circle-exclamation"></i> Load Failed';
+        }
     }
 }
 
 function updateDashboard(rules) {
-    document.getElementById('total-rules').textContent = rules.length;
-    document.getElementById('healthy-rules').textContent = rules.filter(r => r.status === 'success').length;
-    document.getElementById('error-rules').textContent = rules.filter(r => r.status === 'error').length;
-    document.getElementById('total-hits').textContent = rules.reduce((acc, r) => acc + r.hits, 0);
+    const totalRulesEl = document.getElementById('total-rules');
+    const healthyRulesEl = document.getElementById('healthy-rules');
+    const errorRulesEl = document.getElementById('error-rules');
+    const totalHitsEl = document.getElementById('total-hits');
+    if (!totalRulesEl || !healthyRulesEl || !errorRulesEl || !totalHitsEl) return;
+
+    totalRulesEl.textContent = rules.length;
+    healthyRulesEl.textContent = rules.filter(r => r.status === 'success').length;
+    errorRulesEl.textContent = rules.filter(r => r.status === 'error').length;
+    totalHitsEl.textContent = rules.reduce((acc, r) => acc + (Number(r.hits) || 0), 0);
 }
 
 function renderRules(rules, sourceFilter = null) {
@@ -186,6 +209,11 @@ function setupCharts(rules) {
 }
 
 function setupEventListeners() {
+    const runBtn = document.getElementById('run-test');
+    if (runBtn) {
+        runBtn.disabled = true;
+        runBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading Rules...';
+    }
     // Tab switching
     document.querySelectorAll('.nav-item').forEach(btn => {
         btn.onclick = () => {
@@ -236,6 +264,13 @@ function setupEventListeners() {
 
     // Real Test Run
     document.getElementById('run-test').onclick = async () => {
+        if (!rulesLoaded) {
+            await fetchRules();
+        }
+        if (!rulesLoaded || allRules.length === 0) {
+            alert('Rules yuklanmadi. /api/rules javobini tekshiring.');
+            return;
+        }
         const btn = document.getElementById('run-test');
         const originalText = btn.innerHTML;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing Rules...';
@@ -262,7 +297,7 @@ function setupEventListeners() {
 
                 if (result.status === 'success') {
                     rule.status = 'success';
-                    rule.hits = result.hits;
+                    rule.hits = Number(result.hits) || 0;
                     rule.details = result.details || [];
                     rule.error_msg = null;
                 } else {
@@ -277,13 +312,18 @@ function setupEventListeners() {
             // Periodically update UI every 5 rules
             if (i % 5 === 0 || i === allRules.length - 1) {
                 updateDashboard(allRules);
-                setupCharts(allRules);
+                try {
+                    setupCharts(allRules);
+                } catch (err) {
+                    console.error('Chart rendering failed:', err);
+                }
                 const activeTab = document.querySelector('.nav-item.active').getAttribute('data-tab');
                 if (activeTab !== 'dashboard') {
                     renderRules(allRules, activeTab === 'gdpr' ? 'GDPR' : 'PCI-DSS');
                 }
             }
         }
+        updateDashboard(allRules);
 
         btn.innerHTML = originalText;
         btn.disabled = false;

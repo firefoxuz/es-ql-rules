@@ -3,17 +3,17 @@
 // Qoida nomi: Certificate Validation Failure
 // Tavsif: Detects TLS connections with invalid, expired, or self-signed certificates on payment systems.
 
-FROM updive-*-file-*
+FROM metricbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 15 minutes
-| WHERE event.dataset == "updive-file.system.syslog"
-| WHERE message RLIKE ".*(certificate|cert).*"
-  AND message RLIKE ".*(invalid|expired|self-signed|untrusted).*"
-  AND source.port IN (443, 8443)
+| WHERE (tls.server.x509.not_after < NOW()
+        OR tls.established == false
+        OR tls.server.x509.issuer.common_name == tls.server.x509.subject.common_name)
+  AND destination.port IN (443, 8443)
   AND host.name RLIKE ".*(payment|gateway|pos).*"
 | STATS 
-    failed_count = COUNT(*)
-  BY source.ip, host.name
+    failed_count = COUNT(*),
+    cert_issues = VALUES(tls.server.x509.subject.common_name)
+  BY destination.ip, host.name
 | WHERE failed_count >= 1
-| EVAL rule_name = "PCI-RULE-15: Certificate Validation Failure"
 | EVAL severity = "high"
-| KEEP source.ip, host.name, failed_count, rule_name, severity
+| KEEP @timestamp, destination.ip, host.name, tls.server.x509.subject.common_name, tls.server.x509.not_after, cert_issues, failed_count, severity

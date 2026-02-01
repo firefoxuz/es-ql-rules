@@ -3,15 +3,13 @@
 // Qoida nomi: Badge Reader Malfunction or Tamper
 // Tavsif: Detects badge reader errors, tamper alerts, or forced door alarms.
 
-FROM updive-*-file-*
+FROM filebeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
-| WHERE event.dataset == "updive-file.system.syslog"
 | WHERE message RLIKE ".*(badge reader|access control|door alarm).*"
   AND (message RLIKE ".*(tamper|malfunction|forced|alarm|error|offline).*"
        OR message RLIKE ".*(door.*forced|reader.*offline).*")
 | WHERE message RLIKE ".*(datacenter|server room|CDE|payment processing).*"
 | STATS alert_count = COUNT(*) BY host.name, message
 | WHERE alert_count >= 1
-| EVAL rule_name = "PCI-RULE-34: Badge Reader Tamper/Malfunction"
 | EVAL severity = "high"
-| KEEP host.name, message, alert_count, rule_name, severity
+| KEEP @timestamp, host.name, message, alert_count, severity

@@ -3,9 +3,8 @@
 // Qoida nomi: Unnecessary Service Running on CDE Host
 // Tavsif: Identifies non-essential services running on dedicated payment processing hosts.
 
-FROM updive-*-file-*
+FROM auditbeat-*, metricbeat-*
 | WHERE @timestamp >= NOW() - 30 minutes
-| WHERE event.dataset == "updive-file.system.syslog"
 | WHERE process.name IS NOT NULL
   AND host.name RLIKE ".*(payment-app|pos-terminal|card-processor).*"
   AND process.name IN ("httpd", "nginx", "apache2", "mysql", "postgres", "mongod", "redis", "memcached", "docker", "jenkins", "gitlab")
@@ -14,6 +13,5 @@ FROM updive-*-file-*
     services = VALUES(process.name)
   BY host.name
 | WHERE process_count >= 3
-| EVAL rule_name = "PCI-RULE-08: Unnecessary Service on CDE Host"
 | EVAL severity = "medium"
-| KEEP host.name, services, process_count, rule_name, severity
+| KEEP @timestamp, host.name, services, process_count, severity

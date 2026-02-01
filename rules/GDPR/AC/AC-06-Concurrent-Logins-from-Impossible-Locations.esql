@@ -4,16 +4,15 @@
 // Tavsif: Detects logins from two different geographic locations within 1 hour where travel is physically impossible (>500km apart).
 // MITRE ATT&CK: T1078 (Valid Accounts)
 
-FROM updive-*-file-*
+FROM winlogbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 1 hour
-| WHERE event.dataset == "updive-file.system.auth"
 | WHERE event.category == "authentication" AND event.outcome == "success"
-| WHERE source.geo.geo.country_name IS NOT NULL
+| WHERE source.geo.location IS NOT NULL
 | STATS 
-    countries = VALUES(source.geo.geo.country_name),
-    country_count = COUNT_DISTINCT(source.geo.geo.country_name)
+    locations = VALUES(source.geo.location),
+    countries = VALUES(source.geo.country_name),
+    time_span = MAX(@timestamp) - MIN(@timestamp)
   BY user.name
-| WHERE country_count >= 2
-| EVAL rule_name = "RULE-08: Concurrent Logins from Impossible Locations"
+| WHERE LENGTH(countries) >= 2 AND time_span < 3600000
 | EVAL severity = "high"
-| KEEP user.name, countries, country_count, rule_name, severity
+| KEEP @timestamp, user.name, countries, locations, time_span, severity

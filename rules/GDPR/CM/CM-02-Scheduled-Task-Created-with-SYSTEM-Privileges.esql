@@ -4,11 +4,10 @@
 // Tavsif: Detects scheduled tasks created with SYSTEM account privileges, common persistence mechanism.
 // MITRE ATT&CK: T1053.005 (Scheduled Task/Job)
 
-FROM updive-*-file-*
+FROM winlogbeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
-| WHERE event.dataset == "updive-file.system.syslog"
-| WHERE message RLIKE ".*4698.*"
-| WHERE message RLIKE ".*(S-1-5-18|SYSTEM).*"
-| EVAL rule_name = "RULE-16: Scheduled Task Created with SYSTEM Privileges"
+| WHERE event.code == "4698"
+| WHERE winlog.event_data.TaskContent RLIKE ".*<UserId>S-1-5-18</UserId>.*"
+    OR winlog.event_data.TaskContent RLIKE ".*<UserId>SYSTEM</UserId>.*"
 | EVAL severity = "high"
-| KEEP @timestamp, host.name, user.name, message, rule_name, severity
+| KEEP @timestamp, host.name, winlog.event_data.TaskName, winlog.event_data.SubjectUserName, winlog.event_data.TaskContent, severity

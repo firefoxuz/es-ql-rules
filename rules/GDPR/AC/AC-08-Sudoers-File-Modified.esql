@@ -4,12 +4,10 @@
 // Tavsif: Detects unauthorized modifications to `/etc/sudoers` or `/etc/sudoers.d/` files on Linux systems.
 // MITRE ATT&CK: T1548.003 (Abuse Elevation Control: Sudo)
 
-FROM updive-*-audit-*
+FROM auditbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 5 minutes
-| WHERE event.dataset == "file"
 | WHERE file.path RLIKE ".*/etc/sudoers.*" 
-  AND ((MV_CONTAINS(event.action, "modified") OR MV_CONTAINS(event.action, "created") OR MV_CONTAINS(event.action, "deleted")) 
-       OR MV_CONTAINS(event.type, "change"))
-| EVAL rule_name = "RULE-10: Sudoers File Modified"
+  AND (event.action IN ("modified", "created", "deleted") 
+       OR event.type == "change")
 | EVAL severity = "high"
-| KEEP @timestamp, host.name, file.path, event.action, rule_name, severity
+| KEEP @timestamp, host.name, user.name, file.path, event.action, process.name, severity

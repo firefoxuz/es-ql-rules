@@ -102,14 +102,14 @@
 
 **Objective:** Detects new listening ports on cardholder data environment (CDE) systems that are not in approved baseline.
 
-**Data sources:** `updive-packet-*`, `updive-audit-*`
+**Data sources:** `metricbeat-*`, `auditbeat-*`
 
 **Severity:** High
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-packet-*, updive-audit-*
+FROM metricbeat-*, auditbeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE destination.port IS NOT NULL 
   AND network.direction == "inbound"
@@ -150,14 +150,14 @@ FROM updive-packet-*, updive-audit-*
 
 **Objective:** Identifies inbound connections to CDE from IP addresses not in trusted network ranges.
 
-**Data sources:** `updive-packet-*`
+**Data sources:** `metricbeat-*`
 
 **Severity:** Critical
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-packet-*
+FROM metricbeat-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE network.direction == "inbound"
   AND host.name RLIKE ".*(cde|payment|cardholder).*"
@@ -198,14 +198,14 @@ FROM updive-packet-*
 
 **Objective:** Detects modifications to firewall rules or iptables configurations on CDE systems.
 
-**Data sources:** `updive-audit-*`, `updive-file-*`, `updive-win-*`
+**Data sources:** `auditbeat-*`, `filebeat-*`, `winlogbeat-*`
 
 **Severity:** High
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-audit-*, updive-file-*, updive-win-*
+FROM auditbeat-*, filebeat-*, winlogbeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE (process.name IN ("iptables", "firewall-cmd", "ufw", "netsh") 
         AND process.args RLIKE ".*(add|delete|modify|allow|deny).*")
@@ -242,14 +242,14 @@ FROM updive-audit-*, updive-file-*, updive-win-*
 
 **Objective:** Detects non-HTTPS/TLS traffic on ports designated for payment processing.
 
-**Data sources:** `updive-packet-*`
+**Data sources:** `metricbeat-*`
 
 **Severity:** High
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-packet-*
+FROM metricbeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE destination.port IN (443, 8443, 8444, 9443)
   AND network.protocol NOT IN ("tls", "https")
@@ -291,14 +291,14 @@ FROM updive-packet-*
 
 **Objective:** Identifies successful authentication using known default usernames (admin, root, administrator).
 
-**Data sources:** `updive-win-*`, `updive-file-*`
+**Data sources:** `winlogbeat-*`, `filebeat-*`
 
 **Severity:** Critical
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-win-*, updive-file-*
+FROM winlogbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE event.category == "authentication" 
   AND event.outcome == "success"
@@ -336,14 +336,14 @@ FROM updive-win-*, updive-file-*
 
 **Objective:** Detects insecure services (Telnet, FTP, rlogin) running on CDE systems.
 
-**Data sources:** `updive-packet-*`, `updive-audit-*`
+**Data sources:** `metricbeat-*`, `auditbeat-*`
 
 **Severity:** High
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-packet-*, updive-audit-*
+FROM metricbeat-*, auditbeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE (destination.port IN (21, 23, 512, 513, 514) 
         OR network.protocol IN ("telnet", "ftp"))
@@ -383,14 +383,14 @@ FROM updive-packet-*, updive-audit-*
 
 **Objective:** Detects modifications to critical configuration files without corresponding change ticket.
 
-**Data sources:** `updive-audit-*`, `updive-file-*`
+**Data sources:** `auditbeat-*`, `filebeat-*`
 
 **Severity:** Medium
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-audit-*, updive-file-*
+FROM auditbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE event.module == "file_integrity"
   AND event.action IN ("updated", "modified")
@@ -428,14 +428,14 @@ FROM updive-audit-*, updive-file-*
 
 **Objective:** Identifies non-essential services running on dedicated payment processing hosts.
 
-**Data sources:** `updive-audit-*`, `updive-metric-*`
+**Data sources:** `auditbeat-*`, `metricbeat-*`
 
 **Severity:** Medium
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-audit-*, updive-metric-*
+FROM auditbeat-*, metricbeat-*
 | WHERE @timestamp >= NOW() - 30 minutes
 | WHERE process.name IS NOT NULL
   AND host.name RLIKE ".*(payment-app|pos-terminal|card-processor).*"
@@ -477,14 +477,14 @@ FROM updive-audit-*, updive-metric-*
 
 **Objective:** Identifies potential Primary Account Numbers (PAN) in log files or network traffic.
 
-**Data sources:** `updive-file-*`, `updive-packet-*`
+**Data sources:** `filebeat-*`, `metricbeat-*`
 
 **Severity:** Critical
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-file-*, updive-packet-*
+FROM filebeat-*, metricbeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE message RLIKE ".*[0-9]{4}[- ]?[0-9]{4}[- ]?[0-9]{4}[- ]?[0-9]{4}.*"
   OR http.request.body.content RLIKE ".*[0-9]{13,19}.*"
@@ -521,14 +521,14 @@ FROM updive-file-*, updive-packet-*
 
 **Objective:** Detects access to directories known to contain cardholder data without encryption evidence.
 
-**Data sources:** `updive-audit-*`, `updive-win-*`
+**Data sources:** `auditbeat-*`, `winlogbeat-*`
 
 **Severity:** Critical
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-audit-*, updive-win-*
+FROM auditbeat-*, winlogbeat-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE event.action IN ("accessed", "read", "opened")
   AND (file.path RLIKE ".*(cardholder|chd|pan|card_data).*"
@@ -567,14 +567,14 @@ FROM updive-audit-*, updive-win-*
 
 **Objective:** Detects unauthorized access to encryption key files or key management systems.
 
-**Data sources:** `updive-audit-*`, `updive-file-*`
+**Data sources:** `auditbeat-*`, `filebeat-*`
 
 **Severity:** Critical
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-audit-*, updive-file-*
+FROM auditbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE (file.path RLIKE ".*(keystore|keys|master\\.key|encryption\\.key).*"
         OR file.path RLIKE ".*/etc/ssl/private/.*")
@@ -610,14 +610,14 @@ FROM updive-audit-*, updive-file-*
 
 **Objective:** Identifies bulk SELECT queries on tables containing cardholder data.
 
-**Data sources:** `updive-file-*`, `updive-audit-*`
+**Data sources:** `filebeat-*`, `auditbeat-*`
 
 **Severity:** High
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-file-*, updive-audit-*
+FROM filebeat-*, auditbeat-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE message RLIKE ".*SELECT.*FROM.*(payment|transaction|card|cardholder).*"
   OR process.args RLIKE ".*SELECT \\* FROM.*"
@@ -656,14 +656,14 @@ FROM updive-file-*, updive-audit-*
 
 **Objective:** Detects unencrypted HTTP traffic on ports designated for payment data transmission.
 
-**Data sources:** `updive-packet-*`
+**Data sources:** `metricbeat-*`
 
 **Severity:** Critical
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-packet-*
+FROM metricbeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE network.protocol == "http" 
   AND destination.port IN (80, 8080, 8000, 3000)
@@ -704,14 +704,14 @@ FROM updive-packet-*
 
 **Objective:** Identifies TLS connections using deprecated versions (TLS 1.0 or 1.1).
 
-**Data sources:** `updive-packet-*`
+**Data sources:** `metricbeat-*`
 
 **Severity:** High
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-packet-*
+FROM metricbeat-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE tls.version_protocol IN ("tls", "ssl")
   AND tls.version RLIKE ".*(1\\.0|1\\.1|SSLv[23]).*"
@@ -751,14 +751,14 @@ FROM updive-packet-*
 
 **Objective:** Detects TLS connections with invalid, expired, or self-signed certificates on payment systems.
 
-**Data sources:** `updive-packet-*`, `updive-file-*`
+**Data sources:** `metricbeat-*`, `filebeat-*`
 
 **Severity:** High
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-packet-*, updive-file-*
+FROM metricbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE (tls.server.x509.not_after < NOW()
         OR tls.established == false
@@ -800,14 +800,14 @@ FROM updive-packet-*, updive-file-*
 
 **Objective:** Identifies connections to payment gateway without TLS encryption.
 
-**Data sources:** `updive-packet-*`
+**Data sources:** `metricbeat-*`
 
 **Severity:** Critical
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-packet-*
+FROM metricbeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE (destination.domain RLIKE ".*(paypal|stripe|authorize\\.net|firstdata).*"
         OR destination.ip IN ("64.14.227.5", "64.4.250.37"))
@@ -850,14 +850,14 @@ FROM updive-packet-*
 
 **Objective:** Detects when antivirus/anti-malware software is disabled or stopped on CDE systems.
 
-**Data sources:** `updive-win-*`, `updive-file-*`, `updive-audit-*`
+**Data sources:** `winlogbeat-*`, `filebeat-*`, `auditbeat-*`
 
 **Severity:** Critical
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-win-*, updive-file-*, updive-audit-*
+FROM winlogbeat-*, filebeat-*, auditbeat-*
 | WHERE @timestamp >= NOW() - 5 minutes
 | WHERE (event.code IN ("5001", "1116", "1117")
         OR message RLIKE ".*(antivirus|malware|defender).*stopped.*"
@@ -893,14 +893,14 @@ FROM updive-win-*, updive-file-*, updive-audit-*
 
 **Objective:** Identifies antivirus signature database update failures.
 
-**Data sources:** `updive-win-*`, `updive-file-*`
+**Data sources:** `winlogbeat-*`, `filebeat-*`
 
 **Severity:** High
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-win-*, updive-file-*
+FROM winlogbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 24 hours
 | WHERE (event.code IN ("2001", "2003", "2012")
         OR message RLIKE ".*(signature|definition).*update.*fail.*"
@@ -938,14 +938,14 @@ FROM updive-win-*, updive-file-*
 
 **Objective:** Detects new executable files in payment application directories.
 
-**Data sources:** `updive-audit-*`, `updive-win-*`
+**Data sources:** `auditbeat-*`, `winlogbeat-*`
 
 **Severity:** High
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-audit-*, updive-win-*
+FROM auditbeat-*, winlogbeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE event.action IN ("created", "renamed", "moved")
   AND (file.extension IN ("exe", "dll", "so", "sh", "bat", "ps1", "vbs")
@@ -982,14 +982,14 @@ FROM updive-audit-*, updive-win-*
 
 **Objective:** Detects execution of processes matching known malware indicators.
 
-**Data sources:** `updive-audit-*`, `updive-win-*`
+**Data sources:** `auditbeat-*`, `winlogbeat-*`
 
 **Severity:** Critical
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-audit-*, updive-win-*
+FROM auditbeat-*, winlogbeat-*
 | WHERE @timestamp >= NOW() - 5 minutes
 | WHERE process.name IN ("mimikatz.exe", "psexec.exe", "netcat.exe", "nc.exe", "powershell.exe", "cmd.exe")
   AND (process.args RLIKE ".*(invoke-mimikatz|sekurlsa|dump|lsass).*"
@@ -1027,14 +1027,14 @@ FROM updive-audit-*, updive-win-*
 
 **Objective:** Detects attempts to block or evade vulnerability scanning tools.
 
-**Data sources:** `updive-packet-*`, `updive-audit-*`
+**Data sources:** `metricbeat-*`, `auditbeat-*`
 
 **Severity:** High
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-packet-*, updive-audit-*
+FROM metricbeat-*, auditbeat-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE (source.ip IN ("10.50.100.10", "10.50.100.11")
         AND destination.port IN (0, 9999, 31337))
@@ -1073,14 +1073,14 @@ FROM updive-packet-*, updive-audit-*
 
 **Objective:** Identifies systems in CDE running software versions with known critical vulnerabilities.
 
-**Data sources:** `updive-metric-*`, `updive-file-*`
+**Data sources:** `metricbeat-*`, `filebeat-*`
 
 **Severity:** High
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-metric-*, updive-file-*
+FROM metricbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 24 hours
 | WHERE (message RLIKE ".*(CVE-20(2[0-9]|1[8-9])-[0-9]{4,5}).*critical.*"
         OR message RLIKE ".*vulnerable.*version.*(apache|nginx|openssl|openssh|mysql).*")
@@ -1117,14 +1117,14 @@ FROM updive-metric-*, updive-file-*
 
 **Objective:** Detects installation of software not in approved application whitelist.
 
-**Data sources:** `updive-audit-*`, `updive-win-*`
+**Data sources:** `auditbeat-*`, `winlogbeat-*`
 
 **Severity:** Medium
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-audit-*, updive-win-*
+FROM auditbeat-*, winlogbeat-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE (process.name IN ("yum", "apt", "dpkg", "rpm", "msiexec.exe")
         AND process.args RLIKE ".*(install|add|setup).*")
@@ -1161,14 +1161,14 @@ FROM updive-audit-*, updive-win-*
 
 **Objective:** Detects SQL injection, XSS, and other OWASP Top 10 exploit attempts on payment web apps.
 
-**Data sources:** `updive-packet-*`, `updive-file-*`
+**Data sources:** `metricbeat-*`, `filebeat-*`
 
 **Severity:** Critical
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-packet-*, updive-file-*
+FROM metricbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE (http.request.body.content RLIKE ".*(UNION SELECT|'; DROP TABLE|<script>|javascript:|../../../etc/passwd).*"
         OR url.query RLIKE ".*(\\' OR 1=1|<script|\\.\\./).*"
@@ -1209,14 +1209,14 @@ FROM updive-packet-*, updive-file-*
 
 **Objective:** Detects granting of overly broad permissions on cardholder data directories.
 
-**Data sources:** `updive-audit-*`, `updive-win-*`
+**Data sources:** `auditbeat-*`, `winlogbeat-*`
 
 **Severity:** High
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-audit-*, updive-win-*
+FROM auditbeat-*, winlogbeat-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE (process.name IN ("chmod", "chown", "setfacl", "icacls.exe")
         AND process.args RLIKE ".*(777|666|Everyone|Authenticated Users).*")
@@ -1255,14 +1255,14 @@ FROM updive-audit-*, updive-win-*
 
 **Objective:** Identifies multiple users authenticating with the same account on CDE systems.
 
-**Data sources:** `updive-win-*`, `updive-file-*`
+**Data sources:** `winlogbeat-*`, `filebeat-*`
 
 **Severity:** High
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-win-*, updive-file-*
+FROM winlogbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 1 hour
 | WHERE event.category == "authentication" 
   AND event.outcome == "success"
@@ -1303,14 +1303,14 @@ FROM updive-win-*, updive-file-*
 
 **Objective:** Detects users accessing cardholder data when their role doesn't require it.
 
-**Data sources:** `updive-audit-*`, `updive-win-*`
+**Data sources:** `auditbeat-*`, `winlogbeat-*`
 
 **Severity:** High
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-audit-*, updive-win-*
+FROM auditbeat-*, winlogbeat-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE event.action IN ("accessed", "read", "opened")
   AND file.path RLIKE ".*(cardholder|chd|pan|payment_data).*"
@@ -1348,14 +1348,14 @@ FROM updive-audit-*, updive-win-*
 
 **Objective:** Detects permission elevation attempts or role changes without approval.
 
-**Data sources:** `updive-win-*`, `updive-audit-*`
+**Data sources:** `winlogbeat-*`, `auditbeat-*`
 
 **Severity:** Medium
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-win-*, updive-audit-*
+FROM winlogbeat-*, auditbeat-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE (event.code IN ("4728", "4732", "4756")
         OR process.name == "usermod" AND process.args RLIKE ".*-a -G.*")
@@ -1394,14 +1394,14 @@ FROM updive-win-*, updive-audit-*
 
 **Objective:** Detects successful authentication without MFA on systems requiring multi-factor.
 
-**Data sources:** `updive-win-*`, `updive-file-*`
+**Data sources:** `winlogbeat-*`, `filebeat-*`
 
 **Severity:** Critical
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-win-*, updive-file-*
+FROM winlogbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE event.category == "authentication" 
   AND event.outcome == "success"
@@ -1441,14 +1441,14 @@ FROM updive-win-*, updive-file-*
 
 **Objective:** Detects password changes that don't meet complexity requirements.
 
-**Data sources:** `updive-win-*`, `updive-file-*`
+**Data sources:** `winlogbeat-*`, `filebeat-*`
 
 **Severity:** Medium
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-win-*, updive-file-*
+FROM winlogbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE (event.code IN ("4723", "4724")
         OR message RLIKE ".*password.*changed.*")
@@ -1485,14 +1485,14 @@ FROM updive-win-*, updive-file-*
 
 **Objective:** Detects active sessions exceeding 15-minute idle timeout on CDE systems.
 
-**Data sources:** `updive-win-*`, `updive-file-*`
+**Data sources:** `winlogbeat-*`, `filebeat-*`
 
 **Severity:** Medium
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-win-*, updive-file-*
+FROM winlogbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 30 minutes
 | WHERE event.category == "session"
   AND host.name RLIKE ".*(cde|payment).*"
@@ -1533,14 +1533,14 @@ FROM updive-win-*, updive-file-*
 
 **Objective:** Detects administrative account logins without multi-factor authentication.
 
-**Data sources:** `updive-win-*`, `updive-file-*`
+**Data sources:** `winlogbeat-*`, `filebeat-*`
 
 **Severity:** Critical
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-win-*, updive-file-*
+FROM winlogbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE event.category == "authentication" 
   AND event.outcome == "success"
@@ -1582,14 +1582,14 @@ FROM updive-win-*, updive-file-*
 
 **Objective:** Detects physical access to data center outside business hours (logged via badge systems).
 
-**Data sources:** `updive-file-*`, `updive-audit-*`
+**Data sources:** `filebeat-*`, `auditbeat-*`
 
 **Severity:** Medium
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-file-*, updive-audit-*
+FROM filebeat-*, auditbeat-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE message RLIKE ".*(badge|card|access control|door|entry).*"
   AND (message RLIKE ".*(datacenter|server room|cage|rack).*"
@@ -1627,14 +1627,14 @@ FROM updive-file-*, updive-audit-*
 
 **Objective:** Detects badge reader errors, tamper alerts, or forced door alarms.
 
-**Data sources:** `updive-file-*`
+**Data sources:** `filebeat-*`
 
 **Severity:** High
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-file-*
+FROM filebeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE message RLIKE ".*(badge reader|access control|door alarm).*"
   AND (message RLIKE ".*(tamper|malfunction|forced|alarm|error|offline).*"
@@ -1672,14 +1672,14 @@ FROM updive-file-*
 
 **Objective:** Detects console logins (physical or KVM) on CDE servers without authorization.
 
-**Data sources:** `updive-win-*`, `updive-file-*`
+**Data sources:** `winlogbeat-*`, `filebeat-*`
 
 **Severity:** High
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-win-*, updive-file-*
+FROM winlogbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE event.category == "authentication" 
   AND event.outcome == "success"
@@ -1717,14 +1717,14 @@ FROM updive-win-*, updive-file-*
 
 **Objective:** Identifies gaps in media destruction logging for devices containing CHD.
 
-**Data sources:** `updive-file-*`
+**Data sources:** `filebeat-*`
 
 **Severity:** Medium
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-file-*
+FROM filebeat-*
 | WHERE @timestamp >= NOW() - 7 days
 | WHERE message RLIKE ".*(media destruction|hard drive|disk shred|degauss).*"
 | STATS 
@@ -1766,14 +1766,14 @@ FROM updive-file-*
 
 **Objective:** Detects deletion, modification, or tampering of audit logs.
 
-**Data sources:** `updive-audit-*`, `updive-win-*`, `updive-file-*`
+**Data sources:** `auditbeat-*`, `winlogbeat-*`, `filebeat-*`
 
 **Severity:** Critical
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-audit-*, updive-win-*, updive-file-*
+FROM auditbeat-*, winlogbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 5 minutes
 | WHERE (event.code IN ("1102", "1104", "4719")
         OR file.path RLIKE ".*/var/log/(audit|secure|auth\\.log).*" AND event.action IN ("deleted", "modified")
@@ -1809,14 +1809,14 @@ FROM updive-audit-*, updive-win-*, updive-file-*
 
 **Objective:** Detects when log forwarding or collection fails for CDE systems.
 
-**Data sources:** `updive-heart-*`, `updive-file-*`
+**Data sources:** `metricbeat-*`, `filebeat-*`
 
 **Severity:** High
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-heart-*, updive-file-*
+FROM metricbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE (monitor.status == "down" 
         AND monitor.name RLIKE ".*(filebeat|winlogbeat|rsyslog).*")
@@ -1854,14 +1854,14 @@ FROM updive-heart-*, updive-file-*
 
 **Objective:** Detects NTP synchronization failures on systems in CDE.
 
-**Data sources:** `updive-file-*`, `updive-metric-*`
+**Data sources:** `filebeat-*`, `metricbeat-*`
 
 **Severity:** Medium
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-file-*, updive-metric-*
+FROM filebeat-*, metricbeat-*
 | WHERE @timestamp >= NOW() - 30 minutes
 | WHERE (message RLIKE ".*(ntp.*fail|time sync.*error|chronyd.*unreachable).*"
         OR message RLIKE ".*(clock.*skew|time.*offset).*")
@@ -1898,14 +1898,14 @@ FROM updive-file-*, updive-metric-*
 
 **Objective:** Identifies missing daily log review activity (no analyst access to SIEM/logs).
 
-**Data sources:** `updive-file-*`, `updive-audit-*`
+**Data sources:** `filebeat-*`, `auditbeat-*`
 
 **Severity:** Low
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-file-*, updive-audit-*
+FROM filebeat-*, auditbeat-*
 | WHERE @timestamp >= NOW() - 24 hours
 | WHERE (message RLIKE ".*(kibana|elasticsearch|siem).*"
         AND user.name IN ("security-analyst", "log-reviewer", "soc-team"))
@@ -1945,14 +1945,14 @@ FROM updive-file-*, updive-audit-*
 
 **Objective:** Detects network scanning activity from sources not approved as ASV or internal scanners.
 
-**Data sources:** `updive-packet-*`, `updive-file-*`
+**Data sources:** `metricbeat-*`, `filebeat-*`
 
 **Severity:** Medium
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-packet-*, updive-file-*
+FROM metricbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE (destination.port IN (0, 21, 22, 23, 25, 80, 110, 443, 445, 3306, 3389, 8080)
         OR message RLIKE ".*(port scan|nmap|masscan).*")
@@ -1992,14 +1992,14 @@ FROM updive-packet-*, updive-file-*
 
 **Objective:** Detects penetration testing tools/activity outside approved testing windows.
 
-**Data sources:** `updive-packet-*`, `updive-audit-*`, `updive-file-*`
+**Data sources:** `metricbeat-*`, `auditbeat-*`, `filebeat-*`
 
 **Severity:** High
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-packet-*, updive-audit-*, updive-file-*
+FROM metricbeat-*, auditbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE (process.name IN ("metasploit", "burpsuite", "sqlmap", "nikto", "dirb")
         OR http.request.headers.user-agent RLIKE ".*(sqlmap|nikto|burp|metasploit).*"
@@ -2038,14 +2038,14 @@ FROM updive-packet-*, updive-audit-*, updive-file-*
 
 **Objective:** Detects unauthorized wireless access points in cardholder data environment.
 
-**Data sources:** `updive-packet-*`, `updive-file-*`
+**Data sources:** `metricbeat-*`, `filebeat-*`
 
 **Severity:** Critical
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-packet-*, updive-file-*
+FROM metricbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 30 minutes
 | WHERE (message RLIKE ".*(SSID|wireless|802\\.11|access point).*"
         OR network.protocol == "ieee80211")
@@ -2084,14 +2084,14 @@ FROM updive-packet-*, updive-file-*
 
 **Objective:** Detects changes to critical payment application files via FIM.
 
-**Data sources:** `updive-audit-*`
+**Data sources:** `auditbeat-*`
 
 **Severity:** High
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-audit-*
+FROM auditbeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
 | WHERE event.module == "file_integrity"
   AND event.action IN ("updated", "deleted", "attributes_modified")
@@ -2130,14 +2130,14 @@ FROM updive-audit-*
 
 **Objective:** Aggregates multiple indicators of payment card data compromise within 30 minutes.
 
-**Data sources:** `updive-*`
+**Data sources:** `auditbeat-*, metricbeat-*, filebeat-*, winlogbeat-*`
 
 **Severity:** Critical
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-*
+FROM auditbeat-*, metricbeat-*, filebeat-*, winlogbeat-*
 | WHERE @timestamp >= NOW() - 30 minutes
 | WHERE (message RLIKE ".*[0-9]{4}[- ]?[0-9]{4}[- ]?[0-9]{4}[- ]?[0-9]{4}.*"
         OR file.path RLIKE ".*(cardholder|chd|pan).*" AND event.action == "accessed")
@@ -2180,14 +2180,14 @@ FROM updive-*
 
 **Objective:** Aggregates 3+ different PCI DSS rule violations from same user within 1 hour.
 
-**Data sources:** `updive-*`
+**Data sources:** `auditbeat-*, metricbeat-*, filebeat-*, winlogbeat-*`
 
 **Severity:** High
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-*
+FROM auditbeat-*, metricbeat-*, filebeat-*, winlogbeat-*
 | WHERE @timestamp >= NOW() - 1 hour
 | WHERE (event.category IN ("authentication", "file", "process", "network")
         AND (event.outcome == "failure" 
@@ -2231,14 +2231,14 @@ FROM updive-*
 
 **Objective:** Detects large outbound data transfers from CDE systems to external destinations.
 
-**Data sources:** `updive-packet-*`
+**Data sources:** `metricbeat-*`
 
 **Severity:** Critical
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-packet-*
+FROM metricbeat-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE network.direction == "outbound"
   AND host.name RLIKE ".*(cde|payment|cardholder).*"
@@ -2276,14 +2276,14 @@ FROM updive-packet-*
 
 **Objective:** Master rule aggregating critical PCI violations - triggers IR playbook if 2+ critical rules fire within 15 minutes.
 
-**Data sources:** `updive-*`
+**Data sources:** `auditbeat-*, metricbeat-*, filebeat-*, winlogbeat-*`
 
 **Severity:** Critical
 
 **ES|QL Query:**
 
 ```esql
-FROM updive-*
+FROM auditbeat-*, metricbeat-*, filebeat-*, winlogbeat-*
 | WHERE @timestamp >= NOW() - 15 minutes
 | WHERE (event.code IN ("1102", "4720", "4732")
         OR message RLIKE ".*[0-9]{4}[- ]?[0-9]{4}[- ]?[0-9]{4}[- ]?[0-9]{4}.*"
@@ -2416,7 +2416,7 @@ FROM updive-*
 
 ## 2. Index Configuration
 
-- [ ] Create index patterns: `updive-file-*`, `updive-win-*`, `updive-audit-*`, `updive-metric-*`, `updive-packet-*`, `updive-heart-*`
+- [ ] Create index patterns: `filebeat-*`, `winlogbeat-*`, `auditbeat-*`, `metricbeat-*`, `metricbeat-*`, `metricbeat-*`
 - [ ] Set @timestamp as time field for all indices
 - [ ] Verify ECS mappings in index templates
 - [ ] Configure index lifecycle policies (retain logs 1 year minimum per Req 10.5.1)

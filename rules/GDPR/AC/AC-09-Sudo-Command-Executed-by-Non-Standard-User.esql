@@ -4,13 +4,11 @@
 // Tavsif: Detects sudo usage by users not in approved administrator list.
 // MITRE ATT&CK: T1548.003 (Sudo and Sudo Caching)
 
-FROM updive-*-file-*
+FROM filebeat-*, auditbeat-*
 | WHERE @timestamp >= NOW() - 10 minutes
-| WHERE event.dataset == "updive-file.system.syslog"
 | WHERE (process.name == "sudo" OR message RLIKE ".*sudo:.*COMMAND.*")
 | WHERE user.name NOT IN ("sysadmin", "root", "ansible", "puppet")
-| STATS sudo_count = COUNT(*) BY user.name, host.name, process.command_line
+| STATS sudo_count = COUNT(*) BY user.name, host.name, process.args
 | WHERE sudo_count >= 1
-| EVAL rule_name = "RULE-14: Sudo Command Executed by Non-Standard User"
 | EVAL severity = "medium"
-| KEEP user.name, host.name, process.command_line, sudo_count, rule_name, severity
+| KEEP @timestamp, user.name, host.name, process.args, sudo_count, severity

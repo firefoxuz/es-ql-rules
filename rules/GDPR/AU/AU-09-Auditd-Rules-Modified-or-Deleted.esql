@@ -4,10 +4,9 @@
 // Tavsif: Detects changes to auditd rules in /etc/audit/audit.rules or via auditctl.
 // MITRE ATT&CK: T1562.001 (Impair Defenses)
 
-FROM updive-*-audit-*
+FROM auditbeat-*, filebeat-*
 | WHERE @timestamp >= NOW() - 5 minutes
-| WHERE event.dataset == "file"
-| WHERE (file.path RLIKE ".*/etc/audit/.*" AND (MV_CONTAINS(event.action, "modified") OR MV_CONTAINS(event.action, "deleted")))
-| EVAL rule_name = "RULE-24: Auditd Rules Modified or Deleted"
+| WHERE (file.path RLIKE ".*/etc/audit/.*" AND event.action IN ("modified", "deleted"))
+    OR (process.name == "auditctl" AND process.args RLIKE ".* -D .*")
 | EVAL severity = "critical"
-| KEEP @timestamp, host.name, file.path, event.action, rule_name, severity
+| KEEP @timestamp, host.name, user.name, file.path, process.name, process.args, event.action, severity

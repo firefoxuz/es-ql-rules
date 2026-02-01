@@ -3,14 +3,12 @@
 // Qoida nomi: Mass Query on Payment Database
 // Tavsif: Identifies bulk SELECT queries on tables containing cardholder data.
 
-FROM updive-*-file-*
+FROM filebeat-*, auditbeat-*
 | WHERE @timestamp >= NOW() - 15 minutes
-| WHERE event.dataset == "updive-file.system.syslog"
 | WHERE message RLIKE ".*SELECT.*FROM.*(payment|transaction|card|cardholder).*"
-  OR process.command_line RLIKE ".*SELECT \\* FROM.*"
+  OR process.args RLIKE ".*SELECT \\* FROM.*"
 | WHERE message NOT RLIKE ".*(LIMIT [0-9]{1,2}|WHERE id =).*"
 | STATS query_count = COUNT(*) BY user.name, host.name
 | WHERE query_count >= 5
-| EVAL rule_name = "PCI-RULE-12: Mass Query on Payment DB"
 | EVAL severity = "high"
-| KEEP user.name, host.name, query_count, rule_name, severity
+| KEEP @timestamp, user.name, host.name, query_count, message, severity
