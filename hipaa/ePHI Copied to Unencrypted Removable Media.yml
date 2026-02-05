@@ -2,7 +2,7 @@
 #//Requirement: HIPAA Security Rule §164.310(d)(1) - Device and Media Controls
 #//Objective: Detect unencrypted ePHI on removable media
 #//Data sources: USB device logs, file transfer logs, endpoint protection logs
-#//ECS fields used: file.path, event.action, file.extension, device.type
+#//ECS fields used: file.path, event.action, file.extension, observer.type
 #//Tuning notes: Monitor USB insertions; scan for PHI patterns on removable drives
 
 name: "RULE-HIPAA-21: ePHI Copied to Unencrypted Removable Media"
@@ -28,7 +28,7 @@ query: |
     AND (
       file.path RLIKE ".*[D-Z]:\\\\.*"  // Windows removable drives
       OR file.path RLIKE ".*/media/.*"  // Linux removable media
-      OR device.type IN ("usb", "external_drive", "removable")
+      OR observer.type IN ("usb", "external_drive", "removable")
     )
     AND (
       file.path RLIKE "(?i).*(patient|medical|phi|record|chart|dicom|hl7|ccda).*"
@@ -39,7 +39,7 @@ query: |
   | STATS file_transfers = COUNT(*),
           total_size_mb = SUM(file.size) / 1048576,
           files = VALUES(file.name),
-          devices = VALUES(device.type),
+          devices = VALUES(observer.type),
           users = VALUES(user.name)
     BY user.name, host.name
   | WHERE file_transfers > 0

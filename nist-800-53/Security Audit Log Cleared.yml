@@ -63,4 +63,3 @@ pci_dss: ["10.5.2"]
 mitre_attack:
   TA0005:
     T1070: ["T1070.001"]
-  sub_technique: "T1070.001"

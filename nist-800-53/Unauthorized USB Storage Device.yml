@@ -3,7 +3,7 @@
 #//Objective: Detect unauthorized USB storage device connections
 #//Threat scenario: Data exfiltration via USB or malware introduction from removable media
 #//Data sources: Windows Security 6416, device connection events
-#//ECS fields used: event.code, event.action, device.id, user.name
+#//ECS fields used: event.code, event.action, observer.serial_number, user.name
 #//Tuning notes: Allowlist approved USB devices by serial number, exceptions for authorized users
 
 name: "RULE-NIST-33: Unauthorized USB Storage Device"
@@ -24,7 +24,7 @@ query_language: esql
 query: |
   FROM winlogbeat-*, auditbeat-*
   | WHERE event.code IN ("6416", "4663")
-    OR (event.action == "device-connected" AND device.type == "usb")
+    OR (event.action == "device-connected" AND observer.type == "usb")
   | EVAL device_type = CASE(
       winlog.event_data.ClassName RLIKE "(?i).*(disk|storage|usb).*", "USB-Storage",
       event.action RLIKE "(?i).*usb.*", "USB-Device",
@@ -33,8 +33,8 @@ query: |
   | WHERE device_type IN ("USB-Storage", "USB-Device")
   | STATS 
       connection_count = COUNT(*),
-      unique_devices = COUNT_DISTINCT(COALESCE(device.id, winlog.event_data.DeviceId)),
-      devices = VALUES(COALESCE(device.id, winlog.event_data.DeviceId)),
+      unique_devices = COUNT_DISTINCT(COALESCE(observer.serial_number, winlog.event_data.DeviceId)),
+      devices = VALUES(COALESCE(observer.serial_number, winlog.event_data.DeviceId)),
       users = VALUES(user.name)
     BY host.name
     , bucket = DATE_TRUNC(30 minutes, @timestamp)
