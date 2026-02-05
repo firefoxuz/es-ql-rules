@@ -18,11 +18,10 @@ type: esql
 params: '{}'
 schedule_interval: 15m
 index:
-  - logs-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-*
+  FROM filebeat-*
   | WHERE network.protocol RLIKE "(?i).*(tls|ssl|https).*"
     AND (
       tls.version IN ("1.0", "1.1", "SSLv2", "SSLv3")
@@ -69,7 +68,7 @@ references:
 nist: ["SC-8"]
 gdpr: ["Article 32"]
 pci_dss: ["4.1"]
-hipaa: ["§164.312(e)(2)(ii)"]
+hipaa: ["164.312.e.2.ii"]
 mitre_attack:
   TA0040:
     T1040: []

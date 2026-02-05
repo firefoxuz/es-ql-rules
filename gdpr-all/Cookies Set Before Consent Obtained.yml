@@ -19,10 +19,9 @@ params: '{}'
 schedule_interval: 15m
 index:
   - filebeat-nginx-access-*
-  - logs-*
 query_language: esql
 query: |
-  FROM filebeat-nginx-access-*, logs-*
+  FROM filebeat-nginx-access-*
   | WHERE event.category == "web"
     AND http.response.headers RLIKE "(?i).*set-cookie.*(ga|_gid|_gat|fbp|fr|_fbp|doubleclick|adsense).*"
     AND http.request.headers NOT RLIKE "(?i).*(cookie.*consent|gdpr.*accept|cookie.*accept).*"

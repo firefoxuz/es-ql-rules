@@ -17,11 +17,10 @@ type: esql
 params: '{}'
 schedule_interval: 15m
 index:
-  - logs-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-*
+  FROM filebeat-*
   | WHERE event.dataset RLIKE "(?i).*mail.*"
     AND email.subject RLIKE "(?i).*(newsletter|promotion|offer|deal|marketing).*"
   | WHERE email.to IN (
@@ -52,6 +51,6 @@ references:
   - "GDPR Article 21(3) - Right to Object to Direct Marketing"
   - "ePrivacy Directive - Marketing Consent"
 nist: ["IP-1"]
-gdpr: ["Article 21(3)"]
+gdpr: ["Article 21.3"]
 pci_dss: []
 mitre_attack: []

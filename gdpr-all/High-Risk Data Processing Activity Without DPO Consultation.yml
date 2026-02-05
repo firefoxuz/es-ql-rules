@@ -18,11 +18,10 @@ type: esql
 params: '{}'
 schedule_interval: 24h
 index:
-  - logs-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-*
+  FROM filebeat-*
   | WHERE (
       // High-risk processing indicators
       log.original RLIKE "(?i).*(large.*scale.*profiling|systematic.*monitoring|special.*category|biometric|genetic|health.*data|new.*technology).*"

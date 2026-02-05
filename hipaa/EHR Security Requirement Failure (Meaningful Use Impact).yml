@@ -19,11 +19,10 @@ type: esql
 params: '{}'
 schedule_interval: 24h
 index:
-  - logs-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-*
+  FROM filebeat-*
   | WHERE (
       (url.path RLIKE "(?i).*/patient.*portal/.*"
        AND network.protocol == "http"
@@ -68,5 +67,5 @@ references:
 nist: ["SA-4"]
 gdpr: []
 pci_dss: []
-hipaa: ["§164.312"]
+hipaa: ["164.312"]
 mitre_attack: []

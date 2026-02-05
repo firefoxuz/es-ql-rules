@@ -64,7 +64,7 @@ risk_score: 71
 references:
   - "NIST SP 800-53 Rev.5 AC-6: Least Privilege"
 nist: ["AC-3", "AC-6"]
-pci_dss: "Requirement 8.1.6"
+pci_dss: "8.1.6"
 mitre_attack:
   TA0007:
     T1018: []

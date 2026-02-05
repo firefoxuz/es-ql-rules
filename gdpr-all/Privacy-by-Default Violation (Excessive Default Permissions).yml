@@ -17,11 +17,10 @@ type: esql
 params: '{}'
 schedule_interval: 15m
 index:
-  - logs-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-*
+  FROM filebeat-*
   | WHERE event.action IN ("user_created", "account_registered", "signup")
     AND (
       log.original RLIKE "(?i).*(default.*consent.*true|all.*marketing.*enabled|profile.*visibility.*public|share.*all.*data).*"
@@ -55,6 +54,6 @@ references:
   - "GDPR Article 25(2) - Data Protection by Default"
   - "GDPR Recital 78 - Default Settings"
 nist: ["IP-1"]
-gdpr: ["Article 25(2)"]
+gdpr: ["Article 25.2"]
 pci_dss: []
 mitre_attack: []

@@ -18,11 +18,10 @@ type: esql
 params: '{}'
 schedule_interval: 1h
 index:
-  - logs-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-*
+  FROM filebeat-*
   | WHERE event.action RLIKE "(?i).*(create|deploy|provision|launch).*"
     AND log.original RLIKE "(?i).*(vm|instance|database|bucket|storage|container).*"
     AND cloud.region NOT IN ("eu-west-1", "eu-west-2", "eu-west-3", "eu-central-1", "eu-north-1", "europe-west1", "europe-west2", "europe-west3", "europe-west4", "europe-north1", "northeurope", "westeurope", "germanywestcentral", "francecentral", "uksouth", "ukwest", "switzerlandnorth")  // EU regions

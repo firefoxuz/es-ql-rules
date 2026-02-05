@@ -18,11 +18,10 @@ type: esql
 params: '{}'
 schedule_interval: 5m
 index:
-  - logs-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-*
+  FROM filebeat-*
   | WHERE event.category == "physical_access"
     AND (
       event.outcome == "failure"
@@ -63,7 +62,7 @@ references:
 nist: ["PE-3"]
 gdpr: ["Article 32"]
 pci_dss: ["9.1.1"]
-hipaa: ["§164.310(a)(1)"]
+hipaa: ["164.310.a.1"]
 mitre_attack:
   TA0001:
     T1200: []

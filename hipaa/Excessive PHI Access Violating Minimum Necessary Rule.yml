@@ -18,11 +18,10 @@ type: esql
 params: '{}'
 schedule_interval: 15m
 index:
-  - logs-*
   - auditbeat-*
 query_language: esql
 query: |
-  FROM logs-*, auditbeat-*
+  FROM auditbeat-*
   | WHERE (
       (event.category == "database"
        AND database.query RLIKE "(?i).*SELECT.*\\*.*FROM.*(patient|medical|encounter|visit).*"
@@ -63,9 +62,9 @@ references:
   - "45 CFR §164.502(b) - Minimum Necessary Standard"
   - "45 CFR §164.514(d) - Minimum Necessary Requirements"
 nist: ["AC-6"]
-gdpr: ["Article 5(1)(c)"]
+gdpr: ["Article 5.1.c"]
 pci_dss: ["7.1"]
-hipaa: ["§164.502(b), §164.514(d)"]
+hipaa: ["164.502.b, 164.514.d"]
 mitre_attack:
   TA0005:
     T1530: []

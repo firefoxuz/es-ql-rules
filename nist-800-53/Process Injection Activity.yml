@@ -35,7 +35,7 @@ query: |
       "Standard-Process"
     )
   | WHERE target_process_category IN ("Critical-Process", "High-Risk-Target")
-  | STATS 
+  | STATS te
       injection_count = COUNT(*),
       unique_sources = COUNT_DISTINCT(process.name),
       unique_targets = COUNT_DISTINCT(process.target),

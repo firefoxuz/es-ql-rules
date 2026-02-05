@@ -60,7 +60,7 @@ references:
   - "NIST SP 800-53 Rev.5 CM-2: Baseline Configuration"
   - "MITRE ATT&CK T1543.003: Windows Service"
 nist: ["CM-2"]
-pci_dss: ["Requirement 2.2"]
+pci_dss: ["2.2"]
 mitre_attack:
   TA0003:
     T1543.003: []

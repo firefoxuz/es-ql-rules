@@ -67,7 +67,7 @@ references:
   - "NIST SP 800-53 Rev.5 SC-5: Denial-of-Service Protection"
   - "MITRE ATT&CK T1190: Exploit Public-Facing Application"
 nist: ["SC-5", "SI-4"]
-pci_dss: "Requirement 11.4"
+pci_dss: "11.4"
 mitre_attack:
   TA0001:
     T1190: []

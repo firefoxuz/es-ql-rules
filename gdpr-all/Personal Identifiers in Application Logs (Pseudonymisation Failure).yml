@@ -18,12 +18,11 @@ type: esql
 params: '{}'
 schedule_interval: 15m
 index:
-  - logs-*
   - filebeat-nginx-access-*
   - filebeat-nginx-error-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-nginx-access-*, filebeat-nginx-error-*
+  FROM filebeat-nginx-access-*, filebeat-nginx-error-*
   | WHERE log.original IS NOT NULL
     AND (
       log.original RLIKE ".*[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}.*"
@@ -61,7 +60,7 @@ references:
   - "GDPR Article 32(1)(a) - Pseudonymisation and Encryption"
   - "GDPR Recital 78 - Pseudonymisation"
 nist: ["SC-28"]
-gdpr: ["Article 32(1)(a)"]
+gdpr: ["Article 32.1.a"]
 pci_dss: ["3"]
 mitre_attack:
   TA0009:

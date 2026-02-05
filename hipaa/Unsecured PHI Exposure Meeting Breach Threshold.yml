@@ -19,13 +19,12 @@ type: esql
 params: '{}'
 schedule_interval: 15m
 index:
-  - logs-*
   - winlogbeat-*
   - auditbeat-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, winlogbeat-*, auditbeat-*, filebeat-*
+  FROM winlogbeat-*, auditbeat-*, filebeat-*
   | WHERE (
       (event.action RLIKE "(?i).*(unauthorized.*access|breach|compromise).*"
        AND log.original RLIKE "(?i).*(patient|phi|medical.*record).*")
@@ -79,7 +78,7 @@ references:
 nist: ["IR-6"]
 gdpr: ["Article 33"]
 pci_dss: []
-hipaa: ["§164.402"]
+hipaa: ["164.402"]
 mitre_attack:
   TA0010: 
     T1041: []

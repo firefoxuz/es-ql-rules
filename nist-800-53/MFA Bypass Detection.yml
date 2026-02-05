@@ -56,7 +56,7 @@ references:
   - "MITRE ATT&CK T1078: Valid Accounts"
 nist: ["IA-2"]
 gdpr: ["Article 32"]
-pci_dss: ["Requirement 8.3"]
+pci_dss: ["8.3"]
 mitre_attack:
   TA0005:
     T1078: []

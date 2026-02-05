@@ -18,12 +18,11 @@ type: esql
 params: '{}'
 schedule_interval: 10m
 index:
-  - logs-*
   - filebeat-nginx-access-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-nginx-access-*, filebeat-*
+  FROM filebeat-nginx-access-*, filebeat-*
   | WHERE (
       (network.protocol == "http"
        AND destination.port IN (80, 8080)
@@ -69,7 +68,7 @@ references:
 nist: ["SC-8"]
 gdpr: ["Article 32"]
 pci_dss: ["4.1"]
-hipaa: ["§164.312(e)(1)"]
+hipaa: ["164.312.e.1"]
 mitre_attack:
   TA0040:
     T1040: []

@@ -26,11 +26,10 @@ type: esql
 params: '{}'
 schedule_interval: 1h
 index:
-  - logs-*
   - auditbeat-*
 query_language: esql
 query: |
-  FROM logs-*, auditbeat-*
+  FROM auditbeat-*
   | WHERE event.category == "network"
     AND network.type == "wireless"
     AND (

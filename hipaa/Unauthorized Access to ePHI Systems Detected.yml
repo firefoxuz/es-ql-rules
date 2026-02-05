@@ -20,10 +20,9 @@ schedule_interval: 5m
 index:
   - winlogbeat-*
   - auditbeat-*
-  - logs-*
 query_language: esql
 query: |
-  FROM winlogbeat-*, auditbeat-*, logs-*
+  FROM winlogbeat-*, auditbeat-*
   | WHERE event.category == "authentication"
     AND (
       CIDR_MATCH(destination.ip, "10.100.0.0/16", "192.168.50.0/24")
@@ -66,7 +65,7 @@ references:
 nist: ["AC-3"]
 gdpr: ["Article 32"]
 pci_dss: ["7.1"]
-hipaa: ["§164.312(a)(1)"]
+hipaa: ["164.312.a.1"]
 mitre_attack:
   TA0001: 
     T1078: ["T1078.001"]

@@ -18,11 +18,10 @@ type: esql
 params: '{}'
 schedule_interval: 12h
 index:
-  - logs-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-*
+  FROM filebeat-*
   | WHERE event.dataset RLIKE "(?i).*mail.*"
     AND email.from RLIKE "(?i).*(ico\\.org\\.uk|cnil\\.fr|edps\\.europa\\.eu|datenschutz\\.de|gpdp\\.it|aepd\\.es|dpa\\..*|supervisory.*authority).*"
     AND email.subject RLIKE "(?i).*(investigation|inquiry|request|inspection|compliance.*check|article.*58).*"

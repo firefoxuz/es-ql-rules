@@ -19,12 +19,11 @@ type: esql
 params: '{}'
 schedule_interval: 24h
 index:
-  - logs-*
   - winlogbeat-*
   - auditbeat-*
 query_language: esql
 query: |
-  FROM logs-*, winlogbeat-*, auditbeat-*
+  FROM winlogbeat-*, auditbeat-*
   | WHERE event.category == "authentication"
     AND event.outcome == "success"
     AND (
@@ -64,5 +63,5 @@ references:
 nist: ["AT-2"]
 gdpr: []
 pci_dss: ["12.6"]
-hipaa: ["§164.308(a)(5)","§164.530(b)"]
+hipaa: ["164.308.a.5", "164.530.b"]
 mitre_attack: []

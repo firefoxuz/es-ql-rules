@@ -19,11 +19,10 @@ schedule_interval: 5m
 index:
   - winlogbeat-*
   - auditbeat-*
-  - logs-*
   - filebeat-nginx-access-*
 query_language: esql
 query: |
-  FROM winlogbeat-*, auditbeat-*, logs-*, filebeat-nginx-access-*
+  FROM winlogbeat-*, auditbeat-*, filebeat-nginx-access-*
   | WHERE event.outcome == "failure"
     AND (
       event.category IN ("authentication", "file", "network")

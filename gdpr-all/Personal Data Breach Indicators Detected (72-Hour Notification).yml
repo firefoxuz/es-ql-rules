@@ -17,13 +17,12 @@ type: esql
 params: '{}'
 schedule_interval: 5m
 index:
-  - logs-*
   - winlogbeat-*
   - auditbeat-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, winlogbeat-*, auditbeat-*, filebeat-*
+  FROM winlogbeat-*, auditbeat-*, filebeat-*
   | WHERE (
       (network.direction == "outbound"
        AND network.bytes > 104857600  // >100MB

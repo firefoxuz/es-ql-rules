@@ -18,11 +18,10 @@ type: esql
 params: '{}'
 schedule_interval: 24h
 index:
-  - logs-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-*
+  FROM filebeat-*
   | WHERE (
       event.action RLIKE "(?i).*(share|sync|integrat|collaborate).*data.*"
       AND log.original RLIKE "(?i).*(partner|joint|shared|collaborative|co-marketing).*"

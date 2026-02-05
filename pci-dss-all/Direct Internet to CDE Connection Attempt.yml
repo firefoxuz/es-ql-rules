@@ -16,11 +16,10 @@ type: esql
 params: '{}'
 schedule_interval: 5m
 index:
-  - logs-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-*
+  FROM filebeat-*
   | WHERE event.category == "network" 
     AND network.direction == "inbound"
     AND source.ip IS NOT NULL

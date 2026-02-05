@@ -16,11 +16,10 @@ type: esql
 params: '{}'
 schedule_interval: 10m
 index:
-  - logs-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-*
+  FROM filebeat-*
   | WHERE network.protocol RLIKE "(?i).*(tls|ssl).*"
     AND (
       tls.version IN ("1.0", "1.1", "SSLv2", "SSLv3")

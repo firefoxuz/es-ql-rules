@@ -19,11 +19,10 @@ type: esql
 params: '{}'
 schedule_interval: 10m
 index:
-  - logs-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-*
+  FROM filebeat-*
   | WHERE (
       (event.dataset RLIKE "(?i).*mail.*"
        AND email.to NOT RLIKE "(?i).*(hospital|clinic|health|medical|physician|doctor|insurance|gov|medicare|medicaid)\\..*"
@@ -69,7 +68,7 @@ references:
 nist: ["AC-4"]
 gdpr: ["Article 6"]
 pci_dss: []
-hipaa: ["§164.502(a)"]
+hipaa: ["164.502.a"]
 mitre_attack:
   TA0010:
     T1048: ["T1048.003"]

@@ -18,11 +18,10 @@ type: esql
 params: '{}'
 schedule_interval: 12h
 index:
-  - logs-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-*
+  FROM filebeat-*
   | WHERE (
       (network.direction == "outbound"
        AND NOT CIDR_MATCH(destination.ip, "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16")
@@ -65,7 +64,7 @@ references:
 nist: ["SA-9"]
 gdpr: ["Article 28"]
 pci_dss: ["12.8"]
-hipaa: ["§164.308(b)","§164.504(e)"]
+hipaa: ["164.308.b", "164.504.e"]
 mitre_attack:
   TA0010:
     T1567: ["T1567.002"]

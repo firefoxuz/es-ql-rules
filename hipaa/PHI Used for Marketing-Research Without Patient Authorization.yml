@@ -19,11 +19,10 @@ type: esql
 params: '{}'
 schedule_interval: 30m
 index:
-  - logs-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-*
+  FROM filebeat-*
   | WHERE (
       (event.action RLIKE "(?i).*(export|sync|upload).*"
        AND log.original RLIKE "(?i).*(mailchimp|salesforce|hubspot|marketing|campaign).*"
@@ -68,7 +67,7 @@ references:
 nist: ["IP-1"]
 gdpr: ["Article 6"]
 pci_dss: ["7.1"]
-hipaa: ["§164.508"]
+hipaa: ["164.508"]
 mitre_attack:
   TA0009:
     T1213: []

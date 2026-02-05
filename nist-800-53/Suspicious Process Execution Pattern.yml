@@ -70,7 +70,7 @@ references:
   - "NIST SP 800-53 Rev.5 SI-4: System Monitoring"
   - "MITRE ATT&CK T1059: Command and Scripting Interpreter"
 nist: ["SI-3", "SI-4"]
-pci_dss: ["Requirement 10.2"]
+pci_dss: ["10.2"]
 mitre_attack:
   TA0002:
     T1059: []

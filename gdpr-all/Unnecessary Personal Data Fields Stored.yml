@@ -17,11 +17,9 @@ type: esql
 params: '{}'
 schedule_interval: 24h
 index:
-  - logs-*
 query_language: esql
 query: |
-  FROM logs-*
-  | WHERE event.category == "database"
+  FROM   | WHERE event.category == "database"
     AND database.query RLIKE "(?i).*CREATE.*TABLE.*"
   | EVAL column_count = LENGTH(database.query) - LENGTH(REPLACE(database.query, ",", "")) + 1
   | WHERE column_count > 30  // Tables with >30 columns (customize threshold)
@@ -51,6 +49,6 @@ references:
   - "GDPR Article 5(1)(c) - Data Minimisation"
   - "GDPR Article 25 - Data Protection by Design"
 nist: ["IP-1"]
-gdpr: ["Article 5(1)(c)"]
+gdpr: ["Article 5.1.c"]
 pci_dss: ["3.1"]
 mitre_attack: []

@@ -59,7 +59,7 @@ references:
   - "NIST SP 800-53 Rev.5 MP-7: Media Use"
   - "MITRE ATT&CK T1091: Replication Through Removable Media"
 nist: ["MP-7", "AC-19"]
-pci_dss: ["Requirement 9.9"]
+pci_dss: ["9.9"]
 mitre_attack:
   TA0001:
     T1091: []

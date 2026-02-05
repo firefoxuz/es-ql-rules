@@ -17,11 +17,10 @@ type: esql
 params: '{}'
 schedule_interval: 24h
 index:
-  - logs-*
   - auditbeat-*
 query_language: esql
 query: |
-  FROM logs-*, auditbeat-*
+  FROM auditbeat-*
   | WHERE (
       (event.category == "database"
        AND database.query RLIKE "(?i).*(CREATE.*DATABASE|CREATE.*TABLE).*"

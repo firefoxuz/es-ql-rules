@@ -19,11 +19,10 @@ type: esql
 params: '{}'
 schedule_interval: 30m
 index:
-  - logs-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-*
+  FROM filebeat-*
   | WHERE event.category == "web"
     AND url.path RLIKE "(?i).*/api/(predict|score|decision|recommend).*"
     AND http.response.status_code == 200

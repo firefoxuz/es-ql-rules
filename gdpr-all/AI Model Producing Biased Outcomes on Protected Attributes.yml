@@ -18,11 +18,10 @@ type: esql
 params: '{}'
 schedule_interval: 1h
 index:
-  - logs-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-*
+  FROM filebeat-*
   | WHERE event.category == "ml_model"
     AND (
       log.original RLIKE "(?i).*(bias.*detect|fairness.*alert|disparate.*impact|discrimination.*warning).*"

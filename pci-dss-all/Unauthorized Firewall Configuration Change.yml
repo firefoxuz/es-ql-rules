@@ -18,10 +18,9 @@ schedule_interval: 5m
 index:
   - winlogbeat-*
   - auditbeat-*
-  - logs-*
 query_language: esql
 query: |
-  FROM winlogbeat-*, auditbeat-*, logs-*
+  FROM winlogbeat-*, auditbeat-*
   | WHERE event.category == "configuration" 
     AND (
       (winlog.event_id IN ("2004", "2005", "2006", "2033") AND event.provider == "Microsoft-Windows-Windows Firewall With Advanced Security")
@@ -66,7 +65,7 @@ references:
   - "PCI DSS v3.1 Requirement 1.1.1, 1.1.7"
 nist: ["SC-7"]
 gdpr: ["Article 32"]
-pci_dss: ["1.1.1", "1.1.7","1.1.2"]
+pci_dss: ["1.1.1", "1.1.7", "1.1.2"]
 mitre_attack:
   TA0005:
     T1562: ["T1562.004"]

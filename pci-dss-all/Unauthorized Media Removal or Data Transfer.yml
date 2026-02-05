@@ -18,10 +18,9 @@ schedule_interval: 10m
 index:
   - winlogbeat-*
   - auditbeat-*
-  - logs-*
 query_language: esql
 query: |
-  FROM winlogbeat-*, auditbeat-*, logs-*
+  FROM winlogbeat-*, auditbeat-*
   | WHERE event.category IN ("file", "network")
     AND (
       (file.path RLIKE ".*[D-Z]:\\\\.*"

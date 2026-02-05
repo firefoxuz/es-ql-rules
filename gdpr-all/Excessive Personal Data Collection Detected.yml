@@ -17,10 +17,9 @@ params: '{}'
 schedule_interval: 15m
 index:
   - filebeat-nginx-access-*
-  - logs-*
 query_language: esql
 query: |
-  FROM filebeat-nginx-access-*, logs-*
+  FROM filebeat-nginx-access-*
   | WHERE event.category == "web"
     AND http.request.method == "POST"
     AND (
@@ -58,7 +57,7 @@ references:
   - "GDPR Article 5(1)(c) - Data Minimisation"
   - "GDPR Article 25 - Data Protection by Design"
 nist: ["IP-1"]
-gdpr: ["Article 5(1)(c)"]
+gdpr: ["Article 5.1.c"]
 pci_dss: []
 mitre_attack:
   TA0009:

@@ -19,11 +19,10 @@ type: esql
 params: '{}'
 schedule_interval: 6h
 index:
-  - logs-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-*
+  FROM filebeat-*
   | WHERE log.original RLIKE "(?i).*(breach.*confirmed|data.*compromis|security.*incident.*high.*risk).*"
     AND (
       log.original RLIKE "(?i).*(affect.*[0-9]{4,}|special.*category|identit.*theft|financial.*loss).*"

@@ -18,11 +18,10 @@ type: esql
 params: '{}'
 schedule_interval: 30m
 index:
-  - logs-*
   - auditbeat-*
 query_language: esql
 query: |
-  FROM logs-*, auditbeat-*
+  FROM auditbeat-*
   | WHERE (
       event.action RLIKE "(?i).*(chart.*open|record.*view|patient.*access|document.*view|lab.*result|imaging.*view).*"
       OR database.query RLIKE "(?i).*SELECT.*FROM.*(patient|medical.*record|chart|encounter|visit).*"
@@ -57,7 +56,7 @@ references:
 nist: ["AU-12"]
 gdpr: ["Article 32"]
 pci_dss: ["10.2.1"]
-hipaa: ["§164.312(b)"]
+hipaa: ["164.312.b"]
 mitre_attack:
   TA0005:
     T1070: []

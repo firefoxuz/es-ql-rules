@@ -62,7 +62,7 @@ references:
   - "NIST SP 800-53 Rev.5 AC-7: Unsuccessful Logon Attempts"
   - "MITRE ATT&CK T1110: Brute Force"
 nist: ["AC-7", "IA-2"]
-pci_dss: ["Requirement 8.1.6"]
+pci_dss: ["8.1.6"]
 mitre_attack:
-  TA0003:
+  TA0006:
     T1110: []

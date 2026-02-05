@@ -64,7 +64,7 @@ references:
   - "NIST SP 800-53 Rev.5 CM-6: Configuration Settings"
   - "MITRE ATT&CK T1562: Impair Defenses"
 nist: ["CM-6"]
-pci_dss: ["Requirement 2.2"]
+pci_dss: ["2.2"]
 mitre_attack:
   TA0005:
     T1562: []

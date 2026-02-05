@@ -18,11 +18,10 @@ type: esql
 params: '{}'
 schedule_interval: 24h
 index:
-  - logs-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-*
+  FROM filebeat-*
   | WHERE (
       event.action RLIKE "(?i).*(accounting.*request|disclosure.*list|phi.*disclosure.*history).*"
       OR log.original RLIKE "(?i).*(164.*528|accounting.*of.*disclosure).*"
@@ -57,5 +56,5 @@ references:
 nist: ["IP-4"]
 gdpr: ["Article 15"]
 pci_dss: []
-hipaa: ["§164.528"]
+hipaa: ["164.528"]
 mitre_attack: []

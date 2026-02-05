@@ -19,10 +19,9 @@ params: '{}'
 schedule_interval: 15m
 index:
   - winlogbeat-*
-  - logs-*
 query_language: esql
 query: |
-  FROM winlogbeat-*, logs-*
+  FROM winlogbeat-*
   | WHERE event.category == "session"
     AND (
       host.name RLIKE "(?i).*(emr|ehr|workstation|clinical|nurse.*station).*"
@@ -57,5 +56,5 @@ references:
 nist: ["AC-11"]
 gdpr: []
 pci_dss: ["8.1.8"]
-hipaa: ["§164.312(a)(2)(iii)"]
+hipaa: ["164.312.a.2.iii"]
 mitre_attack: []

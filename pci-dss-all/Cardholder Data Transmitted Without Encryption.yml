@@ -23,11 +23,10 @@ type: esql
 params: '{}'
 schedule_interval: 5m
 index:
-  - logs-*
   - filebeat-nginx-access-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-nginx-access-*
+  FROM filebeat-nginx-access-*
   | WHERE event.category == "network" OR event.category == "web"
   | WHERE (
       (network.protocol == "http" 

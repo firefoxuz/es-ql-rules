@@ -61,7 +61,7 @@ risk_score: 68
 references:
   - "NIST SP 800-53 Rev.5 AC-3: Access Enforcement"
 nist: ["AC-3"]
-pci_dss: ["Requirement 7.1"]
+pci_dss: ["7.1"]
 mitre_attack:
   TA0004:
     T1548: []

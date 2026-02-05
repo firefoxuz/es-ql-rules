@@ -18,11 +18,10 @@ type: esql
 params: '{}'
 schedule_interval: 12h
 index:
-  - logs-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-*
+  FROM filebeat-*
   | WHERE (
       (event.dataset RLIKE "(?i).*mail.*"
        AND email.subject RLIKE "(?i).*(appointment|test.*result|medical|health|bill|invoice).*")
@@ -62,5 +61,5 @@ references:
 nist: ["IP-1"]
 gdpr: []
 pci_dss: []
-hipaa: ["§164.522(b)"]
+hipaa: ["164.522.b"]
 mitre_attack: []

@@ -17,11 +17,10 @@ type: esql
 params: '{}'
 schedule_interval: 15m
 index:
-  - logs-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-*
+  FROM filebeat-*
   | WHERE event.action IN ("user_created", "account_registered", "signup")
     AND (
       log.original RLIKE "(?i).*(age.*=.*(1[0-5]|[0-9])|birthdate.*20(0[8-9]|1[0-9]|2[0-4])).*"

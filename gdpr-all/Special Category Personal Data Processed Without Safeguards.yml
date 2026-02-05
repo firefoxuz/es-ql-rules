@@ -18,10 +18,9 @@ params: '{}'
 schedule_interval: 10m
 index:
   - filebeat-nginx-access-*
-  - logs-*
 query_language: esql
 query: |
-  FROM filebeat-nginx-access-*, logs-*
+  FROM filebeat-nginx-access-*
   | WHERE (
       (event.category == "web"
        AND (http.request.body RLIKE "(?i).*(health|medical|disease|diagnosis|prescription|biometric|fingerprint|face.*scan|genetic|dna|race|ethnicity|religion|political.*party|sexual.*orientation|gender.*identity).*"

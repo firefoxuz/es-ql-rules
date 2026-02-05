@@ -18,11 +18,10 @@ type: esql
 params: '{}'
 schedule_interval: 6h
 index:
-  - logs-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-*
+  FROM filebeat-*
   | WHERE event.category == "iam" OR event.category == "web"
     AND (
       log.original RLIKE "(?i).*(data.*breach|personal.*data.*compromis|gdpr.*incident|breach.*confirm).*"
@@ -54,6 +53,6 @@ references:
   - "GDPR Article 33(1) - 72-Hour Notification Requirement"
   - "GDPR Recital 85 - Undue Delay"
 nist: ["IR-6"]
-gdpr: ["Article 33(1)"]
+gdpr: ["Article 33.1"]
 pci_dss: []
 mitre_attack: []

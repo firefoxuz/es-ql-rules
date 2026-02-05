@@ -62,7 +62,7 @@ references:
   - "NIST SP 800-53 Rev.5 AC-17: Remote Access"
   - "MITRE ATT&CK T1110: Brute Force"
 nist: ["AC-17"]
-pci_dss: ["Requirement 8.2.5"]
+pci_dss: ["8.2.5"]
 mitre_attack:
-  TA0001:
+  TA0006:
     T1110: []

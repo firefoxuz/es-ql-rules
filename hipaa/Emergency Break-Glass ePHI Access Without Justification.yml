@@ -20,10 +20,9 @@ schedule_interval: 10m
 index:
   - winlogbeat-*
   - auditbeat-*
-  - logs-*
 query_language: esql
 query: |
-  FROM winlogbeat-*, auditbeat-*, logs-*
+  FROM winlogbeat-*, auditbeat-*
   | WHERE (
       user.name RLIKE "(?i).*(emergency|break.*glass|admin.*emergency|critical.*access|override).*"
       OR event.action RLIKE "(?i).*(emergency.*access|break.*glass|privileged.*override).*"
@@ -59,7 +58,7 @@ references:
 nist: ["AC-6"]
 gdpr: []
 pci_dss: []
-hipaa: ["§164.312(a)(2)(ii)"]
+hipaa: ["164.312.a.2.ii"]
 mitre_attack:
   TA0004:
     T1078: ["T1078.003"]

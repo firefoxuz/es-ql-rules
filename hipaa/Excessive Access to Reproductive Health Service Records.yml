@@ -20,11 +20,9 @@ type: esql
 params: '{}'
 schedule_interval: 15m
 index:
-  - logs-*
 query_language: esql
 query: |
-  FROM logs-*
-  | WHERE event.action RLIKE "(?i).*(record.*access|chart.*view|appointment.*view).*"
+  FROM   | WHERE event.action RLIKE "(?i).*(record.*access|chart.*view|appointment.*view).*"
     AND (
       log.original RLIKE "(?i).*(reproductive|abortion|contraception|pregnancy.*termination|ob.*gyn|fertility|std|hiv|planned.*parenthood).*"
       OR diagnosis.code RLIKE ".*(Z30|Z31|Z32|Z33|O00|O01|O02|O03|O04|O07|O08|A50-A64).*"
@@ -62,7 +60,7 @@ references:
 nist: ["AC-3"]
 gdpr: ["Article 9"]
 pci_dss: []
-hipaa: ["§164.502, §164.514(d)"]
+hipaa: ["164.502, 164.514.d"]
 mitre_attack:
   TA0009:
     T1530: []

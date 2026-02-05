@@ -18,11 +18,10 @@ type: esql
 params: '{}'
 schedule_interval: 24h
 index:
-  - logs-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-*
+  FROM filebeat-*
   | WHERE (
       log.original RLIKE "(?i).*(biometric|fingerprint|face.*recogni|genetic|dna|voice.*print).*processing.*start.*"
       OR

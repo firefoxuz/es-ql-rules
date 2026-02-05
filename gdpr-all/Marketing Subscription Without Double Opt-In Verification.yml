@@ -17,11 +17,10 @@ type: esql
 params: '{}'
 schedule_interval: 1h
 index:
-  - logs-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-*
+  FROM filebeat-*
   | WHERE event.action IN ("subscription_created", "newsletter_signup", "email_subscribed")
     AND log.original NOT RLIKE "(?i).*(confirmation.*sent|double.*opt.*in|verify.*email|activation.*link).*"
   | STATS single_optin_count = COUNT(*),

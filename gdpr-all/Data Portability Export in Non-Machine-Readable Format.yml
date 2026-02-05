@@ -18,11 +18,10 @@ type: esql
 params: '{}'
 schedule_interval: 12h
 index:
-  - logs-*
   - auditbeat-*
 query_language: esql
 query: |
-  FROM logs-*, auditbeat-*
+  FROM auditbeat-*
   | WHERE event.action RLIKE "(?i).*(export|download|portability.*request).*"
     AND (
       file.extension IN ("pdf", "png", "jpg", "jpeg", "txt", "doc", "docx")

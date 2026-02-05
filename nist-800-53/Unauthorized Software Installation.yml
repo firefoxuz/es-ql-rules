@@ -68,7 +68,7 @@ references:
   - "NIST SP 800-53 Rev.5 CM-11: User-Installed Software"
   - "MITRE ATT&CK T1072: Software Deployment Tools"
 nist: ["CM-7", "CM-11"]
-pci_dss: ["Requirement 2.2.4"]
+pci_dss: ["2.2.4"]
 mitre_attack:
   TA0002:
     T1072: []

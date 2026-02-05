@@ -19,11 +19,9 @@ type: esql
 params: '{}'
 schedule_interval: 10m
 index:
-  - logs-*
 query_language: esql
 query: |
-  FROM logs-*
-  | WHERE event.action RLIKE "(?i).*(record.*access|note.*view|document.*open).*"
+  FROM   | WHERE event.action RLIKE "(?i).*(record.*access|note.*view|document.*open).*"
     AND (
       log.original RLIKE "(?i).*(psychotherapy.*note|behavioral.*health.*note|mental.*health.*session|counseling.*note|therapy.*session).*"
       OR record.type IN ("psychotherapy_notes", "therapy_notes", "mental_health_notes")
@@ -62,7 +60,7 @@ references:
 nist: ["AC-3"]
 gdpr: ["Article 9"]
 pci_dss: []
-hipaa: ["§164.508(a)(2)"]
+hipaa: ["164.508.a.2"]
 mitre_attack:
   TA0009:
     T1530: []

@@ -18,11 +18,10 @@ type: esql
 params: '{}'
 schedule_interval: 24h
 index:
-  - logs-*
   - auditbeat-*
 query_language: esql
 query: |
-  FROM logs-*, auditbeat-*
+  FROM auditbeat-*
   | WHERE event.category == "file"
     AND file.path RLIKE "(?i).*(customer|user|personal|contact|profile|gdpr).*\\.(db|sql|csv|json|xml).*"
   | STATS last_access = MAX(file.accessed),
@@ -53,6 +52,6 @@ references:
   - "GDPR Article 5(1)(e) - Storage Limitation"
   - "GDPR Article 17 - Right to Erasure"
 nist: ["SI-12"]
-gdpr: ["Article 5(1)(e)"]
+gdpr: ["Article 5.1.e"]
 pci_dss: ["3", "3.1"]
 mitre_attack: []

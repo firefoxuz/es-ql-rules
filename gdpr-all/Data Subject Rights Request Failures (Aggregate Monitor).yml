@@ -17,11 +17,10 @@ type: esql
 params: '{}'
 schedule_interval: 12h
 index:
-  - logs-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-*
+  FROM filebeat-*
   | WHERE log.original RLIKE "(?i).*(dsar|data.*subject.*right|gdpr.*request|access.*request|erasure|portability|rectification|objection).*"
     AND (
       log.original RLIKE "(?i).*(fail|error|deny|reject|timeout|overdue).*"

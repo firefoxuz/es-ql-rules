@@ -19,10 +19,9 @@ params: '{}'
 schedule_interval: 24h
 index:
   - filebeat-nginx-access-*
-  - logs-*
 query_language: esql
 query: |
-  FROM filebeat-nginx-access-*, logs-*
+  FROM filebeat-nginx-access-*
   | WHERE url.path RLIKE "(?i).*(privacy|legal|contact|gdpr|data.*protection).*"
     AND http.response.status_code == 200
   | WHERE NOT http.response.body RLIKE "(?i).*(data.*protection.*officer|dpo|privacy.*officer).*(@|contact.*form|email).*"
@@ -50,6 +49,6 @@ references:
   - "GDPR Article 37(7) - Publication of DPO Contact Details"
   - "GDPR Article 13(1)(b) - Controller Identity and Contact"
 nist: ["PM-9"]
-gdpr: ["Article 37(7)"]
+gdpr: ["Article 37.7"]
 pci_dss: []
 mitre_attack: []

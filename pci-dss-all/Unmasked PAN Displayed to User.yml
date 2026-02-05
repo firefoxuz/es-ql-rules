@@ -17,10 +17,9 @@ params: '{}'
 schedule_interval: 10m
 index:
   - filebeat-nginx-access-*
-  - logs-*
 query_language: esql
 query: |
-  FROM filebeat-nginx-access-*, logs-*
+  FROM filebeat-nginx-access-*
   | WHERE event.category == "web"
     AND (
       http.response.body RLIKE ".*[3-6][0-9]{15,18}.*"

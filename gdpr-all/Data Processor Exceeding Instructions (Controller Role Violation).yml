@@ -17,11 +17,10 @@ type: esql
 params: '{}'
 schedule_interval: 15m
 index:
-  - logs-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-*
+  FROM filebeat-*
   | WHERE (
       (event.category == "web"
        AND http.request.referrer RLIKE "(?i).*(vendor|partner|processor|third.*party).*"

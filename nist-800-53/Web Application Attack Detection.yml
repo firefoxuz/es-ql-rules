@@ -71,7 +71,7 @@ references:
   - "OWASP Top 10"
   - "MITRE ATT&CK T1190: Exploit Public-Facing Application"
 nist: ["SC-7", "SI-4", "AC-14"]
-pci_dss: "Requirement 6.5"
+pci_dss: "6.5"
 mitre_attack:
   TA0001:
     T1190: []

@@ -26,10 +26,9 @@ schedule_interval: 10m
 index:
   - winlogbeat-*
   - auditbeat-*
-  - logs-*
 query_language: esql
 query: |
-  FROM winlogbeat-*, auditbeat-*, logs-*
+  FROM winlogbeat-*, auditbeat-*
   | WHERE event.category == "iam"
     AND event.action IN ("added-member-to-group", "user_mgmt", "group_add")
     AND (

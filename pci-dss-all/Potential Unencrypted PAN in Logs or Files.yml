@@ -23,12 +23,11 @@ type: esql
 params: '{}'
 schedule_interval: 15m
 index:
-  - logs-*
   - auditbeat-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, auditbeat-*, filebeat-*
+  FROM auditbeat-*, filebeat-*
   | WHERE (
       (log.original RLIKE ".*\\b[3-6][0-9]{12,18}\\b.*"
        AND event.category IN ("web", "database", "file"))

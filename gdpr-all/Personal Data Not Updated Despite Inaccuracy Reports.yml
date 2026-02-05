@@ -18,11 +18,10 @@ type: esql
 params: '{}'
 schedule_interval: 24h
 index:
-  - logs-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-*
+  FROM filebeat-*
   | WHERE (
       event.action RLIKE "(?i).*(rectification.*request|update.*request|correction.*request|data.*quality.*alert).*"
       OR log.original RLIKE "(?i).*(inaccurate.*data|stale.*record|outdated.*information).*"
@@ -56,6 +55,6 @@ references:
   - "GDPR Article 5(1)(d) - Accuracy Principle"
   - "GDPR Article 16 - Right to Rectification"
 nist: ["SI-12"]
-gdpr: ["Articles 5(1)(d), 16"]
+gdpr: ["Articles 5.1.d, 16"]
 pci_dss: []
 mitre_attack: []

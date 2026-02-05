@@ -18,10 +18,9 @@ params: '{}'
 schedule_interval: 10m
 index:
   - filebeat-nginx-access-*
-  - logs-*
 query_language: esql
 query: |
-  FROM filebeat-nginx-access-*, logs-*
+  FROM filebeat-nginx-access-*
   | WHERE event.category == "web"
     AND (
       url.path RLIKE "(?i).*(googletagmanager|google-analytics|facebook\\.net|hotjar|mixpanel|segment\\.io|amplitude|heap|fullstory).*"

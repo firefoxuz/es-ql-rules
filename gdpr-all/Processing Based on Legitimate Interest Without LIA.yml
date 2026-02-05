@@ -18,11 +18,10 @@ type: esql
 params: '{}'
 schedule_interval: 24h
 index:
-  - logs-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-*
+  FROM filebeat-*
   | WHERE log.original RLIKE "(?i).*(legitimate.*interest|article.*6.*1.*f|necessary.*purpose).*"
     AND log.original RLIKE "(?i).*(process|collect|analyz|monitor).*"
   | WHERE NOT log.original RLIKE "(?i).*(lia|legitimate.*interest.*assessment|balancing.*test|interest.*balance).*"
@@ -51,6 +50,6 @@ references:
   - "GDPR Article 6(1)(f) - Legitimate Interest"
   - "WP29 Opinion 06/2014 on Legitimate Interest"
 nist: ["IP-2"]
-gdpr: ["Article 6(1)(f)"]
+gdpr: ["Article 6.1.f"]
 pci_dss: []
 mitre_attack: []

@@ -18,12 +18,11 @@ type: esql
 params: '{}'
 schedule_interval: 30m
 index:
-  - logs-*
   - winlogbeat-*
   - auditbeat-*
 query_language: esql
 query: |
-  FROM logs-*, winlogbeat-*, auditbeat-*
+  FROM winlogbeat-*, auditbeat-*
   | WHERE event.severity IN ("high", "critical")
     AND event.category IN ("malware", "intrusion_detection", "authentication", "file")
     AND (
@@ -67,7 +66,7 @@ references:
 nist: ["IR-4"]
 gdpr: ["Article 33"]
 pci_dss: ["12.10"]
-hipaa: ["§164.308(a)(6)"]
+hipaa: ["164.308.a.6"]
 mitre_attack:
   TA0005: 
     T1562: []

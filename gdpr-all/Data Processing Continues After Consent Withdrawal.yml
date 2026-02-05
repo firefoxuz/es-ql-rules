@@ -17,11 +17,10 @@ type: esql
 params: '{}'
 schedule_interval: 10m
 index:
-  - logs-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-*
+  FROM filebeat-*
   | WHERE (
       event.action RLIKE "(?i).*(consent.*withdraw|opt.*out|unsubscribe).*"
       OR log.original RLIKE "(?i).*(withdraw.*consent|revoke.*consent|opt.*out).*"
@@ -45,6 +44,6 @@ references:
   - "GDPR Article 7(3) - Withdrawal of Consent"
   - "GDPR Recital 42 - Easy Withdrawal"
 nist: ["IP-1"]
-gdpr: ["Article 7(3)"]
+gdpr: ["Article 7.3"]
 pci_dss: []
 mitre_attack: []

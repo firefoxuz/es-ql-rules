@@ -17,11 +17,10 @@ type: esql
 params: '{}'
 schedule_interval: 24h
 index:
-  - logs-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-*
+  FROM filebeat-*
   | WHERE event.category == "web" OR event.category == "iam"
     AND (
       log.original RLIKE "(?i).*(dsar|data.*subject.*access|gdpr.*request|subject.*access.*request).*"

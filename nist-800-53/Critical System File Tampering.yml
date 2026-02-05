@@ -64,7 +64,7 @@ references:
   - "NIST SP 800-53 Rev.5 SI-7: Software, Firmware, and Information Integrity"
   - "MITRE ATT&CK T1556: Modify Authentication Process"
 nist: ["SI-7"]
-pci_dss: ["Requirement 11.5"]
+pci_dss: ["11.5"]
 mitre_attack:
   TA0005:
     T1556: []

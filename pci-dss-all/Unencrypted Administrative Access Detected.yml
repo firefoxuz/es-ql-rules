@@ -16,12 +16,11 @@ type: esql
 params: '{}'
 schedule_interval: 5m
 index:
-  - logs-*
   - filebeat-*
   - auditbeat-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-*, auditbeat-*
+  FROM filebeat-*, auditbeat-*
   | WHERE event.category == "network"
     AND network.direction == "inbound"
     AND destination.port IN (23, 80, 21, 8080)  // Telnet, HTTP, FTP

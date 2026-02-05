@@ -17,11 +17,10 @@ type: esql
 params: '{}'
 schedule_interval: 1h
 index:
-  - logs-*
   - winlogbeat-*
 query_language: esql
 query: |
-  FROM logs-*, winlogbeat-*
+  FROM winlogbeat-*
   | WHERE event.category == "process" 
     AND (
       log.original RLIKE "(?i).*(signature|definition).*update.*(fail|error).*"

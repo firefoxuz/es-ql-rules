@@ -17,11 +17,10 @@ type: esql
 params: '{}'
 schedule_interval: 15m
 index:
-  - logs-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-*
+  FROM filebeat-*
   | WHERE (
       log.original RLIKE "(?i).*(ml.*model|profil|scor|predict|classif|automat.*decision|algorithm).*"
       AND log.original RLIKE "(?i).*(execut|run|infer|apply|decision).*"

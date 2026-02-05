@@ -56,8 +56,7 @@ references:
   - "NIST SP 800-53 Rev.5 AU-12: Audit Record Generation"
   - "MITRE ATT&CK T1562.002: Disable Windows Event Logging"
 nist: ["AU-2", "AU-12"]
-pci_dss: ["Requirement 10.5"]
+pci_dss: ["10.5"]
 mitre_attack:
   TA0005:
     T1562: ["T1562.002"]
-  sub_technique: "T1562.002"

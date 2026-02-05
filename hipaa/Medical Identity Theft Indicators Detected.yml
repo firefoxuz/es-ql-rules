@@ -19,11 +19,9 @@ type: esql
 params: '{}'
 schedule_interval: 30m
 index:
-  - logs-*
 query_language: esql
 query: |
-  FROM logs-*
-  | WHERE event.action RLIKE "(?i).*(check.*in|appointment|prescription|service.*provided).*"
+  FROM   | WHERE event.action RLIKE "(?i).*(check.*in|appointment|prescription|service.*provided).*"
     AND patient.id IS NOT NULL
   | STATS access_locations = COUNT_DISTINCT(geo.city),
           access_count = COUNT(*),
@@ -61,7 +59,7 @@ references:
 nist: ["IR-4"]
 gdpr: []
 pci_dss: []
-hipaa: ["§164.312(a)"]
+hipaa: ["164.312.a"]
 mitre_attack:
   TA0004:
     T1498: []

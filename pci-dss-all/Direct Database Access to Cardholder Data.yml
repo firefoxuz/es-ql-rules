@@ -16,11 +16,10 @@ type: esql
 params: '{}'
 schedule_interval: 10m
 index:
-  - logs-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-*
+  FROM filebeat-*
   | WHERE event.category == "database"
     AND (
       database.query RLIKE "(?i).*(SELECT|UPDATE|DELETE).*FROM.*(payment|card|customer|transaction).*"

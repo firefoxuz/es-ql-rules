@@ -19,11 +19,10 @@ type: esql
 params: '{}'
 schedule_interval: 12h
 index:
-  - logs-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-*
+  FROM filebeat-*
   | WHERE (
       event.action RLIKE "(?i).*(deploy|activate|enable|start).*"
       AND log.original RLIKE "(?i).*(facial.*recognition|face.*matching|biometric.*identification|face.*detection.*surveillance).*"

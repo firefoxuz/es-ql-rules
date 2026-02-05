@@ -19,11 +19,10 @@ type: esql
 params: '{}'
 schedule_interval: 24h
 index:
-  - logs-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-*
+  FROM filebeat-*
   | WHERE (
       // Vendor/BA system incidents
       (url.domain RLIKE "(?i).*(vendor|partner|contractor|cloud|saas).*"
@@ -61,5 +60,5 @@ references:
 nist: ["IR-6"]
 gdpr: []
 pci_dss: ["12.8"]
-hipaa: ["§164.410"]
+hipaa: ["164.410"]
 mitre_attack: []

@@ -17,11 +17,10 @@ type: esql
 params: '{}'
 schedule_interval: 10m
 index:
-  - logs-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-*
+  FROM filebeat-*
   | WHERE (
       (event.dataset RLIKE ".*mail.*"
        AND (email.subject RLIKE ".*[3-6][0-9]{13,18}.*"

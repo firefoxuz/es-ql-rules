@@ -18,11 +18,9 @@ type: esql
 params: '{}'
 schedule_interval: 10m
 index:
-  - logs-*
 query_language: esql
 query: |
-  FROM logs-*
-  | WHERE event.action RLIKE "(?i).*(chart.*open|record.*access|patient.*view).*"
+  FROM   | WHERE event.action RLIKE "(?i).*(chart.*open|record.*access|patient.*view).*"
     AND (
       log.original RLIKE "(?i).*(vip.*patient|celebrity|public.*figure|confidential.*patient|restricted.*access).*"
       OR patient.tags IN ["vip", "celebrity", "restricted"]
@@ -63,7 +61,7 @@ references:
 nist: ["AC-3"]
 gdpr: ["Article 32"]
 pci_dss: []
-hipaa: ["§164.502(a)"]
+hipaa: ["164.502.a"]
 mitre_attack:
   TA0009:
     T1530: []

@@ -17,11 +17,10 @@ params: '{}'
 schedule_interval: 10m
 index:
   - auditbeat-*
-  - logs-*
   - metricbeat-*
 query_language: esql
 query: |
-  FROM auditbeat-*, logs-*, metricbeat-*
+  FROM auditbeat-*, metricbeat-*
   | WHERE (
       (process.name IN ("dnsmasq", "dhcpd", "isc-dhcp-server") 
        AND process.args RLIKE ".*(wlan|wlp|ath|ra)[0-9].*"

@@ -29,10 +29,9 @@ params: '{}'
 schedule_interval: 5m
 index:
   - auditbeat-*
-  - logs-*
 query_language: esql
 query: |
-  FROM auditbeat-*, logs-*
+  FROM auditbeat-*
   | WHERE event.category == "file"
     AND event.action IN ("access", "read", "open")
     AND file.path RLIKE ".*/tenant_[0-9]+/.*"

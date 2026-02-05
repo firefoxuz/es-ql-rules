@@ -18,11 +18,10 @@ type: esql
 params: '{}'
 schedule_interval: 6h
 index:
-  - logs-*
   - auditbeat-*
 query_language: esql
 query: |
-  FROM logs-*, auditbeat-*
+  FROM auditbeat-*
   | WHERE event.action RLIKE "(?i).*(dsar.*export|access.*request.*fulfill|subject.*data.*export).*"
     AND file.extension IN ("csv", "json", "xml", "xlsx", "sql")
   | WHERE file.size > 1048576  

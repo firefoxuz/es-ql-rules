@@ -20,10 +20,9 @@ params: '{}'
 schedule_interval: 1h
 index:
   - filebeat-nginx-access-*
-  - logs-*
 query_language: esql
 query: |
-  FROM filebeat-nginx-access-*, logs-*
+  FROM filebeat-nginx-access-*
   | WHERE url.path RLIKE "(?i).*/patient.*portal/.*"
     AND (
       http.response.status_code IN (503, 504, 500)
@@ -62,7 +61,7 @@ references:
 nist: ["CP-2"]
 gdpr: ["Article 15"]
 pci_dss: ["12.8"]
-hipaa: ["§164.524"]
+hipaa: ["164.524"]
 mitre_attack:
   TA0040:
     T1499: []

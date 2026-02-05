@@ -16,12 +16,11 @@ type: esql
 params: '{}'
 schedule_interval: 5m
 index:
-  - logs-*
   - auditbeat-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, auditbeat-*, filebeat-*
+  FROM auditbeat-*, filebeat-*
   | WHERE (
       event.module IN ("file_integrity", "fim", "aide", "tripwire", "ossec")
       OR

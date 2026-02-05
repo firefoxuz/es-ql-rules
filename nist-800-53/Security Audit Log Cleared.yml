@@ -59,7 +59,7 @@ references:
   - "NIST SP 800-53 Rev.5 AU-9: Protection of Audit Information"
   - "MITRE ATT&CK T1070.001: Clear Windows Event Logs"
 nist: ["AU-6", "AU-9"]
-pci_dss: ["Requirement 10.5.2"]
+pci_dss: ["10.5.2"]
 mitre_attack:
   TA0005:
     T1070: ["T1070.001"]

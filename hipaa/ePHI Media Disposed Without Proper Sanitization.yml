@@ -18,11 +18,10 @@ type: esql
 params: '{}'
 schedule_interval: 24h
 index:
-  - logs-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-*
+  FROM filebeat-*
   | WHERE (
       event.action RLIKE "(?i).*(dispose|retire|decommission|discard|surplus).*"
       AND log.original RLIKE "(?i).*(server|hard.*drive|laptop|workstation|tape|backup|storage|device|media).*"
@@ -62,7 +61,7 @@ references:
 nist: ["MP-6"]
 gdpr: ["Article 32"]
 pci_dss: ["9.8"]
-hipaa: ["§164.310(d)(2)(i)"]
+hipaa: ["164.310.d.2.i"]
 mitre_attack:
   TA0009:
     T1005: []

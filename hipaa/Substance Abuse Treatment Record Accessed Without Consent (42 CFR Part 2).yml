@@ -19,11 +19,9 @@ type: esql
 params: '{}'
 schedule_interval: 10m
 index:
-  - logs-*
 query_language: esql
 query: |
-  FROM logs-*
-  | WHERE event.action RLIKE "(?i).*(record.*access|disclosure|chart.*view).*"
+  FROM   | WHERE event.action RLIKE "(?i).*(record.*access|disclosure|chart.*view).*"
     AND (
       program.type IN ("substance_abuse", "addiction_treatment", "opioid_treatment", "methadone_clinic")
       OR log.original RLIKE "(?i).*(substance.*abuse|addiction|opioid.*treatment|methadone|buprenorphine|sud|42.*cfr.*part.*2).*"

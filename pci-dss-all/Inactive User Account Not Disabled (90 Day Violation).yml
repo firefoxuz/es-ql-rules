@@ -18,10 +18,9 @@ schedule_interval: 24h
 index:
   - winlogbeat-*
   - auditbeat-*
-  - logs-*
 query_language: esql
 query: |
-  FROM winlogbeat-*, auditbeat-*, logs-*
+  FROM winlogbeat-*, auditbeat-*
   | WHERE event.category == "authentication"
     AND event.outcome == "success"
   | STATS last_login = MAX(@timestamp),

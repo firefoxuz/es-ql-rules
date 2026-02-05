@@ -18,11 +18,10 @@ type: esql
 params: '{}'
 schedule_interval: 10m
 index:
-  - logs-*
   - auditbeat-*
 query_language: esql
 query: |
-  FROM logs-*, auditbeat-*
+  FROM auditbeat-*
   | WHERE event.action RLIKE "(?i).*(enroll|register|capture|scan).*"
     AND log.original RLIKE "(?i).*(fingerprint|face.*recognition|facial|iris|retina|voice.*print|biometric).*"
   | WHERE NOT log.original RLIKE "(?i).*(explicit.*consent|consent.*form|agreement.*signed|article.*9.*consent).*"

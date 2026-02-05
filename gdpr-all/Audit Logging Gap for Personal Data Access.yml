@@ -18,12 +18,11 @@ type: esql
 params: '{}'
 schedule_interval: 1h
 index:
-  - logs-*
   - winlogbeat-*
   - auditbeat-*
 query_language: esql
 query: |
-  FROM logs-*, winlogbeat-*, auditbeat-*
+  FROM winlogbeat-*, auditbeat-*
   | WHERE event.category IN ("database", "file", "authentication", "iam")
     AND @timestamp > NOW() - 2 HOURS
   | STATS event_count = COUNT(*),
@@ -54,7 +53,7 @@ references:
   - "GDPR Article 32(1)(d) - Testing and Evaluation"
   - "GDPR Article 30 - Records of Processing Activities"
 nist: ["AU-6"]
-gdpr: ["Article 32(1)(d)"]
+gdpr: ["Article 32.1.d"]
 pci_dss: ["10.1", "10.2"]
 mitre_attack:
   TA0005:

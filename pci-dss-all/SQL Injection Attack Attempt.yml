@@ -18,10 +18,9 @@ params: '{}'
 schedule_interval: 5m
 index:
   - filebeat-nginx-access-*
-  - logs-*
 query_language: esql
 query: |
-  FROM filebeat-nginx-access-*, logs-*
+  FROM filebeat-nginx-access-*
   | WHERE event.category == "web"
     AND (
       url.query RLIKE "(?i).*(union.*select|or.*1.*=.*1|;.*drop|;.*exec|'.*or.*'|\".*or.*\"|--|\\/\\*|xp_cmdshell).*"

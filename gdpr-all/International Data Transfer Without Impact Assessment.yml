@@ -17,11 +17,10 @@ type: esql
 params: '{}'
 schedule_interval: 12h
 index:
-  - logs-*
   - filebeat-*
 query_language: esql
 query: |
-  FROM logs-*, filebeat-*
+  FROM filebeat-*
   | WHERE (
       (event.action RLIKE "(?i).*(deploy|launch|provision|create).*"
        AND log.original RLIKE "(?i).*(cloud|aws|azure|gcp|region).*"

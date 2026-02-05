@@ -58,6 +58,6 @@ references:
   - "NIST SP 800-53 Rev.5 IA-4: Identifier Management"
   - "NIST SP 800-53 Rev.5 AC-2: Account Management"
 nist: ["IA-4", "AC-2"]
-pci_dss: ["Requirement 8.1"]
+pci_dss: ["8.1"]
 gdpr: []
 mitre_attack: []
