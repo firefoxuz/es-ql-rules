@@ -2,7 +2,8 @@
 #//Requirement: HIPAA Security Rule §164.310(d)(2)(i) - Disposal
 #//Objective: Detect improper disposal of media containing ePHI
 #//Data sources: Asset disposal logs, device retirement logs, sanitization logs
-#//ECS fields used: event.action, log.original, asset.type, event.category
+#//ECS fields used: event.action, event.original, event.original  # FIXME: asset.type not available, event.category
+#//Healthcare field validation: Verify EHR/EMR fields exist in your indices (event.original  # FIXME: patient.id not available, encounter.id, etc.)
 #//Tuning notes: Track asset lifecycle; verify wiping/destruction certificates
 
 name: "ePHI Media Disposed Without Proper Sanitization"
@@ -18,22 +19,25 @@ type: esql
 params: '{}'
 schedule_interval: 24h
 index:
+  - winlogbeat-*
+  - auditbeat-*
+  - filebeat-ehr-*
   - filebeat-*
 query_language: esql
 query: |
   FROM filebeat-*
   | WHERE (
       event.action RLIKE "(?i).*(dispose|retire|decommission|discard|surplus).*"
-      AND log.original RLIKE "(?i).*(server|hard.*drive|laptop|workstation|tape|backup|storage|device|media).*"
+      AND event.original RLIKE "(?i).*(server|hard.*drive|laptop|workstation|tape|backup|storage|device|media).*"
     )
     AND (
-      log.original RLIKE "(?i).*(emr|ehr|phi|patient|medical|clinical).*"
+      event.original RLIKE "(?i).*(emr|ehr|phi|patient|medical|clinical).*"
       OR host.name RLIKE "(?i).*(emr|ehr|clinical|patient).*"
     )
-  | WHERE NOT log.original RLIKE "(?i).*(wipe|sanitize|shred|degauss|destroy|nist.*800.*88|certificate).*"
+  | WHERE NOT event.original RLIKE "(?i).*(wipe|sanitize|shred|degauss|destroy|nist.*800.*88|certificate).*"
   | STATS disposal_events = COUNT(*),
-          devices = VALUES(log.original),
-          asset_types = VALUES(asset.type),
+          devices = VALUES(event.original),
+          asset_types = VALUES(event.original  # FIXME: asset.type not available),
           first_disposal = MIN(@timestamp)
     BY host.name
   | WHERE disposal_events > 0

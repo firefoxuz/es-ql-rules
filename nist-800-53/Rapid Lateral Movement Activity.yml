@@ -3,7 +3,8 @@
 #//Objective: Detect attacker lateral movement across network
 #//Threat scenario: Attacker uses compromised credentials to access multiple systems
 #//Data sources: Windows Security 4624/4648 (network logons), remote execution
-#//ECS fields used: event.code, winlog.logon.type, source.ip, destination.ip, user.name
+#//ECS fields used: event.code, winlog.logon.type, source.ip, event.original, user.name
+#//Field validation: Verify all ECS fields exist in your indices before enabling
 #//Tuning notes: Baseline normal admin activity, allowlist jump servers and management hosts
 #
 name: "Rapid Lateral Movement Activity"

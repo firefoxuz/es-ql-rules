@@ -12,6 +12,7 @@
 #//Objective: Detect unauthorized physical access to sensitive areas
 #//Data sources: Physical access control logs, badge system logs
 #//ECS fields used: event.category, event.action, user.name, event.outcome
+#//Field validation: Verify these fields exist in your indices before enabling
 #//Tuning notes: Monitor badge swipes, door alarms; correlate with video surveillance
 
 name: "Unauthorized Physical Access Attempt to Sensitive Area"
@@ -33,7 +34,7 @@ query: |
     AND event.outcome == "failure"
     AND (
       event.action RLIKE "(?i).*(badge.*deny|access.*deny|door.*alarm|unauthorized).*"
-      OR log.original RLIKE "(?i).*(access.*denied|invalid.*badge|alarm.*trigger).*"
+      OR event.original RLIKE "(?i).*(access.*denied|invalid.*badge|alarm.*trigger).*"
     )
   | STATS attempt_count = COUNT(*),
           users = VALUES(user.name),

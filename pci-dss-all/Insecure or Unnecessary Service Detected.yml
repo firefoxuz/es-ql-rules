@@ -2,7 +2,8 @@
 #//Requirement: 2
 #//Objective: Detect unnecessary or insecure services running
 #//Data sources: Linux auditd, Windows services logs
-#//ECS fields used: event.action, process.name, service.name, network.protocol
+#//ECS fields used: event.action, process.name, event.provider, event.original
+#//Field validation: Verify these fields exist in your indices before enabling
 #//Tuning notes: Define baseline of required services per system role; review quarterly
 
 name: "Insecure or Unnecessary Service Detected"
@@ -24,27 +25,27 @@ query: |
   FROM winlogbeat-*, auditbeat-*, metricbeat-*
   | WHERE (
       (event.category == "network" 
-       AND destination.port IN (21, 23, 69, 161, 162, 512, 513, 514) 
-       AND network.direction == "inbound")
+       AND event.original IN (21, 23, 69, 161, 162, 512, 513, 514) 
+       AND event.original == "inbound")
       OR
       (process.name IN ("telnetd", "ftpd", "rsh", "rlogin", "rexec", "snmpd")
        AND event.action IN ("started", "process_started"))
       OR
-      (service.name RLIKE "(?i)(telnet|ftp|snmp|remote.*registry|simple.*tcp)"
+      (event.provider RLIKE "(?i)(telnet|ftp|snmp|remote.*registry|simple.*tcp)"
        AND winlog.event_id == "7036" 
        AND event.outcome == "success")
     )
   | STATS service_count = COUNT(*),
           first_seen = MIN(@timestamp),
-          services = VALUES(service.name),
+          services = VALUES(event.provider),
           processes = VALUES(process.name),
-          ports = VALUES(destination.port)
-    BY host.name, service.name, process.name
+          ports = VALUES(event.original)
+    BY host.name, event.provider, process.name
   | WHERE service_count > 0
   | EVAL severity_level = CASE(
       process.name IN ("telnetd", "rsh"), "critical",
-      destination.port IN (21, 23), "high",
-      destination.port IN (161, 162), "medium",
+      event.original IN (21, 23), "high",
+      event.original IN (161, 162), "medium",
       "low"
     )
   | KEEP host.name, services, processes, ports, service_count, first_seen, severity_level

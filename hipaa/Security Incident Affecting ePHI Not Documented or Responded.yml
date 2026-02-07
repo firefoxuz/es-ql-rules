@@ -2,7 +2,8 @@
 #//Requirement: HIPAA Security Rule §164.308(a)(6) - Security Incident Procedures
 #//Objective: Detect security incidents without proper documentation or response
 #//Data sources: SIEM logs, incident response system, security event logs
-#//ECS fields used: event.severity, event.category, event.action, @timestamp
+#//ECS fields used: event.type, event.category, event.action, @timestamp
+#//Healthcare field validation: Verify EHR/EMR fields exist in your indices (event.original  # FIXME: patient.id not available, encounter.id, etc.)
 #//Tuning notes: Monitor high-severity security events; track incident response workflow
 
 name: "Security Incident Affecting ePHI Not Documented or Responded"
@@ -20,20 +21,23 @@ schedule_interval: 30m
 index:
   - winlogbeat-*
   - auditbeat-*
+  - filebeat-ehr-*
+  - winlogbeat-*
+  - auditbeat-*
 query_language: esql
 query: |
   FROM winlogbeat-*, auditbeat-*
-  | WHERE event.severity IN ("high", "critical")
+  | WHERE event.type IN ("high", "critical")
     AND event.category IN ("malware", "intrusion_detection", "authentication", "file")
     AND (
       host.name RLIKE "(?i).*(emr|ehr|phi|patient|clinical|medical).*"
-      OR log.original RLIKE "(?i).*(ephi|protected.*health|patient.*data).*"
+      OR event.original RLIKE "(?i).*(ephi|protected.*health|patient.*data).*"
     )
     AND (
       event.action RLIKE "(?i).*(malware.*detect|unauthorized.*access|suspicious.*activity|breach|compromise).*"
-      OR log.original RLIKE "(?i).*(security.*incident|intrusion|attack|exploit).*"
+      OR event.original RLIKE "(?i).*(security.*incident|intrusion|attack|exploit).*"
     )
-  | WHERE NOT log.original RLIKE "(?i).*(incident.*ticket|case.*number|ir.*team|investigated|164.*308.*a.*6|security.*response).*"
+  | WHERE NOT event.original RLIKE "(?i).*(incident.*ticket|case.*number|ir.*team|investigated|164.*308.*a.*6|security.*response).*"
   | STATS undocumented_incidents = COUNT(*),
           incident_types = VALUES(event.action),
           affected_systems = VALUES(host.name),

@@ -2,7 +2,7 @@
 #//Requirement: 6
 #//Objective: Detect XSS attack attempts in web requests
 #//Data sources: Web access logs (nginx), WAF logs
-#//ECS fields used: url.query, http.request.body, source.ip, url.path
+#//ECS fields used: event.original, event.original, source.ip, event.original
 #//Tuning notes: Monitor for script tags and JavaScript event handlers; exclude CDN
 
 name: "Cross-Site Scripting (XSS) Attack Attempt"
@@ -22,29 +22,34 @@ query: |
   FROM filebeat-nginx-access-*
   | WHERE event.category == "web"
     AND (
-      url.query RLIKE "(?i).*(<script|<iframe|javascript:|onerror|onload|eval\\(|alert\\(|document\\.).*"
-      OR http.request.body RLIKE "(?i).*(<script|<iframe|javascript:|onerror|onload|eval\\(|alert\\(|document\\.).*"
-      OR http.request.referrer RLIKE "(?i).*(<script|javascript:).*"
+      event.original RLIKE "(?i).*(<script|<iframe|<svg|<embed|<object|javascript:|data:text\\/html|onerror|onload|onmouseover|onfocus|eval\\(|alert\\(|document\\.|window\\.|String\\.fromCharCode|&#[0-9]+;|\\u[0-9a-f]{4}|%3c|%3e).*"
+      OR event.original RLIKE "(?i).*(<script|<iframe|<svg|<embed|javascript:|onerror|onload|eval\\(|alert\\(|document\\.|String\\.fromCharCode|&#|\\u[0-9a-f]{4}).*"
+      OR event.original RLIKE "(?i).*(<script|javascript:|data:text).*"
     )
   | STATS attempt_count = COUNT(*),
-          urls = VALUES(url.path),
-          queries = VALUES(url.query),
-          user_agents = VALUES(user_agent.original),
-          referrers = VALUES(http.request.referrer)
-    BY source.ip, url.path
+          urls = VALUES(event.original),
+          queries = VALUES(event.original),
+          user_agents = VALUES(event.original),
+          referrers = VALUES(event.original)
+    BY source.ip, event.original
   | WHERE attempt_count > 0
-  | EVAL attack_type = CASE(
-      queries RLIKE "(?i).*<script.*", "Script Injection",
-      queries RLIKE "(?i).*javascript:.*", "JavaScript Protocol",
-      queries RLIKE "(?i).*(onerror|onload).*", "Event Handler",
+  | EVAL attack_vector = CASE(
+      queries RLIKE "(?i).*(<svg|<embed|<object).*", "SVG/XML-Based XSS",
+      queries RLIKE "(?i).*(<script|<iframe).*", "Script/Iframe Injection",
+      queries RLIKE "(?i).*(javascript:|data:text).*", "Protocol Handler XSS",
+      queries RLIKE "(?i).*(onerror|onload|onmouseover|onfocus).*", "Event Handler XSS",
+      queries RLIKE "(?i).*(String\\.fromCharCode|&#[0-9]+;|\\u[0-9a-f]{4}|%3c).*", "Obfuscated/Encoded XSS",
+      queries RLIKE "(?i).*(window\\.|document\\.|location\\.).*", "DOM-Based XSS Indicator",
       "Generic XSS"
     )
   | EVAL risk_score = CASE(
+      attack_vector RLIKE "(?i).*obfuscated.*", 95,
       attempt_count > 5, 90,
-      attack_type == "Script Injection", 85,
+      attack_vector == "SVG/XML-Based XSS", 85,
+      attack_vector == "DOM-Based XSS Indicator", 80,
       70
     )
-  | KEEP source.ip, url.path, attempt_count, attack_type, queries, user_agents, risk_score
+  | KEEP source.ip, event.original, attempt_count, attack_vector, queries, user_agents, risk_score
   | SORT risk_score DESC
   | LIMIT 100
 enabled: false
@@ -59,7 +64,7 @@ risk_score: 85
 references:
   - "PCI DSS v3.1 Requirement 6.5.7"
   - "OWASP Top 10 A7:2017"
-nist: ["SI-10"]
+nist: ["IA-5"]
 gdpr: ["Article 32"]
 pci_dss: ["6.5.7"]
 mitre_attack:

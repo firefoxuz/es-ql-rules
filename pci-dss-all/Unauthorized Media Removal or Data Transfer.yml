@@ -2,7 +2,8 @@
 #//Requirement: 9
 #//Objective: Detect removal of media containing cardholder data without approval
 #//Data sources: Data Loss Prevention logs, file transfer logs
-#//ECS fields used: event.category, event.action, file.path, destination.ip
+#//ECS fields used: event.category, event.action, file.path, event.original
+#//Field validation: Verify these fields exist in your indices before enabling
 #//Tuning notes: Monitor USB/external drive usage; track media movement logs
 
 name: "Unauthorized Media Removal or Data Transfer"
@@ -25,17 +26,17 @@ query: |
     AND (
       (file.path RLIKE ".*[D-Z]:\\\\.*"
        AND event.action IN ("created", "modified")
-       AND file.size > 1048576)
+       AND event.original > 1048576)
       OR
-      (network.direction == "outbound"
-       AND network.bytes > 10485760
-       AND NOT CIDR_MATCH(destination.ip, "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"))
+      (event.original == "outbound"
+       AND event.original > 10485760
+       AND NOT CIDR_MATCH(event.original, "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"))
     )
   | WHERE NOT user.name RLIKE "(?i).*(backup|admin.*approved).*"
   | STATS transfer_count = COUNT(*),
-          total_bytes = SUM(file.size),
+          total_bytes = SUM(event.original),
           files = VALUES(file.name),
-          destinations = VALUES(destination.ip)
+          destinations = VALUES(event.original)
     BY user.name, host.name
   | WHERE transfer_count > 0
   | EVAL risk_score = CASE(

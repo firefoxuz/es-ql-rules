@@ -3,7 +3,9 @@
 #//Objective: Detect process injection techniques used for evasion
 #//Threat scenario: Attacker injects malicious code into legitimate process to hide activity
 #//Data sources: Windows Security 10 (process access), Sysmon process access events
-#//ECS fields used: event.code, process.name, process.target, winlog.event_data.GrantedAccess
+#//ECS fields used: event.code, process.name, event.original, event.original
+#//Field validation: Verify all ECS fields exist in your indices before enabling
+# REQUIRES: Sysmon with process monitoring configuration
 #//Tuning notes: Requires Sysmon, allowlist legitimate debugging tools, baseline normal process relationships
 
 name: "Process Injection Activity"
@@ -23,25 +25,25 @@ query_language: esql
 query: |
   FROM winlogbeat-*
   | WHERE event.code == "10"
-    AND winlog.event_data.GrantedAccess IS NOT NULL
+    AND event.original IS NOT NULL
   | EVAL suspicious_access = CASE(
-      winlog.event_data.GrantedAccess RLIKE ".*(0x1F0FFF|0x1FFFFF|0x1410|0x1438).*", true,
+      event.original RLIKE ".*(0x1F0FFF|0x1FFFFF|0x1410|0x1438).*", true,
       false
     )
   | WHERE suspicious_access == true
   | EVAL target_process_category = CASE(
-      process.target RLIKE "(?i).*(lsass|csrss|winlogon|services|svchost|explorer).*", "Critical-Process",
-      process.target RLIKE "(?i).*(powershell|cmd|rundll32|regsvr32).*", "High-Risk-Target",
+      event.original RLIKE "(?i).*(lsass|csrss|winlogon|services|svchost|explorer).*", "Critical-Process",
+      event.original RLIKE "(?i).*(powershell|cmd|rundll32|regsvr32).*", "High-Risk-Target",
       "Standard-Process"
     )
   | WHERE target_process_category IN ("Critical-Process", "High-Risk-Target")
   | STATS te
       injection_count = COUNT(*),
       unique_sources = COUNT_DISTINCT(process.name),
-      unique_targets = COUNT_DISTINCT(process.target),
+      unique_targets = COUNT_DISTINCT(event.original),
       source_processes = VALUES(process.name),
-      target_processes = VALUES(process.target),
-      access_rights = VALUES(winlog.event_data.GrantedAccess)
+      target_processes = VALUES(event.original),
+      access_rights = VALUES(event.original)
     BY host.name, user.name, target_process_category
     , bucket = DATE_TRUNC(15 minutes, @timestamp)
   | WHERE injection_count >= 1

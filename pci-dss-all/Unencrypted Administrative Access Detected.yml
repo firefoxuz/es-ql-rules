@@ -2,7 +2,8 @@
 #//Requirement: 2
 #//Objective: Detect non-console administrative access without encryption
 #//Data sources: Network logs, authentication logs
-#//ECS fields used: event.category, network.protocol, destination.port, user.name
+#//ECS fields used: event.category, event.original, event.original, user.name
+#//Field validation: Verify these fields exist in your indices before enabling
 #//Tuning notes: Allowlist SSH/TLS/VPN connections; alert on cleartext admin protocols
 
 name: "Unencrypted Administrative Access Detected"
@@ -22,31 +23,31 @@ query_language: esql
 query: |
   FROM filebeat-*, auditbeat-*
   | WHERE event.category == "network"
-    AND network.direction == "inbound"
-    AND destination.port IN (23, 80, 21, 8080)  // Telnet, HTTP, FTP
+    AND event.original == "inbound"
+    AND event.original IN (23, 80, 21, 8080)  // Telnet, HTTP, FTP
     AND event.action RLIKE "(?i)(connect|login|auth)"
   | WHERE NOT (
-      network.protocol == "tls" OR network.protocol == "ssh"
-      OR destination.port == 443
+      event.original == "tls" OR event.original == "ssh"
+      OR event.original == 443
     )
   | STATS connection_count = COUNT(*),
           unique_users = COUNT_DISTINCT(user.name),
           sources = VALUES(source.ip),
-          protocols = VALUES(network.protocol)
-    BY destination.ip, destination.port, user.name
+          protocols = VALUES(event.original)
+    BY event.original, event.original, user.name
   | WHERE connection_count > 0
   | EVAL admin_likely = CASE(
       user.name RLIKE "(?i)(admin|root|sa|dba)", 1,
-      destination.port == 23, 1,
+      event.original == 23, 1,
       0
     )
   | WHERE admin_likely == 1
   | EVAL risk_score = CASE(
-      destination.port == 23, 95,
-      destination.port == 80 AND user.name IS NOT NULL, 85,
+      event.original == 23, 95,
+      event.original == 80 AND user.name IS NOT NULL, 85,
       70
     )
-  | KEEP destination.ip, destination.port, user.name, connection_count, sources, protocols, risk_score
+  | KEEP event.original, event.original, user.name, connection_count, sources, protocols, risk_score
   | SORT risk_score DESC
 enabled: false
 tags:

@@ -3,7 +3,8 @@
 #//Objective: Detect registry modifications for persistence mechanisms
 #//Threat scenario: Attacker modifies Run keys or startup registry for auto-execution
 #//Data sources: Windows Registry change events
-#//ECS fields used: event.action, registry.path, registry.value, user.name
+#//ECS fields used: event.action, event.original, event.original, user.name
+#//Field validation: Verify all ECS fields exist in your indices before enabling
 #//Tuning notes: Allowlist known software installers, baseline normal startup programs
 
 name: "Registry Persistence Key Modification"
@@ -23,25 +24,25 @@ query_language: esql
 query: |
   FROM winlogbeat-*
   | WHERE event.action IN ("RegistryEvent", "SetValue")
-    AND registry.path RLIKE "(?i).*(\\\\Run$|\\\\RunOnce|\\\\RunServices|\\\\Startup|\\\\Winlogon|\\\\Shell|\\\\Load|\\\\UserInit).*"
+    AND event.original RLIKE "(?i).*(\\\\Run$|\\\\RunOnce|\\\\RunServices|\\\\Startup|\\\\Winlogon|\\\\Shell|\\\\Load|\\\\UserInit).*"
   | EVAL persistence_key_type = CASE(
-      registry.path RLIKE "(?i).*\\\\Run$", "Run-Key",
-      registry.path RLIKE "(?i).*\\\\RunOnce", "RunOnce-Key",
-      registry.path RLIKE "(?i).*\\\\Winlogon", "Winlogon-Key",
-      registry.path RLIKE "(?i).*\\\\Startup", "Startup-Folder",
+      event.original RLIKE "(?i).*\\\\Run$", "Run-Key",
+      event.original RLIKE "(?i).*\\\\RunOnce", "RunOnce-Key",
+      event.original RLIKE "(?i).*\\\\Winlogon", "Winlogon-Key",
+      event.original RLIKE "(?i).*\\\\Startup", "Startup-Folder",
       "Other-Persistence"
     )
   | EVAL suspicious_value = CASE(
-      registry.value RLIKE "(?i).*(\\\\Temp\\\\|\\\\AppData\\\\Roaming\\\\|\\\\Users\\\\Public\\\\|powershell|cmd\\.exe|wscript|regsvr32|rundll32).*", true,
-      registry.value RLIKE "(?i).*(http|ftp|download|encoded|bypass|hidden).*", true,
+      event.original RLIKE "(?i).*(\\\\Temp\\\\|\\\\AppData\\\\Roaming\\\\|\\\\Users\\\\Public\\\\|powershell|cmd\\.exe|wscript|regsvr32|rundll32).*", true,
+      event.original RLIKE "(?i).*(http|ftp|download|encoded|bypass|hidden).*", true,
       false
     )
   | WHERE suspicious_value == true
   | STATS 
       modification_count = COUNT(*),
-      unique_keys = COUNT_DISTINCT(registry.path),
-      registry_keys = VALUES(registry.path),
-      registry_values = VALUES(registry.value),
+      unique_keys = COUNT_DISTINCT(event.original),
+      registry_keys = VALUES(event.original),
+      registry_values = VALUES(event.original),
       modifiers = VALUES(user.name)
     BY host.name, persistence_key_type
     , bucket = DATE_TRUNC(15 minutes, @timestamp)

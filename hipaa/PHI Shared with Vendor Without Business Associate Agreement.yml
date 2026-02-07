@@ -2,7 +2,8 @@
 #//Requirement: HIPAA Privacy Rule §164.504(e) - Business Associate Contracts
 #//Objective: Detect PHI sharing with vendors without executed BAA
 #//Data sources: Data sharing logs, API logs, vendor integration logs
-#//ECS fields used: destination.ip, url.domain, network.bytes, event.action
+#//ECS fields used: event.original, event.original, event.original, event.action
+#//Healthcare field validation: Verify EHR/EMR fields exist in your indices (event.original  # FIXME: patient.id not available, encounter.id, etc.)
 #//Tuning notes: Maintain BAA registry; monitor new vendor integrations
 
 name: "PHI Shared with Vendor Without Business Associate Agreement"
@@ -18,25 +19,28 @@ type: esql
 params: '{}'
 schedule_interval: 12h
 index:
+  - winlogbeat-*
+  - auditbeat-*
+  - filebeat-ehr-*
   - filebeat-*
 query_language: esql
 query: |
   FROM filebeat-*
   | WHERE (
-      (network.direction == "outbound"
-       AND NOT CIDR_MATCH(destination.ip, "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16")
-       AND (log.original RLIKE "(?i).*(patient|phi|medical|health.*record).*"
-            OR url.path RLIKE "(?i).*/api/(patient|chart|clinical).*"))
+      (event.original == "outbound"
+       AND NOT CIDR_MATCH(event.original, "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16")
+       AND (event.original RLIKE "(?i).*(patient|phi|medical|health.*record).*"
+            OR event.original RLIKE "(?i).*/api/(patient|chart|clinical).*"))
       OR
       (event.action RLIKE "(?i).*(api.*call|webhook|integration|sync).*"
-       AND log.original RLIKE "(?i).*(patient.*data|phi|medical).*")
+       AND event.original RLIKE "(?i).*(patient.*data|phi|medical).*")
     )
-  | WHERE NOT url.domain IN ("approved-baa-vendor1.com", "signed-ba2.health", "baa-vendor3.io")  // BAA registry
+  | WHERE NOT event.original IN ("approved-baa-vendor1.com", "signed-ba2.health", "baa-vendor3.io")  // BAA registry
   | STATS phi_sharing_events = COUNT(*),
-          vendors = VALUES(url.domain),
-          data_volume_mb = SUM(network.bytes) / 1048576,
-          api_endpoints = VALUES(url.path)
-    BY url.domain, host.name
+          vendors = VALUES(event.original),
+          data_volume_mb = SUM(event.original) / 1048576,
+          api_endpoints = VALUES(event.original)
+    BY event.original, host.name
   | WHERE phi_sharing_events > 5
   | EVAL risk_score = CASE(
       data_volume_mb > 100, 100,
@@ -44,7 +48,7 @@ query: |
       phi_sharing_events > 20, 90,
       85
     )
-  | KEEP url.domain, host.name, phi_sharing_events, data_volume_mb, vendors, api_endpoints, risk_score
+  | KEEP event.original, host.name, phi_sharing_events, data_volume_mb, vendors, api_endpoints, risk_score
   | SORT risk_score DESC
 enabled: false
 tags:

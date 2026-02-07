@@ -3,7 +3,8 @@
 #//Objective: Detect modification of audit policy or logging configuration
 #//Threat scenario: Attacker disables logging to operate undetected
 #//Data sources: Windows Security 4719, Linux auditd config changes
-#//ECS fields used: event.code, event.action, registry.path, file.path
+#//ECS fields used: event.code, event.action, event.original, file.path
+#//Field validation: Verify all ECS fields exist in your indices before enabling
 #//Tuning notes: Baseline normal audit policy changes, allowlist SCCM/GPO update windows
 #
 name: "Audit Policy Modification Detection"
@@ -25,16 +26,16 @@ query: |
   FROM winlogbeat-*, auditbeat-*
   | WHERE event.code == "4719"
     OR (event.action == "modified-file" AND file.path RLIKE "(?i).*(auditd\\.conf|audit\\.rules|rsyslog\\.conf).*")
-    OR (registry.path RLIKE "(?i).*\\\\Policies\\\\Microsoft\\\\Windows\\\\EventLog.*")
+    OR (event.original RLIKE "(?i).*\\\\Policies\\\\Microsoft\\\\Windows\\\\EventLog.*")
   | EVAL change_type = CASE(
       event.code == "4719", "Windows-AuditPolicy-Change",
       file.path RLIKE "(?i).*auditd.*", "Linux-Auditd-Config",
-      registry.path IS NOT NULL, "Windows-EventLog-Registry",
+      event.original IS NOT NULL, "Windows-EventLog-Registry",
       "Unknown-Audit-Change"
     )
   | STATS 
       change_count = COUNT(*),
-      changed_items = VALUES(COALESCE(registry.path, file.path, winlog.event_data.SubcategoryGuid)),
+      changed_items = VALUES(COALESCE(event.original, file.path, event.original)),
       modifiers = VALUES(user.name)
     BY host.name
     , bucket = DATE_TRUNC(15 minutes, @timestamp)

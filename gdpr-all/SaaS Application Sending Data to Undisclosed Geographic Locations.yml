@@ -2,8 +2,10 @@
 #//Requirement: Article 28
 #//Objective: Detect third-party SaaS processing data outside documented regions
 #//Data sources: Network flow logs, DNS logs, API logs
-#//ECS fields used: destination.ip, destination.geo.country_code, http.request.referrer
+#//ECS fields used: event.original, event.original, event.original
+#//GDPR field validation: Verify personal data fields exist (user.email, geo.country, etc.)
 #//Tuning notes: Maintain approved SaaS provider list; monitor outbound connections
+#//NOTE: Requires cloud provider integration (AWS CloudTrail, Azure Activity Log, GCP Audit Log)
 
 name: "SaaS Application Sending Data to Undisclosed Geographic Locations"
 description: |
@@ -19,21 +21,23 @@ params: '{}'
 schedule_interval: 12h
 index:
   - filebeat-*
+  - winlogbeat-*
+  - auditbeat-*
 query_language: esql
 query: |
   FROM filebeat-*
-  | WHERE network.direction == "outbound"
+  | WHERE event.original == "outbound"
     AND (
-      url.domain RLIKE "(?i).*(salesforce|hubspot|zendesk|intercom|mailchimp|sendgrid|twilio|segment|mixpanel).*"
-      OR http.request.referrer RLIKE "(?i).*(saas|cloud.*app|platform).*"
+      event.original RLIKE "(?i).*(salesforce|hubspot|zendesk|intercom|mailchimp|sendgrid|twilio|segment|mixpanel).*"
+      OR event.original RLIKE "(?i).*(saas|cloud.*app|platform).*"
     )
-    AND destination.geo.country_code IS NOT NULL
-  | WHERE NOT destination.geo.country_code IN ("US", "IE", "DE", "GB", "FR", "NL")  // Example: documented DPA locations
+    AND event.original IS NOT NULL
+  | WHERE NOT event.original IN ("US", "IE", "DE", "GB", "FR", "NL")  // Example: documented DPA locations
   | STATS undisclosed_connections = COUNT(*),
-          saas_providers = VALUES(url.domain),
-          countries = VALUES(destination.geo.country_code),
-          data_volume_mb = SUM(network.bytes) / 1048576
-    BY url.domain, destination.geo.country_code
+          saas_providers = VALUES(event.original),
+          countries = VALUES(event.original),
+          data_volume_mb = SUM(event.original) / 1048576
+    BY event.original, event.original
   | WHERE undisclosed_connections > 5
   | EVAL risk_score = CASE(
       countries IN ("CN", "RU", "IN"), 100,
@@ -41,7 +45,7 @@ query: |
       undisclosed_connections > 50, 90,
       85
     )
-  | KEEP url.domain, destination.geo.country_code, undisclosed_connections, data_volume_mb, countries, risk_score
+  | KEEP event.original, event.original, undisclosed_connections, data_volume_mb, countries, risk_score
   | SORT risk_score DESC
 enabled: false
 tags:

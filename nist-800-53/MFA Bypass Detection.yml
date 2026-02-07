@@ -4,6 +4,7 @@
 #//Threat scenario: Attacker bypasses MFA via legacy protocol or stolen session token
 #//Data sources: Windows Security 4624 (LogonType 3/10 without MFA claim), Azure AD logs
 #//ECS fields used: event.code, winlog.logon.type, user.name, event.action
+#//Field validation: Verify all ECS fields exist in your indices before enabling
 #//Tuning notes: Requires MFA enforcement baseline, allowlist service accounts, legacy apps
 
 name: "MFA Bypass Detection"
@@ -25,9 +26,9 @@ query: |
   | WHERE event.code == "4624"
     AND winlog.logon.type IN ("3", "10")
     AND event.outcome == "success"
-  | WHERE winlog.event_data.AuthenticationPackageName != "Negotiate"
-    OR winlog.event_data.AuthenticationPackageName IS NULL
-  | EVAL mfa_indicator = COALESCE(winlog.event_data.ElevatedToken, "NotPresent")
+  | WHERE event.original != "Negotiate"
+    OR event.original IS NULL
+  | EVAL mfa_indicator = COALESCE(event.original, "NotPresent")
   | WHERE mfa_indicator == "NotPresent"
   | STATS 
       non_mfa_logins = COUNT(*),

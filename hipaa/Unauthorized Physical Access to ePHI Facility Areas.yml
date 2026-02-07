@@ -3,6 +3,7 @@
 #//Objective: Detect unauthorized physical access to areas with ePHI systems
 #//Data sources: Physical access control logs, badge system logs
 #//ECS fields used: event.category, event.action, user.name, event.outcome
+#//Healthcare field validation: Verify EHR/EMR fields exist in your indices (event.original  # FIXME: patient.id not available, encounter.id, etc.)
 #//Tuning notes: Monitor server rooms, data centers, medical records areas; track badge swipes
 
 name: "Unauthorized Physical Access to ePHI Facility Areas"
@@ -18,6 +19,9 @@ type: esql
 params: '{}'
 schedule_interval: 5m
 index:
+  - winlogbeat-*
+  - auditbeat-*
+  - filebeat-ehr-*
   - filebeat-*
 query_language: esql
 query: |
@@ -28,12 +32,12 @@ query: |
       OR event.action RLIKE "(?i).*(door.*alarm|forced.*entry|tailgate|unauthorized).*"
     )
     AND (
-      log.original RLIKE "(?i).*(server.*room|data.*center|medical.*records|network.*closet|secure.*area|restricted).*"
+      event.original RLIKE "(?i).*(server.*room|data.*center|medical.*records|network.*closet|secure.*area|restricted).*"
       OR event.dataset RLIKE "(?i).*(badge|access.*control|security.*system).*"
     )
   | STATS access_attempts = COUNT(*),
           users = VALUES(user.name),
-          locations = VALUES(log.original),
+          locations = VALUES(event.original),
           first_attempt = MIN(@timestamp),
           last_attempt = MAX(@timestamp)
     BY user.name, event.dataset

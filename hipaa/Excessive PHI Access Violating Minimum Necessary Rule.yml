@@ -2,7 +2,8 @@
 #//Requirement: HIPAA Privacy Rule §164.502(b) - Minimum Necessary
 #//Objective: Detect excessive PHI access beyond job requirements
 #//Data sources: EHR access logs, database query logs, file access logs
-#//ECS fields used: event.action, user.name, database.query, log.original
+#//ECS fields used: event.action, user.name, event.original, event.original
+#//Healthcare field validation: Verify EHR/EMR fields exist in your indices (event.original  # FIXME: patient.id not available, encounter.id, etc.)
 #//Tuning notes: Define role-based data access limits; monitor bulk queries
 
 name: "Excessive PHI Access Violating Minimum Necessary Rule"
@@ -18,26 +19,29 @@ type: esql
 params: '{}'
 schedule_interval: 15m
 index:
+  - winlogbeat-*
+  - auditbeat-*
+  - filebeat-ehr-*
   - auditbeat-*
 query_language: esql
 query: |
   FROM auditbeat-*
   | WHERE (
       (event.category == "database"
-       AND database.query RLIKE "(?i).*SELECT.*\\*.*FROM.*(patient|medical|encounter|visit).*"
+       AND event.original RLIKE "(?i).*SELECT.*\\*.*FROM.*(patient|medical|encounter|visit).*"
        AND user.name NOT RLIKE "(?i).*(physician|doctor|nurse|clinician|provider).*")
       OR
       (event.action RLIKE "(?i).*(chart.*view|record.*access|document.*open).*"
        AND user.name RLIKE "(?i).*(billing|admin|clerk|receptionist|scheduler).*"
-       AND log.original RLIKE "(?i).*(diagnosis|medication|lab|radiology|notes).*")
+       AND event.original RLIKE "(?i).*(diagnosis|medication|lab|radiology|notes).*")
       OR
       (event.action RLIKE "(?i).*patient.*access.*"
        AND event.category IN ("database", "web"))
     )
   | STATS access_count = COUNT(*),
-          unique_patients = COUNT_DISTINCT(log.original),
+          unique_patients = COUNT_DISTINCT(event.original),
           access_types = VALUES(event.action),
-          queries = VALUES(database.query)
+          queries = VALUES(event.original)
     BY user.name, host.name
   | WHERE access_count > 50 OR unique_patients > 20
   | EVAL risk_score = CASE(

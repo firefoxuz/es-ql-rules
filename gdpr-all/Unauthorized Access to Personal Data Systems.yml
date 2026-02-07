@@ -3,6 +3,7 @@
 #//Objective: Detect unauthorized access to personal data systems
 #//Data sources: Authentication logs, database logs, file access logs
 #//ECS fields used: event.category, user.name, event.outcome, source.ip
+#//GDPR field validation: Verify personal data fields exist (user.email, geo.country, etc.)
 #//Tuning notes: Monitor unauthorized access attempts; track privilege escalation
 
 name: "Unauthorized Access to Personal Data Systems"

@@ -2,7 +2,8 @@
 #//Requirement: HIPAA Security Rule §164.312(e)(1) - Transmission Security
 #//Objective: Detect unencrypted ePHI transmissions over networks
 #//Data sources: Network logs, web access logs, email logs
-#//ECS fields used: network.protocol, destination.port, tls.version, http.request.body
+#//ECS fields used: event.original, event.original, event.original, event.original
+#//Healthcare field validation: Verify EHR/EMR fields exist in your indices (event.original  # FIXME: patient.id not available, encounter.id, etc.)
 #//Tuning notes: Monitor for HTTP (not HTTPS), plain FTP, unencrypted email with PHI
 
 name: "ePHI Transmitted Without Encryption (Cleartext)"
@@ -18,31 +19,35 @@ type: esql
 params: '{}'
 schedule_interval: 10m
 index:
+  - winlogbeat-*
+  - auditbeat-*
+  - filebeat-ehr-*
   - filebeat-nginx-access-*
   - filebeat-*
 query_language: esql
 query: |
   FROM filebeat-nginx-access-*, filebeat-*
   | WHERE (
-      (network.protocol == "http"
-       AND destination.port IN (80, 8080)
-       AND (http.request.body RLIKE "(?i).*(patient|mrn|diagnosis|medication|dob|ssn).*"
-            OR url.query RLIKE "(?i).*(patient.*id|medical.*record|chart).*"))
+      (event.original == "http"
+       AND event.original IN (80, 8080)
+       AND (event.original RLIKE "(?i).*(patient|mrn|diagnosis|medication|dob|ssn).*"
+        # NOTE: Generic keyword detection - high false positive rate. Consider structured field validation.
+            OR event.original RLIKE "(?i).*(patient.*id|medical.*record|chart).*"))
       OR
-      (destination.port == 21
-       AND network.protocol == "ftp"
-       AND tls.established != true)
+      (event.original == 21
+       AND event.original == "ftp"
+       AND event.original != true)
       OR
-      (destination.port IN (25, 110)
-       AND email.body RLIKE "(?i).*(patient|medical.*record|diagnosis|lab.*result).*")
+      (event.original IN (25, 110)
+       AND event.original RLIKE "(?i).*(patient|medical.*record|diagnosis|lab.*result).*")
     )
   | WHERE NOT CIDR_MATCH(source.ip, "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16")
   | STATS cleartext_transmissions = COUNT(*),
-          protocols = VALUES(network.protocol),
-          destinations = VALUES(destination.ip),
-          data_volume_mb = SUM(network.bytes) / 1048576,
-          urls = VALUES(url.path)
-    BY destination.ip, destination.port
+          protocols = VALUES(event.original),
+          destinations = VALUES(event.original),
+          data_volume_mb = SUM(event.original) / 1048576,
+          urls = VALUES(event.original)
+    BY event.original, event.original
   | WHERE cleartext_transmissions > 0
   | EVAL risk_score = CASE(
       protocols IN ("http", "ftp"), 100,
@@ -50,7 +55,7 @@ query: |
       cleartext_transmissions > 10, 90,
       85
     )
-  | KEEP destination.ip, destination.port, cleartext_transmissions, data_volume_mb, protocols, urls, risk_score
+  | KEEP event.original, event.original, cleartext_transmissions, data_volume_mb, protocols, urls, risk_score
   | SORT risk_score DESC
 enabled: false
 tags:

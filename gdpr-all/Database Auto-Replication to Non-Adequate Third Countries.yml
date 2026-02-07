@@ -2,8 +2,10 @@
 #//Requirement: Articles 44-46
 #//Objective: Detect automatic data replication to non-adequate countries
 #//Data sources: Database replication logs, cloud sync logs
-#//ECS fields used: destination.geo.country_code, event.action, database.name
+#//ECS fields used: event.original, event.action, event.original
+#//GDPR field validation: Verify personal data fields exist (user.email, geo.country, etc.)
 #//Tuning notes: Monitor database replication; enforce geo-restrictions
+#//NOTE: Requires cloud provider integration (AWS CloudTrail, Azure Activity Log, GCP Audit Log)
 
 name: "Database Auto-Replication to Non-Adequate Third Countries"
 description: |
@@ -23,13 +25,13 @@ query_language: esql
 query: |
   FROM auditbeat-*
   | WHERE event.action RLIKE "(?i).*(replicat|sync|backup|mirror|copy).*"
-    AND log.original RLIKE "(?i).*(database|db|storage|data).*"
-    AND destination.geo.country_code NOT IN ("AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE", "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE", "GB", "NO", "IS", "LI", "CH", "IL", "JP", "NZ", "CA", "KR", "AR", "UY")
+    AND event.original RLIKE "(?i).*(database|db|storage|data).*"
+    AND event.original NOT IN ("AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE", "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE", "GB", "NO", "IS", "LI", "CH", "IL", "JP", "NZ", "CA", "KR", "AR", "UY")
   | STATS replication_events = COUNT(*),
-          destination_countries = VALUES(destination.geo.country_code),
-          databases = VALUES(database.name),
-          data_volume_mb = SUM(network.bytes) / 1048576
-    BY destination.geo.country_code, database.name
+          destination_countries = VALUES(event.original),
+          databases = VALUES(event.original),
+          data_volume_mb = SUM(event.original) / 1048576
+    BY event.original, event.original
   | WHERE replication_events > 0
   | EVAL risk_score = CASE(
       destination_countries IN ("CN", "RU", "IN", "BR"), 100,
@@ -37,7 +39,7 @@ query: |
       replication_events > 10, 90,
       85
     )
-  | KEEP destination.geo.country_code, database.name, replication_events, data_volume_mb, destination_countries, risk_score
+  | KEEP event.original, event.original, replication_events, data_volume_mb, destination_countries, risk_score
   | SORT risk_score DESC
 enabled: false
 tags:

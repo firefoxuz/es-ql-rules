@@ -4,6 +4,7 @@
 #//Threat scenario: Credential stuffing or privilege escalation attempts
 #//Data sources: Windows Security 4656/4663, Linux auditd syscall failures
 #//ECS fields used: event.outcome, event.code, user.name, file.path, process.name
+#//Field validation: Verify all ECS fields exist in your indices before enabling
 #//Tuning notes: Adjust threshold per environment (5-10 failures/5min), allowlist monitoring tools
 
 name: "Excessive Failed Privileged Access"
@@ -33,7 +34,7 @@ query: |
       file.path RLIKE "(?i).*(\\\\windows\\\\|/root/|/var/|HKLM\\\\SAM).*", true,
       false
     )
-  | WHERE sensitive_path == true OR winlog.event_data.PrivilegeList IS NOT NULL
+  | WHERE sensitive_path == true OR event.original IS NOT NULL
   | STATS 
       failure_count = COUNT(*),
       unique_targets = COUNT_DISTINCT(COALESCE(file.path, process.name)),

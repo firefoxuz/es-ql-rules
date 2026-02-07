@@ -2,7 +2,8 @@
 #//Requirement: HIPAA Security Rule §164.312(b) - Audit Controls
 #//Objective: Detect patient record access not logged in audit system
 #//Data sources: EHR/EMR access logs, database logs, audit trail logs
-#//ECS fields used: event.action, user.name, log.original, event.category
+#//ECS fields used: event.action, user.name, event.original, event.category
+#//Healthcare field validation: Verify EHR/EMR fields exist in your indices (event.original  # FIXME: patient.id not available, encounter.id, etc.)
 #//Tuning notes: Verify comprehensive audit trail; correlate with compliance reports
 
 name: "Patient Medical Record Accessed Without Audit Log Entry"
@@ -18,15 +19,18 @@ type: esql
 params: '{}'
 schedule_interval: 30m
 index:
+  - winlogbeat-*
+  - auditbeat-*
+  - filebeat-ehr-*
   - auditbeat-*
 query_language: esql
 query: |
   FROM auditbeat-*
   | WHERE (
       event.action RLIKE "(?i).*(chart.*open|record.*view|patient.*access|document.*view|lab.*result|imaging.*view).*"
-      OR database.query RLIKE "(?i).*SELECT.*FROM.*(patient|medical.*record|chart|encounter|visit).*"
+      OR event.original RLIKE "(?i).*SELECT.*FROM.*(patient|medical.*record|chart|encounter|visit).*"
     )
-  | WHERE NOT log.original RLIKE "(?i).*(audit.*trail|audit.*log|access.*log|hipaa.*audit).*"
+  | WHERE NOT event.original RLIKE "(?i).*(audit.*trail|audit.*log|access.*log|hipaa.*audit).*"
   | STATS unaudited_access = COUNT(*),
           users = VALUES(user.name),
           access_types = VALUES(event.action),

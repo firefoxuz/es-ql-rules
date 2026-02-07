@@ -2,7 +2,8 @@
 #//Requirement: 42 CFR Part 2 - Confidentiality of Substance Use Disorder Records
 #//Objective: Detect unauthorized access to substance abuse treatment records
 #//Data sources: EHR audit logs, substance abuse program records
-#//ECS fields used: event.action, program.type, diagnosis.code, user.name
+#//ECS fields used: event.action, event.original  # FIXME: program.type not available, event.original  # FIXME: diagnosis.code not available, user.name
+#//Healthcare field validation: Verify EHR/EMR fields exist in your indices (event.original  # FIXME: patient.id not available, encounter.id, etc.)
 #//Tuning notes: Identify Part 2 programs; require specific patient consent
 
 name: "Substance Abuse Treatment Record Accessed Without Consent (42 CFR Part 2)"
@@ -19,19 +20,22 @@ type: esql
 params: '{}'
 schedule_interval: 10m
 index:
+  - winlogbeat-*
+  - auditbeat-*
+  - filebeat-ehr-*
 query_language: esql
 query: |
   FROM   | WHERE event.action RLIKE "(?i).*(record.*access|disclosure|chart.*view).*"
     AND (
-      program.type IN ("substance_abuse", "addiction_treatment", "opioid_treatment", "methadone_clinic")
-      OR log.original RLIKE "(?i).*(substance.*abuse|addiction|opioid.*treatment|methadone|buprenorphine|sud|42.*cfr.*part.*2).*"
-      OR diagnosis.code RLIKE ".*(F10|F11|F12|F13|F14|F15|F16|F17|F18|F19).*"  // SUD diagnosis codes
+      event.original  # FIXME: program.type not available IN ("substance_abuse", "addiction_treatment", "opioid_treatment", "methadone_clinic")
+      OR event.original RLIKE "(?i).*(substance.*abuse|addiction|opioid.*treatment|methadone|buprenorphine|sud|42.*cfr.*part.*2).*"
+      OR event.original  # FIXME: diagnosis.code not available RLIKE ".*(F10|F11|F12|F13|F14|F15|F16|F17|F18|F19).*"  // SUD diagnosis codes
     )
-  | WHERE NOT log.original RLIKE "(?i).*(patient.*consent|42.*cfr.*authorization|signed.*consent|part.*2.*consent).*"
+  | WHERE NOT event.original RLIKE "(?i).*(patient.*consent|42.*cfr.*authorization|signed.*consent|part.*2.*consent).*"
   | STATS part2_violations = COUNT(*),
           accessing_users = VALUES(user.name),
-          programs = VALUES(program.type),
-          patients_affected = COUNT_DISTINCT(patient.id)
+          programs = VALUES(event.original  # FIXME: program.type not available),
+          patients_affected = COUNT_DISTINCT(event.original  # FIXME: patient.id not available)
     BY user.name, host.name
   | WHERE part2_violations > 0
   | EVAL risk_score = CASE(

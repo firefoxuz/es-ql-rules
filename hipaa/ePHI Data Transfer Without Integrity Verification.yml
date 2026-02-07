@@ -2,7 +2,8 @@
 #//Requirement: HIPAA Security Rule §164.312(c)(2) - Mechanism to Authenticate ePHI
 #//Objective: Detect ePHI transmissions without checksums/digital signatures
 #//Data sources: Network logs, file transfer logs, HL7 interface logs
-#//ECS fields used: network.protocol, network.bytes, file.hash, event.action
+#//ECS fields used: event.original, event.original, event.original, event.action
+#//Healthcare field validation: Verify EHR/EMR fields exist in your indices (event.original  # FIXME: patient.id not available, encounter.id, etc.)
 #//Tuning notes: Monitor HL7/FHIR interfaces; verify message integrity mechanisms
 
 name: "ePHI Data Transfer Without Integrity Verification"
@@ -18,35 +19,38 @@ type: esql
 params: '{}'
 schedule_interval: 30m
 index:
+  - winlogbeat-*
+  - auditbeat-*
+  - filebeat-ehr-*
   - filebeat-*
 query_language: esql
 query: |
   FROM filebeat-*
   | WHERE (
-      (network.protocol RLIKE "(?i).*(hl7|mllp).*"
-       AND log.original NOT RLIKE "(?i).*(checksum|hash|digest|signature).*")
+      (event.original RLIKE "(?i).*(hl7|mllp).*"
+       AND event.original NOT RLIKE "(?i).*(checksum|hash|digest|signature).*")
       OR
       (event.action RLIKE "(?i).*(transfer|send|transmit|export).*"
        AND file.path RLIKE "(?i).*(patient|medical|ehr|phi|clinical|ccda|ccd).*"
-       AND file.hash.sha256 IS NULL)
+       AND event.original.sha256 IS NULL)
       OR
-      (url.path RLIKE "(?i).*/fhir/.*"
-       AND http.request.headers NOT RLIKE "(?i).*(digest|signature|integrity).*")
+      (event.original RLIKE "(?i).*/fhir/.*"
+       AND event.original NOT RLIKE "(?i).*(digest|signature|integrity).*")
     )
-    AND network.bytes > 10240
+    AND event.original > 10240
   | STATS unverified_transfers = COUNT(*),
-          protocols = VALUES(network.protocol),
+          protocols = VALUES(event.original),
           files = VALUES(file.name),
-          data_volume_mb = SUM(network.bytes) / 1048576,
-          destinations = VALUES(destination.ip)
-    BY host.name, destination.ip
+          data_volume_mb = SUM(event.original) / 1048576,
+          destinations = VALUES(event.original)
+    BY host.name, event.original
   | WHERE unverified_transfers > 5
   | EVAL risk_score = CASE(
       data_volume_mb > 100, 90,
       unverified_transfers > 50, 85,
       80
     )
-  | KEEP host.name, destination.ip, unverified_transfers, data_volume_mb, protocols, files, risk_score
+  | KEEP host.name, event.original, unverified_transfers, data_volume_mb, protocols, files, risk_score
   | SORT unverified_transfers DESC
 enabled: false
 tags:

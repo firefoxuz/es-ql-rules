@@ -2,7 +2,7 @@
 #//Requirement: 6
 #//Objective: Detect path traversal attacks in web requests
 #//Data sources: Web access logs (nginx), application logs
-#//ECS fields used: url.path, url.query, http.response.status_code, source.ip
+#//ECS fields used: event.original, event.original, event.outcome, source.ip
 #//Tuning notes: Monitor for ../ patterns and absolute paths; correlate with 404/403 errors
 #
 name: "Directory Traversal Attack Attempt"
@@ -22,28 +22,39 @@ query: |
   FROM filebeat-nginx-access-*
   | WHERE event.category == "web"
     AND (
-      url.path RLIKE ".*\\.\\.[\\/\\\\].*"
-      OR url.path RLIKE ".*(etc\\/passwd|windows\\/win\\.ini|\\.ssh\\/|config\\.php|web\\.config).*"
-      OR url.query RLIKE "(?i).*(file=.*\\.\\.[\\/]|path=.*\\.\\.[\\/]).*"
-      OR url.path RLIKE ".*%2e%2e[\\/|%2f|%5c].*"  // Encoded ../ or ..\
+      event.original RLIKE ".*\\.\\.[\\/\\\\].*"
+      OR event.original RLIKE ".*(etc\\/passwd|windows\\/win\\.ini|\\.ssh\\/|config\\.php|web\\.config|boot\\.ini|system32).*"
+      OR event.original RLIKE "(?i).*(file=.*\\.\\.[\\/]|path=.*\\.\\.[\\/]).*"
+      OR event.original RLIKE ".*%2e%2e[\\/|%2f|%5c].*"
+      OR event.original RLIKE ".*%252e%252e.*"
+      OR event.original RLIKE ".*\\\\\\\\.*"
+      OR event.original RLIKE ".*%00.*"
     )
   | STATS attempt_count = COUNT(*),
-          status_codes = VALUES(http.response.status_code),
-          paths = VALUES(url.path),
-          user_agents = VALUES(user_agent.original)
-    BY source.ip, url.path
+          status_codes = VALUES(event.outcome),
+          paths = VALUES(event.original),
+          user_agents = VALUES(event.original)
+    BY source.ip, event.original
   | WHERE attempt_count > 0
+  | EVAL traversal_technique = CASE(
+      paths RLIKE ".*%252e.*", "Double Encoded",
+      paths RLIKE ".*%2e%2e.*", "URL Encoded",
+      paths RLIKE ".*%00.*", "Null Byte Injection",
+      paths RLIKE ".*\\\\\\\\.*", "UNC Path",
+      "Standard Traversal"
+    )
   | EVAL success_indicators = CASE(
       status_codes RLIKE ".*(200|301|302).*", 1,
       0
     )
   | EVAL risk_score = CASE(
       success_indicators == 1, 100,
+      paths RLIKE "(?i).*(passwd|shadow|win\\.ini|boot\\.ini).*", 95,
       attempt_count > 5, 90,
-      paths RLIKE "(?i).*(passwd|shadow|win\\.ini).*", 95,
+      traversal_technique == "Double Encoded", 85,
       75
     )
-  | KEEP source.ip, url.path, attempt_count, status_codes, paths, user_agents, risk_score
+  | KEEP source.ip, event.original, attempt_count, status_codes, traversal_technique, paths, user_agents, risk_score
   | SORT risk_score DESC
   | LIMIT 100
 enabled: false

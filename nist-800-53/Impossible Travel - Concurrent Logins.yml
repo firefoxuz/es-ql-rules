@@ -3,7 +3,9 @@
 #//Objective: Detect geographically impossible user logins
 #//Threat scenario: Compromised credentials used from attacker-controlled infrastructure
 #//Data sources: Windows Security 4624, Linux successful auth events with source.geo
-#//ECS fields used: event.outcome, user.name, source.ip, source.geo.location
+#//ECS fields used: event.outcome, user.name, source.ip, event.original  # FIXME: source.geo.location not available
+#//Field validation: Verify all ECS fields exist in your indices before enabling
+# REQUIRES: GeoIP enrichment configured in Elasticsearch
 #//Tuning notes: Requires GeoIP enrichment, adjust time/distance threshold, allowlist VPN exit nodes
 
 name: "Impossible Travel - Concurrent Logins"
@@ -24,13 +26,13 @@ query: |
   FROM winlogbeat-*, auditbeat-*
   | WHERE event.outcome == "success"
     AND (event.code == "4624" OR event.action IN ("ssh_login", "login", "user-login"))
-    AND source.geo.location IS NOT NULL
+    AND event.original  # FIXME: source.geo.location not available IS NOT NULL
   | STATS 
       login_count = COUNT(*),
       unique_ips = COUNT_DISTINCT(source.ip),
-      unique_countries = COUNT_DISTINCT(source.geo.country_name),
-      locations = VALUES(source.geo.city_name),
-      countries = VALUES(source.geo.country_name),
+      unique_countries = COUNT_DISTINCT(event.original  # FIXME: source.geo.country_name not available),
+      locations = VALUES(event.original  # FIXME: source.geo.city_name not available),
+      countries = VALUES(event.original  # FIXME: source.geo.country_name not available),
       ips = VALUES(source.ip),
       first_login = MIN(@timestamp),
       last_login = MAX(@timestamp)

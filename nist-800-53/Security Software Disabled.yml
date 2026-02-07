@@ -3,7 +3,8 @@
 #//Objective: Detect attempts to disable or tamper with security software
 #//Threat scenario: Attacker disables antivirus, EDR, or logging before deploying malware
 #//Data sources: Windows Service events, process termination of security tools
-#//ECS fields used: event.action, service.name, process.name, event.code
+#//ECS fields used: event.action, event.provider, process.name, event.code
+#//Field validation: Verify all ECS fields exist in your indices before enabling
 #//Tuning notes: Maintain list of protected security services, allowlist legitimate maintenance
 
 name: "Security Software Disabled"
@@ -23,15 +24,15 @@ index:
 query_language: esql
 query: |
   FROM winlogbeat-*, auditbeat-*
-  | WHERE (event.code IN ("7036", "7040") AND service.name RLIKE "(?i).*(defender|windefend|sense|crowdstrike|carbonblack|sysmon|splunk|wazuh|elastic).*")
+  | WHERE (event.code IN ("7036", "7040") AND event.provider RLIKE "(?i).*(defender|windefend|sense|crowdstrike|carbonblack|sysmon|splunk|wazuh|elastic).*")
     OR (event.action == "process-terminated" AND process.name RLIKE "(?i).*(msmpeng|mssense|csagent|cb\\.exe|sysmon|winlogbeat|auditbeat).*")
     OR (event.action IN ("service-stopped", "service-disabled"))
   | EVAL security_component = CASE(
-      service.name RLIKE "(?i).*defender.*" OR process.name RLIKE "(?i).*msmpeng.*", "Windows-Defender",
-      service.name RLIKE "(?i).*crowdstrike.*" OR process.name RLIKE "(?i).*csagent.*", "CrowdStrike-EDR",
-      service.name RLIKE "(?i).*carbonblack.*" OR process.name RLIKE "(?i).*cb\\.exe.*", "CarbonBlack-EDR",
-      service.name RLIKE "(?i).*sysmon.*" OR process.name RLIKE "(?i).*sysmon.*", "Sysmon-Logging",
-      service.name RLIKE "(?i).*(elastic|beats).*", "Elastic-Agent",
+      event.provider RLIKE "(?i).*defender.*" OR process.name RLIKE "(?i).*msmpeng.*", "Windows-Defender",
+      event.provider RLIKE "(?i).*crowdstrike.*" OR process.name RLIKE "(?i).*csagent.*", "CrowdStrike-EDR",
+      event.provider RLIKE "(?i).*carbonblack.*" OR process.name RLIKE "(?i).*cb\\.exe.*", "CarbonBlack-EDR",
+      event.provider RLIKE "(?i).*sysmon.*" OR process.name RLIKE "(?i).*sysmon.*", "Sysmon-Logging",
+      event.provider RLIKE "(?i).*(elastic|beats).*", "Elastic-Agent",
       "Other-Security-Tool"
     )
   | EVAL action_type = CASE(
@@ -42,8 +43,8 @@ query: |
     )
   | STATS 
       tampering_count = COUNT(*),
-      unique_components = COUNT_DISTINCT(COALESCE(service.name, process.name)),
-      affected_services = VALUES(COALESCE(service.name, process.name)),
+      unique_components = COUNT_DISTINCT(COALESCE(event.provider, process.name)),
+      affected_services = VALUES(COALESCE(event.provider, process.name)),
       tamper_actions = VALUES(action_type),
       users = VALUES(user.name)
     BY host.name

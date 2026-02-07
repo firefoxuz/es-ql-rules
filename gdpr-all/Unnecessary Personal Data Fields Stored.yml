@@ -2,8 +2,10 @@
 #//Requirement: Article 5
 #//Objective: Detect storage of data not necessary for processing purpose
 #//Data sources: Database logs, file system monitoring
-#//ECS fields used: database.query, file.path, event.action
+#//ECS fields used: event.original, file.path, event.action
+#//GDPR field validation: Verify personal data fields exist (user.email, geo.country, etc.)
 #//Tuning notes: Define minimal datasets; monitor for bloat/scope creep
+#//NOTE: Requires data classification taxonomy (define which fields contain special category personal data)
 
 name: "Unnecessary Personal Data Fields Stored"
 description: |
@@ -20,21 +22,21 @@ index:
 query_language: esql
 query: |
   FROM   | WHERE event.category == "database"
-    AND database.query RLIKE "(?i).*CREATE.*TABLE.*"
-  | EVAL column_count = LENGTH(database.query) - LENGTH(REPLACE(database.query, ",", "")) + 1
+    AND event.original RLIKE "(?i).*CREATE.*TABLE.*"
+  | EVAL column_count = LENGTH(event.original) - LENGTH(REPLACE(event.original, ",", "")) + 1
   | WHERE column_count > 30  // Tables with >30 columns (customize threshold)
-    AND database.query RLIKE "(?i).*(customer|user|contact|personal).*"
+    AND event.original RLIKE "(?i).*(customer|user|contact|personal).*"
   | STATS excessive_schemas = COUNT(*),
-          tables = VALUES(database.name),
+          tables = VALUES(event.original),
           column_counts = VALUES(column_count)
-    BY database.name, host.name
+    BY event.original, host.name
   | WHERE excessive_schemas > 0
   | EVAL risk_score = CASE(
       column_count > 50, 85,
       column_count > 40, 75,
       65
     )
-  | KEEP database.name, host.name, excessive_schemas, tables, column_counts, risk_score
+  | KEEP event.original, host.name, excessive_schemas, tables, column_counts, risk_score
   | SORT column_count DESC
 enabled: false
 tags:

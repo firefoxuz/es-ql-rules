@@ -2,8 +2,10 @@
 #//Requirement: Articles 9, 32
 #//Objective: Detect unencrypted biometric template databases
 #//Data sources: Database logs, file system monitoring
-#//ECS fields used: database.name, file.path, event.action
+#//ECS fields used: event.original, file.path, event.action
+#//GDPR field validation: Verify personal data fields exist (user.email, geo.country, etc.)
 #//Tuning notes: Scan biometric databases; verify encryption-at-rest
+#//NOTE: Requires data classification taxonomy (define which fields contain special category personal data)
 
 name: "Unencrypted Biometric Template Database Detected"
 description: |
@@ -26,9 +28,9 @@ query: |
     AND file.path RLIKE "(?i).*(biometric|fingerprint|facial|iris|voice.*print).*"
     AND file.extension IN ("db", "sqlite", "dat", "bin", "xml", "json")
     AND file.path NOT RLIKE "(?i).*(encrypt|vault|secure|protected|tde).*"
-  | WHERE file.size > 102400  // >100KB
+  | WHERE event.original > 102400  // >100KB
   | STATS biometric_files = COUNT(*),
-          total_size_mb = SUM(file.size) / 1048576,
+          total_size_mb = SUM(event.original) / 1048576,
           files = VALUES(file.path),
           directories = VALUES(file.directory)
     BY host.name, file.directory

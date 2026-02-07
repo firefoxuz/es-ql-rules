@@ -3,6 +3,7 @@
 #//Objective: Detect creation and deletion of system-level objects
 #//Data sources: Windows Event Logs, Linux auditd
 #//ECS fields used: event.category, event.action, file.path, user.name
+#//Field validation: Verify these fields exist in your indices before enabling
 #//Tuning notes: Monitor system file changes, service deletions, registry keys
 #
 name: "Critical System-Level Object Created or Deleted"
@@ -23,10 +24,10 @@ query: |
   FROM winlogbeat-*, auditbeat-*
   | WHERE (
       (winlog.event_id IN ("7045", "7040")
-       AND winlog.channel == "System")
+       AND event.dataset == "System")
       OR
       (event.category == "registry"
-       AND winlog.event_data.ObjectName RLIKE ".*\\\\(CurrentVersion|Run|RunOnce|Policies)\\\\.*"
+       AND event.original RLIKE ".*\\\\(CurrentVersion|Run|RunOnce|Policies)\\\\.*"
        AND event.action IN ("created", "deleted"))
       OR
       (event.category == "file"
@@ -38,8 +39,8 @@ query: |
     )
   | STATS change_count = COUNT(*),
           files_affected = VALUES(file.path),
-          services = VALUES(service.name),
-          registry_keys = VALUES(winlog.event_data.ObjectName),
+          services = VALUES(event.provider),
+          registry_keys = VALUES(event.original),
           actions = VALUES(event.action)
     BY user.name, host.name
   | WHERE change_count > 0

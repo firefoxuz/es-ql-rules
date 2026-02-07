@@ -3,7 +3,8 @@
 #//Objective: Detect unauthorized creation of privileged accounts
 #//Threat scenario: Attacker creates backdoor admin account for persistence
 #//Data sources: Windows Security Event 4720, Linux /var/log/auth.log via auditbeat
-#//ECS fields used: event.code, user.name, user.target.name, user.target.group, winlog.event_data.PrivilegeList
+#//ECS fields used: event.code, user.name, user.target.name, user.target.name, event.original
+#//Field validation: Verify all ECS fields exist in your indices before enabling
 #//Tuning notes: Allowlist known provisioning systems, baseline normal admin account creation frequency
 
 name: "Privileged Account Creation Detection"
@@ -23,11 +24,11 @@ query_language: esql
 query: |
   FROM winlogbeat-*, auditbeat-*
   | WHERE event.code IN ("4720", "4732", "4728", "4756")
-    OR (event.action == "added-user-account" AND user.target.group IN ("sudo", "wheel", "admin", "root"))
+    OR (event.action == "added-user-account" AND user.target.name IN ("sudo", "wheel", "admin", "root"))
   | EVAL privilege_indicators = CASE(
-      winlog.event_data.PrivilegeList IS NOT NULL, "Windows-Privileged",
-      user.target.group IN ("Administrators", "Domain Admins", "Enterprise Admins"), "Windows-HighPriv",
-      user.target.group IN ("sudo", "wheel", "root"), "Linux-HighPriv",
+      event.original IS NOT NULL, "Windows-Privileged",
+      user.target.name IN ("Administrators", "Domain Admins", "Enterprise Admins"), "Windows-HighPriv",
+      user.target.name IN ("sudo", "wheel", "root"), "Linux-HighPriv",
       "Standard"
     )
   | WHERE privilege_indicators != "Standard"
@@ -38,7 +39,7 @@ query: |
       unique_creators = COUNT_DISTINCT(user.name),
       after_hours_count = SUM(CASE(is_after_hours == true, 1, 0)),
       targets = VALUES(user.target.name),
-      groups = VALUES(user.target.group)
+      groups = VALUES(user.target.name)
     BY host.name, user.name
     | WHERE account_creations >= 1
   | EVAL risk_score = account_creations * 20 + after_hours_count * 30

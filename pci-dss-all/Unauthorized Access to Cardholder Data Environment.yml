@@ -3,7 +3,8 @@
 #//Requirement: 7
 #//Objective: Detect access to CDE systems by users without documented need-to-know
 #//Data sources: Windows Event Logs, Linux auditd, database audit logs
-#//ECS fields used: event.category, user.name, destination.ip, event.action
+#//ECS fields used: event.category, user.name, event.original, event.action
+#//Field validation: Verify these fields exist in your indices before enabling
 #//Tuning notes: Define CDE asset list; maintain authorized user registry; monitor access patterns
 
 name: "Unauthorized Access to Cardholder Data Environment"
@@ -25,7 +26,7 @@ query: |
   | WHERE event.category == "authentication"
     AND event.outcome == "success"
     AND (
-      CIDR_MATCH(destination.ip, "10.100.0.0/16", "192.168.10.0/24")
+      CIDR_MATCH(event.original, "10.100.0.0/16", "192.168.10.0/24")
       OR host.name RLIKE "(?i).*(cde|cardholder|payment|db.*prod).*"
     )
   | WHERE NOT user.name RLIKE "(?i).*(svc.*payment|cde.*admin|authorized.*user).*"  // Allowlist
@@ -33,8 +34,8 @@ query: |
           first_access = MIN(@timestamp),
           last_access = MAX(@timestamp),
           sources = VALUES(source.ip),
-          systems = VALUES(destination.ip)
-    BY user.name, destination.ip
+          systems = VALUES(event.original)
+    BY user.name, event.original
   | WHERE access_count > 0
   | EVAL risk_score = CASE(
       access_count > 10, 95,
@@ -42,7 +43,7 @@ query: |
       access_count > 3, 80,
       70
     )
-  | KEEP user.name, destination.ip, access_count, first_access, last_access, sources, systems, risk_score
+  | KEEP user.name, event.original, access_count, first_access, last_access, sources, systems, risk_score
   | SORT risk_score DESC
 enabled: false
 tags:

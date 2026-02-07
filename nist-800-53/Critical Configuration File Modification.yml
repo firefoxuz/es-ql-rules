@@ -3,7 +3,8 @@
 #//Objective: Detect modifications to critical system configuration files
 #//Threat scenario: Attacker modifies security settings to weaken defenses
 #//Data sources: Windows Registry changes, Linux /etc configuration file modifications
-#//ECS fields used: event.action, registry.path, file.path, user.name
+#//ECS fields used: event.action, event.original, file.path, user.name
+#//Field validation: Verify all ECS fields exist in your indices before enabling
 #//Tuning notes: Allowlist known configuration management tools (Ansible, Puppet), change windows
 
 name: "Critical Configuration File Modification"
@@ -25,22 +26,22 @@ query: |
   FROM winlogbeat-*, auditbeat-*
   | WHERE (event.action IN ("modified-file", "created-file", "deleted-file")
       AND file.path RLIKE "(?i).*(\/etc\/|\/boot\/|C:\\\\Windows\\\\System32\\\\config\\\\).*")
-    OR (registry.path RLIKE "(?i).*(HKLM\\\\SYSTEM\\\\CurrentControlSet\\\\Services|HKLM\\\\SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Policies).*")
+    OR (event.original RLIKE "(?i).*(HKLM\\\\SYSTEM\\\\CurrentControlSet\\\\Services|HKLM\\\\SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Policies).*")
   | EVAL config_type = CASE(
       file.path RLIKE "(?i).*\/etc\/passwd.*", "Linux-UserAccounts",
       file.path RLIKE "(?i).*\/etc\/sudoers.*", "Linux-Sudo-Config",
       file.path RLIKE "(?i).*\/etc\/ssh\/.*", "Linux-SSH-Config",
       file.path RLIKE "(?i).*firewall.*", "Firewall-Rules",
-      registry.path RLIKE "(?i).*Policies.*", "Windows-Security-Policy",
-      registry.path RLIKE "(?i).*Services.*", "Windows-Service-Config",
+      event.original RLIKE "(?i).*Policies.*", "Windows-Security-Policy",
+      event.original RLIKE "(?i).*Services.*", "Windows-Service-Config",
       "Other-Critical-Config"
     )
   | EVAL hour_of_day = DATE_EXTRACT("hour", @timestamp)
   | EVAL is_after_hours = CASE(hour_of_day < 7 OR hour_of_day > 19, true, false)
   | STATS 
       change_count = COUNT(*),
-      unique_files = COUNT_DISTINCT(COALESCE(file.path, registry.path)),
-      changed_configs = VALUES(COALESCE(file.path, registry.path)),
+      unique_files = COUNT_DISTINCT(COALESCE(file.path, event.original)),
+      changed_configs = VALUES(COALESCE(file.path, event.original)),
       modifiers = VALUES(user.name),
       after_hours_changes = SUM(CASE(is_after_hours == true, 1, 0))
     BY host.name, config_type

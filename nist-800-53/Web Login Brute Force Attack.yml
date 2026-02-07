@@ -3,7 +3,8 @@
 #//Objective: Detect brute force attacks against web login forms
 #//Threat scenario: Attacker attempts credential stuffing against web application authentication
 #//Data sources: Nginx access logs showing POST to login endpoints with 401/403 responses
-#//ECS fields used: url.path, http.response.status_code, http.request.method, source.ip
+#//ECS fields used: event.original, event.outcome, event.action, source.ip
+#//Field validation: Verify all ECS fields exist in your indices before enabling
 #//Tuning notes: Adjust threshold per application login frequency, allowlist known IPs
 
 name: "Web Login Brute Force Attack"
@@ -22,18 +23,18 @@ index:
 query_language: esql
 query: |
   FROM filebeat-nginx-access-*
-  | WHERE http.request.method == "POST"
-    AND url.path RLIKE "(?i).*(login|signin|auth|authenticate|logon).*"
-    AND http.response.status_code IN (401, 403, 302, 200)
-  | EVAL is_failure = CASE(http.response.status_code IN (401, 403), true, false)
-  | EVAL is_success = CASE(http.response.status_code IN (200, 302), true, false)
+  | WHERE event.action == "POST"
+    AND event.original RLIKE "(?i).*(login|signin|auth|authenticate|logon).*"
+    AND event.outcome IN (401, 403, 302, 200)
+  | EVAL is_failure = CASE(event.outcome IN (401, 403), true, false)
+  | EVAL is_success = CASE(event.outcome IN (200, 302), true, false)
   | STATS 
       total_attempts = COUNT(*),
       failure_count = SUM(CASE(is_failure == true, 1, 0)),
       success_count = SUM(CASE(is_success == true, 1, 0)),
-      unique_paths = COUNT_DISTINCT(url.path),
-      login_paths = VALUES(url.path),
-      user_agents = VALUES(user_agent.original)
+      unique_paths = COUNT_DISTINCT(event.original),
+      login_paths = VALUES(event.original),
+      user_agents = VALUES(event.original)
     BY source.ip
     , bucket = DATE_TRUNC(10 minutes, @timestamp)
   | WHERE failure_count >= 10

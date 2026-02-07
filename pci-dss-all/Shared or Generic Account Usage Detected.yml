@@ -3,6 +3,7 @@
 #//Objective: Detect use of shared, group, or generic accounts
 #//Data sources: Windows Event Logs, Linux auditd, application logs
 #//ECS fields used: event.category, user.name, source.ip, event.action
+#//Field validation: Verify these fields exist in your indices before enabling
 #//Tuning notes: Identify generic usernames; monitor for concurrent logins from same account
 
 name: "Shared or Generic Account Usage Detected"

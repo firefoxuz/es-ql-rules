@@ -2,7 +2,8 @@
 #//Requirement: HIPAA Privacy Rule §164.524 - Right of Access
 #//Objective: Detect patient medical record requests not fulfilled within 30 days
 #//Data sources: Patient portal logs, medical records request logs, ticketing systems
-#//ECS fields used: event.action, user.name, @timestamp, log.original
+#//ECS fields used: event.action, user.name, @timestamp, event.original
+#//Healthcare field validation: Verify EHR/EMR fields exist in your indices (event.original  # FIXME: patient.id not available, encounter.id, etc.)
 #//Tuning notes: Track request lifecycle; monitor 30-day deadline compliance
 
 name: "Patient Access to Medical Records Request Overdue"
@@ -18,18 +19,21 @@ type: esql
 params: '{}'
 schedule_interval: 24h
 index:
+  - winlogbeat-*
+  - auditbeat-*
+  - filebeat-ehr-*
   - filebeat-*
 query_language: esql
 query: |
   FROM filebeat-*
   | WHERE (
       event.action RLIKE "(?i).*(medical.*record.*request|chart.*request|access.*request|record.*copy).*"
-      OR log.original RLIKE "(?i).*(patient.*portal.*request|designated.*record.*set|164.*524).*"
+      OR event.original RLIKE "(?i).*(patient.*portal.*request|designated.*record.*set|164.*524).*"
     )
-    AND log.original RLIKE "(?i).*(pending|open|in.*progress|submitted).*"
-    AND log.original NOT RLIKE "(?i).*(completed|fulfilled|provided|delivered|closed).*"
+    AND event.original RLIKE "(?i).*(pending|open|in.*progress|submitted).*"
+    AND event.original NOT RLIKE "(?i).*(completed|fulfilled|provided|delivered|closed).*"
   | STATS request_age_days = (NOW() - MIN(@timestamp)) / 86400000,
-          request_status = VALUES(log.original),
+          request_status = VALUES(event.original),
           first_request = MIN(@timestamp),
           patient = VALUES(user.name)
     BY user.name, host.name

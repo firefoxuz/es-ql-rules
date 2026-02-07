@@ -3,7 +3,8 @@
 #//Objective: Detect unauthorized modifications to critical system files
 #//Threat scenario: Attacker modifies system binaries to install rootkit or backdoor
 #//Data sources: Windows file hash changes, Linux critical file modifications (FIM)
-#//ECS fields used: event.action, file.path, file.hash.sha256, user.name
+#//ECS fields used: event.action, file.path, event.original.sha256, user.name
+#//Field validation: Verify all ECS fields exist in your indices before enabling
 #//Tuning notes: Requires FIM baseline, allowlist software update processes, patch windows
 
 name: "Critical System File Tampering"
@@ -40,7 +41,7 @@ query: |
       unique_files = COUNT_DISTINCT(file.path),
       modified_files = VALUES(file.path),
       modifiers = VALUES(user.name),
-      file_hashes = VALUES(file.hash.sha256)
+      file_hashes = VALUES(event.original.sha256)
     BY host.name, system_criticality
     , bucket = DATE_TRUNC(15 minutes, @timestamp)
   | WHERE modification_count >= 1

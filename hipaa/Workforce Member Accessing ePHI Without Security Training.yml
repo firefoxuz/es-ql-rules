@@ -2,7 +2,8 @@
 #//Requirement: HIPAA Security Rule §164.308(a)(5) - Security Awareness and Training
 #//Objective: Detect workforce members accessing ePHI without completed training
 #//Data sources: LMS logs, training records, authentication logs
-#//ECS fields used: user.name, event.action, @timestamp, log.original
+#//ECS fields used: user.name, event.action, @timestamp, event.original
+#//Healthcare field validation: Verify EHR/EMR fields exist in your indices (event.original  # FIXME: patient.id not available, encounter.id, etc.)
 #//Tuning notes: Track training completion dates; require annual refresher training
 
 name: "Workforce Member Accessing ePHI Without Security Training"
@@ -21,6 +22,9 @@ schedule_interval: 24h
 index:
   - winlogbeat-*
   - auditbeat-*
+  - filebeat-ehr-*
+  - winlogbeat-*
+  - auditbeat-*
 query_language: esql
 query: |
   FROM winlogbeat-*, auditbeat-*
@@ -28,7 +32,7 @@ query: |
     AND event.outcome == "success"
     AND (
       host.name RLIKE "(?i).*(emr|ehr|phi|patient|clinical).*"
-      OR destination.ip RLIKE ".*(10\\.100\\.|192\\.168\\.50\\.).*"  // ePHI systems
+      OR event.original RLIKE ".*(10\\.100\\.|192\\.168\\.50\\.).*"  // ePHI systems
     )
   | WHERE user.name NOT IN (
       "trained.user1", "certified.doctor2", "trained.nurse3"

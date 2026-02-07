@@ -4,6 +4,7 @@
 #//Objective: Detect and log all actions by root/administrator accounts
 #//Data sources: Windows Event Logs, Linux auditd
 #//ECS fields used: event.category, user.name, process.name, event.action
+#//Field validation: Verify these fields exist in your indices before enabling
 #//Tuning notes: Monitor sudo/runas commands; track privileged process executions
 
 name: "Privileged Command Execution by Administrator"

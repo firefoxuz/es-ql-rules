@@ -3,6 +3,7 @@
 #//Objective: Detect shared accounts or generic usernames accessing ePHI
 #//Data sources: Authentication logs, EHR access logs
 #//ECS fields used: event.category, user.name, source.ip, host.name
+#//Healthcare field validation: Verify EHR/EMR fields exist in your indices (event.original  # FIXME: patient.id not available, encounter.id, etc.)
 #//Tuning notes: Identify generic/shared accounts; monitor concurrent access
 
 name: "Shared or Generic Account Accessing ePHI"
@@ -19,6 +20,9 @@ type: esql
 params: '{}'
 schedule_interval: 10m
 index:
+  - winlogbeat-*
+  - auditbeat-*
+  - filebeat-ehr-*
   - winlogbeat-*
   - auditbeat-*
 query_language: esql

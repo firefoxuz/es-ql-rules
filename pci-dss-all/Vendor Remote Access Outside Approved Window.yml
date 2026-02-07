@@ -13,6 +13,7 @@
 #//Objective: Detect vendor/partner remote access not following activation procedures
 #//Data sources: VPN logs, remote access logs, authentication logs
 #//ECS fields used: event.category, user.name, source.ip, event.action
+#//Field validation: Verify these fields exist in your indices before enabling
 #//Tuning notes: Track vendor account usage; monitor for always-on vendor connections
 
 name: "Vendor Remote Access Outside Approved Window"
@@ -35,7 +36,7 @@ query: |
   | WHERE event.category == "authentication"
     AND event.outcome == "success"
     AND user.name RLIKE "(?i).*(vendor|partner|contractor|support|supplier).*"
-    AND network.direction == "inbound"
+    AND event.original == "inbound"
     AND NOT CIDR_MATCH(source.ip, "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16")
   | STATS session_count = COUNT(*),
           session_start = MIN(@timestamp),

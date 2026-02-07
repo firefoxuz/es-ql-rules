@@ -2,7 +2,8 @@
 #//Requirement: 3
 #//Objective: Detect display of full unmasked PAN to unauthorized users
 #//Data sources: Application logs, web access logs
-#//ECS fields used: log.original, http.response.body, user.name, url.path
+#//ECS fields used: event.original, http.response.body, user.name, event.original
+#//Field validation: Verify these fields exist in your indices before enabling
 #//Tuning notes: Monitor API responses and UI logs; allowlist authorized roles with business need
 
 name: "Unmasked PAN Displayed to User"
@@ -23,24 +24,24 @@ query: |
   | WHERE event.category == "web"
     AND (
       http.response.body RLIKE ".*[3-6][0-9]{15,18}.*"
-      OR log.original RLIKE ".*\\b[3-6][0-9]{15,18}\\b.*"
+      OR event.original RLIKE ".*\\b[3-6][0-9]{15,18}\\b.*"
     )
   | WHERE NOT (
-      url.path RLIKE ".*/admin/payment/.*"
+      event.original RLIKE ".*/admin/payment/.*"
       OR user.name RLIKE "(?i).*(admin|payment[_]?support).*"
     )
   | STATS display_count = COUNT(*),
           users = VALUES(user.name),
-          urls = VALUES(url.path),
+          urls = VALUES(event.original),
           sources = VALUES(source.ip)
-    BY host.name, url.path
+    BY host.name, event.original
   | WHERE display_count > 0
   | EVAL risk_score = CASE(
       user.name IS NULL OR user.name == "anonymous", 95,
       display_count > 5, 85,
       70
     )
-  | KEEP host.name, url.path, users, display_count, sources, risk_score
+  | KEEP host.name, event.original, users, display_count, sources, risk_score
   | SORT risk_score DESC
 enabled: false
 tags:

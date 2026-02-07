@@ -4,6 +4,7 @@
 #//Threat scenario: Attacker clears event logs to hide evidence of compromise
 #//Data sources: Windows Security 1102/1104, Linux auditd log rotation anomalies
 #//ECS fields used: event.code, event.action, user.name, file.path
+#//Field validation: Verify all ECS fields exist in your indices before enabling
 #//Tuning notes: Allowlist scheduled maintenance windows, legitimate log rotation scripts
 
 name: "Security Audit Log Cleared"
@@ -36,7 +37,7 @@ query: |
   | EVAL is_after_hours = CASE(hour_of_day < 6 OR hour_of_day > 22, true, false)
   | STATS 
       clear_count = COUNT(*),
-      cleared_logs = VALUES(COALESCE(winlog.channel, file.path)),
+      cleared_logs = VALUES(COALESCE(event.dataset, file.path)),
       users = VALUES(user.name),
       after_hours_events = SUM(CASE(is_after_hours == true, 1, 0))
     BY host.name

@@ -2,8 +2,10 @@
 #//Requirement: Article 9
 #//Objective: Detect processing of sensitive data without explicit consent or legal basis
 #//Data sources: Application logs, database logs, web access logs
-#//ECS fields used: event.category, http.request.body, database.query, log.original
+#//ECS fields used: event.category, event.original, event.original, event.original
+#//GDPR field validation: Verify personal data fields exist (user.email, geo.country, etc.)
 #//Tuning notes: Monitor for health, biometric, genetic data; require explicit consent
+#//NOTE: Requires data classification taxonomy (define which fields contain special category personal data)
 
 name: "Special Category Personal Data Processed Without Safeguards"
 description: |
@@ -23,28 +25,28 @@ query: |
   FROM filebeat-nginx-access-*
   | WHERE (
       (event.category == "web"
-       AND (http.request.body RLIKE "(?i).*(health|medical|disease|diagnosis|prescription|biometric|fingerprint|face.*scan|genetic|dna|race|ethnicity|religion|political.*party|sexual.*orientation|gender.*identity).*"
-            OR url.query RLIKE "(?i).*(health|biometric|genetic|religion|political).*"))
+       AND (event.original RLIKE "(?i).*(health|medical|disease|diagnosis|prescription|biometric|fingerprint|face.*scan|genetic|dna|race|ethnicity|religion|political.*party|sexual.*orientation|gender.*identity).*"
+            OR event.original RLIKE "(?i).*(health|biometric|genetic|religion|political).*"))
       OR
       (event.category == "database"
-       AND database.query RLIKE "(?i).*(health|medical|biometric|genetic|race|religion|political|sexual).*")
+       AND event.original RLIKE "(?i).*(health|medical|biometric|genetic|race|religion|political|sexual).*")
     )
   | WHERE NOT (
-      log.original RLIKE "(?i).*(explicit.*consent|article.*9.*exemption|healthcare.*provider|legal.*obligation).*"
-      OR url.path RLIKE "(?i).*(hospital|clinic|health.*portal|government).*"
+      event.original RLIKE "(?i).*(explicit.*consent|article.*9.*exemption|healthcare.*provider|legal.*obligation).*"
+      OR event.original RLIKE "(?i).*(hospital|clinic|health.*portal|government).*"
     )
   | STATS processing_events = COUNT(*),
-          data_categories = VALUES(url.path),
+          data_categories = VALUES(event.original),
           sources = VALUES(source.ip),
           users = VALUES(user.name)
-    BY url.path, host.name
+    BY event.original, host.name
   | WHERE processing_events > 0
   | EVAL risk_score = CASE(
       data_categories RLIKE "(?i).*(biometric|genetic|health).*", 100,
       processing_events > 5, 95,
       90
     )
-  | KEEP url.path, host.name, processing_events, data_categories, sources, risk_score
+  | KEEP event.original, host.name, processing_events, data_categories, sources, risk_score
   | SORT risk_score DESC
 enabled: false
 tags:

@@ -4,6 +4,7 @@
 #//Threat scenario: Attacker deploys ransomware for extortion and business disruption
 #//Data sources: Windows file creation patterns, mass file encryption indicators
 #//ECS fields used: event.action, file.extension, file.path, process.name
+#//Field validation: Verify all ECS fields exist in your indices before enabling
 #//Tuning notes: Adjust file extension list for new ransomware variants, threshold for mass file ops
 
 name: "Ransomware File Encryption Detection"

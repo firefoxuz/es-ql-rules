@@ -3,7 +3,8 @@
 #//Objective: Detect abnormally large POST requests indicating upload attacks or DoS
 #//Threat scenario: Attacker uploads malicious files or attempts resource exhaustion
 #//Data sources: Nginx access logs with request body size
-#//ECS fields used: http.request.method, http.request.body.bytes, url.path, source.ip
+#//ECS fields used: event.action, event.original.bytes, event.original, source.ip
+#//Field validation: Verify all ECS fields exist in your indices before enabling
 #//Tuning notes: Adjust size threshold per application (consider file upload endpoints)
 
 name: "Suspicious Large HTTP POST"
@@ -22,12 +23,12 @@ index:
 query_language: esql
 query: |
   FROM filebeat-nginx-access-*
-  | WHERE http.request.method == "POST"
-    AND http.request.body.bytes IS NOT NULL
-  | EVAL body_size_mb = http.request.body.bytes / 1048576
+  | WHERE event.action == "POST"
+    AND event.original.bytes IS NOT NULL
+  | EVAL body_size_mb = event.original.bytes / 1048576
   | WHERE body_size_mb >= 10
   | EVAL is_upload_endpoint = CASE(
-      url.path RLIKE "(?i).*(upload|media|file|attachment|import|backup).*", true,
+      event.original RLIKE "(?i).*(upload|media|file|attachment|import|backup).*", true,
       false
     )
   | STATS 
@@ -37,7 +38,7 @@ query: |
       avg_size_mb = AVG(body_size_mb),
       upload_endpoints = SUM(CASE(is_upload_endpoint == true, 1, 0)),
       non_upload_endpoints = SUM(CASE(is_upload_endpoint == false, 1, 0)),
-      target_paths = VALUES(url.path)
+      target_paths = VALUES(event.original)
     BY source.ip
     , bucket = DATE_TRUNC(20 minutes, @timestamp)
   | WHERE large_post_count >= 3 OR non_upload_endpoints >= 1

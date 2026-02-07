@@ -2,7 +2,8 @@
 #//Requirement: HITECH Act §13405(e) - Patient Access to Health Information
 #//Objective: Detect excessive patient portal downtime impacting access rights
 #//Data sources: Patient portal availability logs, uptime monitoring logs
-#//ECS fields used: event.action, event.duration, @timestamp, http.response.status_code
+#//ECS fields used: event.action, event.original, @timestamp, event.outcome
+#//Healthcare field validation: Verify EHR/EMR fields exist in your indices (event.original  # FIXME: patient.id not available, encounter.id, etc.)
 #//Tuning notes: Monitor portal availability; track downtime incidents; require 99% SLA
 
 name: "Patient Portal Extended Downtime (Access Violation)"
@@ -19,17 +20,20 @@ type: esql
 params: '{}'
 schedule_interval: 1h
 index:
+  - winlogbeat-*
+  - auditbeat-*
+  - filebeat-ehr-*
   - filebeat-nginx-access-*
 query_language: esql
 query: |
   FROM filebeat-nginx-access-*
-  | WHERE url.path RLIKE "(?i).*/patient.*portal/.*"
+  | WHERE event.original RLIKE "(?i).*/patient.*portal/.*"
     AND (
-      http.response.status_code IN (503, 504, 500)
+      event.outcome IN (503, 504, 500)
       OR event.action RLIKE "(?i).*(service.*unavailable|gateway.*timeout|portal.*down).*"
     )
   | STATS downtime_events = COUNT(*),
-          error_codes = VALUES(http.response.status_code),
+          error_codes = VALUES(event.outcome),
           first_error = MIN(@timestamp),
           last_error = MAX(@timestamp),
           duration_hours = (MAX(@timestamp) - MIN(@timestamp)) / 3600000

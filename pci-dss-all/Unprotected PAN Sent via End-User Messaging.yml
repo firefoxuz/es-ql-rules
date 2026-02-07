@@ -3,7 +3,8 @@
 #//Requirement: 4
 #//Objective: Detect unprotected PANs sent via email, IM, SMS
 #//Data sources: Email logs, messaging application logs
-#//ECS fields used: email.subject, email.body, log.original, event.category
+#//ECS fields used: event.original, event.original, event.original, event.category
+#//Field validation: Verify these fields exist in your indices before enabling
 #//Tuning notes: Monitor mail server logs and messaging platforms; exclude encrypted email gateways
 
 name: "Unprotected PAN Sent via End-User Messaging"
@@ -23,27 +24,27 @@ query: |
   FROM filebeat-*
   | WHERE (
       (event.dataset RLIKE ".*mail.*"
-       AND (email.subject RLIKE ".*[3-6][0-9]{13,18}.*"
-            OR email.body RLIKE ".*[3-6][0-9]{13,18}.*"
-            OR log.original RLIKE "(?i).*(card.*number|account.*number).*[3-6][0-9]{13,}.*"))
+       AND (event.original RLIKE ".*[3-6][0-9]{13,18}.*"
+            OR event.original RLIKE ".*[3-6][0-9]{13,18}.*"
+            OR event.original RLIKE "(?i).*(card.*number|account.*number).*[3-6][0-9]{13,}.*"))
       OR
       (event.category == "web"
-       AND log.original RLIKE "(?i).*(slack|teams|chat|sms|im).*"
-       AND log.original RLIKE ".*[3-6][0-9]{13,18}.*")
+       AND event.original RLIKE "(?i).*(slack|teams|chat|sms|im).*"
+       AND event.original RLIKE ".*[3-6][0-9]{13,18}.*")
     )
   | WHERE NOT (
-      log.original RLIKE "(?i).*(encrypt|pgp|smime|secure).*"
-      OR email.subject RLIKE "(?i).*(token|encrypted).*"
+      event.original RLIKE "(?i).*(encrypt|pgp|smime|secure).*"
+      OR event.original RLIKE "(?i).*(token|encrypted).*"
     )
   | STATS message_count = COUNT(*),
           senders = VALUES(user.name),
-          subjects = VALUES(email.subject),
-          recipients = VALUES(email.to)
+          subjects = VALUES(event.original),
+          recipients = VALUES(event.original)
     BY host.name, event.dataset
   | WHERE message_count > 0
   | EVAL risk_score = CASE(
       message_count > 5, 90,
-      email.to IS NOT NULL, 85,
+      event.original IS NOT NULL, 85,
       70
     )
   | KEEP host.name, event.dataset, message_count, senders, subjects, risk_score

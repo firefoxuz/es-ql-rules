@@ -2,7 +2,8 @@
 #//Requirement: HIPAA Security Rule §164.312(a)(1) - Access Control
 #//Objective: Detect unauthorized access to systems containing ePHI
 #//Data sources: Authentication logs, database audit logs, EMR access logs
-#//ECS fields used: event.category, user.name, event.outcome, source.ip, destination.ip
+#//ECS fields used: event.category, user.name, event.outcome, source.ip, event.original
+#//Healthcare field validation: Verify EHR/EMR fields exist in your indices (event.original  # FIXME: patient.id not available, encounter.id, etc.)
 #//Tuning notes: Define ePHI systems; monitor role-based access violations
 
 name: "Unauthorized Access to ePHI Systems Detected"
@@ -20,12 +21,15 @@ schedule_interval: 5m
 index:
   - winlogbeat-*
   - auditbeat-*
+  - filebeat-ehr-*
+  - winlogbeat-*
+  - auditbeat-*
 query_language: esql
 query: |
   FROM winlogbeat-*, auditbeat-*
   | WHERE event.category == "authentication"
     AND (
-      CIDR_MATCH(destination.ip, "10.100.0.0/16", "192.168.50.0/24")
+      CIDR_MATCH(event.original, "10.100.0.0/16", "192.168.50.0/24")
       OR host.name RLIKE "(?i).*(emr|ehr|epic|cerner|meditech|pacs|ris|his|phi|patient|clinical).*"
     )
   | WHERE (

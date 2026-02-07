@@ -3,7 +3,8 @@
 #//Objective: Detect deviations from approved baseline configurations
 #//Threat scenario: Unauthorized software installation or service enablement
 #//Data sources: Windows services started, Linux systemd service changes
-#//ECS fields used: event.action, service.name, process.name
+#//ECS fields used: event.action, event.provider, process.name
+#//Field validation: Verify all ECS fields exist in your indices before enabling
 #//Tuning notes: Requires approved service baseline, adjust for environment-specific services
 #
 name: "Unauthorized Service Installation"
@@ -24,21 +25,21 @@ query_language: esql
 query: |
   FROM winlogbeat-*, auditbeat-*
   | WHERE event.code IN ("7045", "4697")
-    OR (event.action IN ("service-installed", "service-started") AND service.name IS NOT NULL)
-  | EVAL service_path = COALESCE(winlog.event_data.ImagePath, process.executable, file.path)
+    OR (event.action IN ("service-installed", "service-started") AND event.provider IS NOT NULL)
+  | EVAL service_path = COALESCE(event.original, process.executable, file.path)
   | EVAL suspicious_path = CASE(
       service_path RLIKE "(?i).*(\\\\Users\\\\|\\\\Temp\\\\|\\\\AppData\\\\|\/tmp\/|\/var\/tmp\/).*", true,
       service_path RLIKE "(?i).*(powershell|cmd|bash|python|perl|ruby).*", true,
       false
     )
   | EVAL suspicious_name = CASE(
-      service.name RLIKE "(?i).*(update|svc|system|windows|google|adobe).*", true,
+      event.provider RLIKE "(?i).*(update|svc|system|windows|google|adobe).*", true,
       false
     )
   | WHERE suspicious_path == true OR suspicious_name == true
   | STATS 
       new_services = COUNT(*),
-      service_names = VALUES(service.name),
+      service_names = VALUES(event.provider),
       service_paths = VALUES(service_path),
       installers = VALUES(user.name)
     BY host.name

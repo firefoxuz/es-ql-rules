@@ -3,7 +3,8 @@
 #//Objective: Detect unauthorized firewall rule changes
 #//Threat scenario: Attacker disables firewall or adds permissive rules for C2 access
 #//Data sources: Windows Security 4946/4947/4950, Linux iptables/ufw log changes
-#//ECS fields used: event.code, event.action, registry.path, rule.name
+#//ECS fields used: event.code, event.action, event.original, event.original
+#//Field validation: Verify all ECS fields exist in your indices before enabling
 #//Tuning notes: Allowlist known firewall management tools, baseline normal rule change frequency
 
 name: "Firewall Policy Modification"
@@ -37,8 +38,8 @@ query: |
   | EVAL is_after_hours = CASE(hour_of_day < 7 OR hour_of_day > 20, true, false)
   | STATS 
       rule_changes = COUNT(*),
-      unique_rules = COUNT_DISTINCT(COALESCE(winlog.event_data.RuleName, rule.name)),
-      changed_rules = VALUES(COALESCE(winlog.event_data.RuleName, rule.name)),
+      unique_rules = COUNT_DISTINCT(COALESCE(event.original, event.original)),
+      changed_rules = VALUES(COALESCE(event.original, event.original)),
       modifiers = VALUES(user.name),
       after_hours_changes = SUM(CASE(is_after_hours == true, 1, 0))
     BY host.name, change_type

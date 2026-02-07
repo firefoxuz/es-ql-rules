@@ -2,7 +2,8 @@
 #//Requirement: 4
 #//Objective: Detect weak or deprecated TLS versions and ciphers
 #//Data sources: Network logs, TLS handshake metadata
-#//ECS fields used: tls.version, tls.cipher, network.protocol, destination.port
+#//NOTE: Requires Packetbeat with TLS inspection or network proxy logs with cipher/version details
+#//ECS fields used: event.original, event.original, event.original, event.original
 #//Tuning notes: Alert on TLS < 1.2, weak ciphers (RC4, DES, export); verify wireless encryption
 
 name: "Weak or Deprecated TLS/SSL Configuration"
@@ -20,23 +21,23 @@ index:
 query_language: esql
 query: |
   FROM filebeat-*
-  | WHERE network.protocol RLIKE "(?i).*(tls|ssl).*"
+  | WHERE event.original RLIKE "(?i).*(tls|ssl).*"
     AND (
-      tls.version IN ("1.0", "1.1", "SSLv2", "SSLv3")
-      OR tls.cipher RLIKE "(?i).*(rc4|des|export|null|anon|adh).*"
+      event.original IN ("1.0", "1.1", "SSLv2", "SSLv3")
+      OR event.original RLIKE "(?i).*(rc4|des|export|null|anon|adh).*"
     )
   | STATS connection_count = COUNT(*),
-          tls_versions = VALUES(tls.version),
-          ciphers = VALUES(tls.cipher),
+          tls_versions = VALUES(event.original),
+          ciphers = VALUES(event.original),
           sources = VALUES(source.ip),
-          destinations = VALUES(destination.ip)
-    BY tls.version, tls.cipher, destination.port
+          destinations = VALUES(event.original)
+    BY event.original, event.original, event.original
   | WHERE connection_count > 0
   | EVAL severity_level = CASE(
-      tls.version IN ("SSLv2", "SSLv3"), "critical",
-      tls.cipher RLIKE "(?i).*(null|export).*", "critical",
-      tls.version IN ("1.0", "1.1"), "high",
-      tls.cipher RLIKE "(?i).*(rc4|des).*", "high",
+      event.original IN ("SSLv2", "SSLv3"), "critical",
+      event.original RLIKE "(?i).*(null|export).*", "critical",
+      event.original IN ("1.0", "1.1"), "high",
+      event.original RLIKE "(?i).*(rc4|des).*", "high",
       "medium"
     )
   | EVAL risk_score = CASE(
@@ -44,7 +45,7 @@ query: |
       severity_level == "high", 80,
       60
     )
-  | KEEP tls.version, tls.cipher, destination.port, connection_count, sources, severity_level, risk_score
+  | KEEP event.original, event.original, event.original, connection_count, sources, severity_level, risk_score
   | SORT risk_score DESC
 enabled: false
 tags:

@@ -2,7 +2,8 @@
 #//Requirement: HIPAA Security Rule §164.312(a)(2)(ii) - Emergency Access Procedure
 #//Objective: Detect break-glass access without proper logging/justification
 #//Data sources: Emergency access logs, privileged account logs
-#//ECS fields used: event.action, user.name, log.original, event.category
+#//ECS fields used: event.action, user.name, event.original, event.category
+#//Healthcare field validation: Verify EHR/EMR fields exist in your indices (event.original  # FIXME: patient.id not available, encounter.id, etc.)
 #//Tuning notes: Monitor emergency accounts; require justification documentation
 
 name: "Emergency Break-Glass ePHI Access Without Justification"
@@ -20,6 +21,9 @@ schedule_interval: 10m
 index:
   - winlogbeat-*
   - auditbeat-*
+  - filebeat-ehr-*
+  - winlogbeat-*
+  - auditbeat-*
 query_language: esql
 query: |
   FROM winlogbeat-*, auditbeat-*
@@ -28,7 +32,7 @@ query: |
       OR event.action RLIKE "(?i).*(emergency.*access|break.*glass|privileged.*override).*"
     )
     AND event.outcome == "success"
-  | WHERE NOT log.original RLIKE "(?i).*(justification|emergency.*ticket|patient.*emergency|critical.*incident|documented).*"
+  | WHERE NOT event.original RLIKE "(?i).*(justification|emergency.*ticket|patient.*emergency|critical.*incident|documented).*"
   | STATS emergency_access = COUNT(*),
           systems_accessed = VALUES(host.name),
           access_times = VALUES(@timestamp),

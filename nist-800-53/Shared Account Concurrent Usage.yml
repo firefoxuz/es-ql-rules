@@ -4,6 +4,7 @@
 #//Threat scenario: Shared credentials used by multiple individuals violating accountability
 #//Data sources: Windows Security 4624, concurrent sessions from same account
 #//ECS fields used: event.code, user.name, source.ip, host.name
+#//Field validation: Verify all ECS fields exist in your indices before enabling
 #//Tuning notes: Allowlist known service accounts, adjust concurrent login threshold
 #
 name: "Shared Account Concurrent Usage"

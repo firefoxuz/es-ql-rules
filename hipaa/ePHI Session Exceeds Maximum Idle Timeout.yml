@@ -2,7 +2,8 @@
 #//Requirement: HIPAA Security Rule §164.312(a)(2)(iii) - Automatic Logoff
 #//Objective: Detect long-duration sessions without timeout
 #//Data sources: Session logs, application logs, workstation logs
-#//ECS fields used: event.action, event.duration, user.name, @timestamp
+#//ECS fields used: event.action, event.original, user.name, @timestamp
+#//Healthcare field validation: Verify EHR/EMR fields exist in your indices (event.original  # FIXME: patient.id not available, encounter.id, etc.)
 #//Tuning notes: Define max session duration (15-30 min); monitor idle sessions
 
 name: "ePHI Session Exceeds Maximum Idle Timeout"
@@ -19,6 +20,9 @@ params: '{}'
 schedule_interval: 15m
 index:
   - winlogbeat-*
+  - auditbeat-*
+  - filebeat-ehr-*
+  - winlogbeat-*
 query_language: esql
 query: |
   FROM winlogbeat-*
@@ -28,9 +32,9 @@ query: |
       OR event.dataset RLIKE "(?i).*(epic|cerner|meditech).*"
     )
     AND event.action IN ("session_idle", "session_active")
-  | STATS session_duration_min = MAX(event.duration) / 60000000, 
+  | STATS session_duration_min = MAX(event.original) / 60000000, 
           last_activity = MAX(@timestamp),
-          sessions = VALUES(event.id)
+          sessions = VALUES(event.code)
     BY user.name, host.name
   | WHERE session_duration_min > 15  
   | EVAL risk_score = CASE(

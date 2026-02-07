@@ -2,7 +2,8 @@
 #//Requirement: HIPAA Privacy Rule §164.522(b) - Confidential Communications
 #//Objective: Detect communications sent to non-requested addresses
 #//Data sources: Patient contact preference logs, mailing system logs
-#//ECS fields used: email.to, log.original, user.name, event.action
+#//ECS fields used: event.original, event.original, user.name, event.action
+#//Healthcare field validation: Verify EHR/EMR fields exist in your indices (event.original  # FIXME: patient.id not available, encounter.id, etc.)
 #//Tuning notes: Track alternative communication preferences; verify request compliance
 
 name: "PHI Sent to Non-Preferred Contact Method (Privacy Request Violation)"
@@ -18,24 +19,27 @@ type: esql
 params: '{}'
 schedule_interval: 12h
 index:
+  - winlogbeat-*
+  - auditbeat-*
+  - filebeat-ehr-*
   - filebeat-*
 query_language: esql
 query: |
   FROM filebeat-*
   | WHERE (
       (event.dataset RLIKE "(?i).*mail.*"
-       AND email.subject RLIKE "(?i).*(appointment|test.*result|medical|health|bill|invoice).*")
+       AND event.original RLIKE "(?i).*(appointment|test.*result|medical|health|bill|invoice).*")
       OR
       (event.action RLIKE "(?i).*(sms|text|call|phone).*"
-       AND log.original RLIKE "(?i).*(appointment|reminder|result|prescription).*")
+       AND event.original RLIKE "(?i).*(appointment|reminder|result|prescription).*")
       OR
-      (log.original RLIKE "(?i).*(mail.*to|send.*to|address).*"
-       AND log.original RLIKE "(?i).*(medical.*record|billing|statement).*")
+      (event.original RLIKE "(?i).*(mail.*to|send.*to|address).*"
+       AND event.original RLIKE "(?i).*(medical.*record|billing|statement).*")
     )
-    AND log.original NOT RLIKE "(?i).*(preferred.*method|requested.*contact|alternative.*address|164.*522).*"
+    AND event.original NOT RLIKE "(?i).*(preferred.*method|requested.*contact|alternative.*address|164.*522).*"
   | STATS communication_violations = COUNT(*),
-          contact_methods = VALUES(log.original),
-          recipients = VALUES(email.to)
+          contact_methods = VALUES(event.original),
+          recipients = VALUES(event.original)
     BY user.name, host.name
   | WHERE communication_violations > 3
   | EVAL risk_score = CASE(

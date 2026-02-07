@@ -4,6 +4,7 @@
 #//Threat scenario: User installs prohibited software (hacking tools, P2P, unauthorized remote access)
 #//Data sources: Windows MSI install events, Linux package manager logs
 #//ECS fields used: event.action, process.name, process.command_line, file.path
+#//Field validation: Verify all ECS fields exist in your indices before enabling
 #//Tuning notes: Requires approved software catalog, allowlist enterprise deployment tools
 
 name: "Unauthorized Software Installation"

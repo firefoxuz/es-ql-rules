@@ -4,6 +4,7 @@
 #//Threat scenario: Malware execution, living-off-the-land attacks, fileless malware
 #//Data sources: Windows Security 4688, Linux auditd execve syscalls
 #//ECS fields used: event.action, process.name, process.command_line, process.parent.name
+#//Field validation: Verify all ECS fields exist in your indices before enabling
 #//Tuning notes: Baseline normal administrative activity, adjust command-line pattern matching
 
 name: "Suspicious Process Execution Pattern"

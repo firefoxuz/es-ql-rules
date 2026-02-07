@@ -2,7 +2,8 @@
 #//Requirement: HIPAA Breach Notification Rule §164.402 - Breach Definition
 #//Objective: Detect PHI exposure incidents meeting breach criteria
 #//Data sources: Security incident logs, data loss prevention logs, access logs
-#//ECS fields used: event.severity, event.action, network.bytes, user.name
+#//ECS fields used: event.type, event.action, event.original, user.name
+#//Healthcare field validation: Verify EHR/EMR fields exist in your indices (event.original  # FIXME: patient.id not available, encounter.id, etc.)
 #//Tuning notes: Assess risk factors; track breach threshold evaluations
 
 name: "Unsecured PHI Exposure Meeting Breach Threshold"
@@ -21,28 +22,31 @@ schedule_interval: 15m
 index:
   - winlogbeat-*
   - auditbeat-*
+  - filebeat-ehr-*
+  - winlogbeat-*
+  - auditbeat-*
   - filebeat-*
 query_language: esql
 query: |
   FROM winlogbeat-*, auditbeat-*, filebeat-*
   | WHERE (
       (event.action RLIKE "(?i).*(unauthorized.*access|breach|compromise).*"
-       AND log.original RLIKE "(?i).*(patient|phi|medical.*record).*")
+       AND event.original RLIKE "(?i).*(patient|phi|medical.*record).*")
       OR
-      (network.direction == "outbound"
-       AND network.bytes > 10485760  // >10MB
-       AND log.original RLIKE "(?i).*(patient|phi|ssn|diagnosis).*"
-       AND NOT CIDR_MATCH(destination.ip, "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"))
+      (event.original == "outbound"
+       AND event.original > 10485760  // >10MB
+       AND event.original RLIKE "(?i).*(patient|phi|ssn|diagnosis).*"
+       AND NOT CIDR_MATCH(event.original, "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"))
       OR
       (event.action RLIKE "(?i).*(lost|stolen|missing).*"
-       AND log.original RLIKE "(?i).*(laptop|tablet|phone|device|media).*phi.*")
+       AND event.original RLIKE "(?i).*(laptop|tablet|phone|device|media).*phi.*")
       OR
       (event.dataset RLIKE "(?i).*mail.*"
-       AND log.original RLIKE "(?i).*(wrong.*recipient|misdirected|incorrect.*address).*phi.*")
+       AND event.original RLIKE "(?i).*(wrong.*recipient|misdirected|incorrect.*address).*phi.*")
     )
   | STATS breach_indicators = COUNT(*),
           indicator_types = VALUES(event.action),
-          data_volume_mb = SUM(network.bytes) / 1048576,
+          data_volume_mb = SUM(event.original) / 1048576,
           affected_systems = VALUES(host.name),
           users_involved = VALUES(user.name)
     BY host.name

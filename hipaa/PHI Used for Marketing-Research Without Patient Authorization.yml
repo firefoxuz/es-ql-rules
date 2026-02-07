@@ -2,7 +2,8 @@
 #//Requirement: HIPAA Privacy Rule §164.508 - Uses/Disclosures Requiring Authorization
 #//Objective: Detect PHI used for marketing, research, or sale without authorization
 #//Data sources: Marketing system logs, research database logs, data sale logs
-#//ECS fields used: event.action, log.original, database.name, user.name
+#//ECS fields used: event.action, event.original, event.original, user.name
+#//Healthcare field validation: Verify EHR/EMR fields exist in your indices (event.original  # FIXME: patient.id not available, encounter.id, etc.)
 #//Tuning notes: Monitor marketing campaigns; track research protocols; verify IRB approvals
 
 name: "PHI Used for Marketing/Research Without Patient Authorization"
@@ -19,27 +20,30 @@ type: esql
 params: '{}'
 schedule_interval: 30m
 index:
+  - winlogbeat-*
+  - auditbeat-*
+  - filebeat-ehr-*
   - filebeat-*
 query_language: esql
 query: |
   FROM filebeat-*
   | WHERE (
       (event.action RLIKE "(?i).*(export|sync|upload).*"
-       AND log.original RLIKE "(?i).*(mailchimp|salesforce|hubspot|marketing|campaign).*"
-       AND log.original RLIKE "(?i).*(patient|member|subscriber|contact).*")
+       AND event.original RLIKE "(?i).*(mailchimp|salesforce|hubspot|marketing|campaign).*"
+       AND event.original RLIKE "(?i).*(patient|member|subscriber|contact).*")
       OR
-      (database.name RLIKE "(?i).*(research|study|trial|clinical).*"
-       AND database.query RLIKE "(?i).*SELECT.*FROM.*(patient|subject).*"
-       AND log.original NOT RLIKE "(?i).*(irb|protocol|authorization|consent|waiver).*")
+      (event.original RLIKE "(?i).*(research|study|trial|clinical).*"
+       AND event.original RLIKE "(?i).*SELECT.*FROM.*(patient|subject).*"
+       AND event.original NOT RLIKE "(?i).*(irb|protocol|authorization|consent|waiver).*")
       OR
       (event.action RLIKE "(?i).*(sale|sell|commercial|monetiz).*"
-       AND log.original RLIKE "(?i).*(phi|patient.*data|health.*information).*")
+       AND event.original RLIKE "(?i).*(phi|patient.*data|health.*information).*")
     )
-  | WHERE NOT log.original RLIKE "(?i).*(hipaa.*authorization|164.*508|signed.*consent|patient.*approval).*"
+  | WHERE NOT event.original RLIKE "(?i).*(hipaa.*authorization|164.*508|signed.*consent|patient.*approval).*"
   | STATS unauthorized_uses = COUNT(*),
           use_types = VALUES(event.action),
-          systems = VALUES(database.name),
-          destinations = VALUES(url.domain)
+          systems = VALUES(event.original),
+          destinations = VALUES(event.original)
     BY host.name, user.name
   | WHERE unauthorized_uses > 0
   | EVAL risk_score = CASE(

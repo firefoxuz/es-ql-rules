@@ -3,6 +3,7 @@
 #//Objective: Detect ePHI access by terminated healthcare workers
 #//Data sources: HR termination logs, authentication logs, access logs
 #//ECS fields used: event.category, user.name, event.outcome, @timestamp
+#//Healthcare field validation: Verify EHR/EMR fields exist in your indices (event.original  # FIXME: patient.id not available, encounter.id, etc.)
 #//Tuning notes: Integrate with HR system; maintain terminated employee list
 
 name: "Terminated Healthcare Worker Accessing ePHI"
@@ -20,12 +21,16 @@ schedule_interval: 5m
 index:
   - winlogbeat-*
   - auditbeat-*
+  - filebeat-ehr-*
+  - winlogbeat-*
+  - auditbeat-*
 query_language: esql
 query: |
   FROM winlogbeat-*, auditbeat-*
   | WHERE event.category == "authentication"
     AND event.outcome == "success"
     AND user.name IN ("terminated.nurse1", "former.doctor2", "separated.admin3")
+    # NOTE: Replace with HR system integration or maintain dynamic terminated employee list
   | STATS access_count = COUNT(*),
           systems_accessed = VALUES(host.name),
           sources = VALUES(source.ip),

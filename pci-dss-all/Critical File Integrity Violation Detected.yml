@@ -2,7 +2,7 @@
 #//Requirement: 11
 #//Objective: Detect unauthorized modifications to critical system files
 #//Data sources: File integrity monitoring logs (Tripwire, AIDE, OSSEC)
-#//ECS fields used: event.category, file.path, file.hash, event.action
+#//ECS fields used: event.category, file.path, event.original, event.action
 #//Tuning notes: Monitor FIM alerts; weekly file comparisons; baseline critical files
 
 name: "Critical File Integrity Violation Detected"
@@ -36,7 +36,7 @@ query: |
   | STATS integrity_violations = COUNT(*),
           files_changed = VALUES(file.path),
           users = VALUES(user.name),
-          hash_changes = VALUES(file.hash.sha256),
+          hash_changes = VALUES(event.original.sha256),
           first_violation = MIN(@timestamp)
     BY host.name, file.path
   | WHERE integrity_violations > 0

@@ -3,6 +3,7 @@
 #//Objective: Detect missing or disabled audit logging for ePHI systems
 #//Data sources: System logs, security event logs, database audit logs
 #//ECS fields used: event.category, @timestamp, host.name
+#//Healthcare field validation: Verify EHR/EMR fields exist in your indices (event.original  # FIXME: patient.id not available, encounter.id, etc.)
 #//Tuning notes: Monitor log volume trends; detect logging service failures
 
 name: "Audit Logging Disabled or Gap in ePHI Systems"
@@ -18,6 +19,9 @@ type: esql
 params: '{}'
 schedule_interval: 1h
 index:
+  - winlogbeat-*
+  - auditbeat-*
+  - filebeat-ehr-*
   - winlogbeat-*
   - auditbeat-*
 query_language: esql

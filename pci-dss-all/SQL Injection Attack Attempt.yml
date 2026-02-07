@@ -2,7 +2,7 @@
 #//Requirement: 6
 #//Objective: Detect SQL injection attacks against web applications
 #//Data sources: Web access logs (nginx), WAF logs
-#//ECS fields used: url.query, http.request.body, user_agent.original, source.ip
+#//ECS fields used: event.original, event.original, event.original, source.ip
 #//Tuning notes: Monitor for SQL syntax in parameters; correlate with WAF blocks
 
 name: "SQL Injection Attack Attempt"
@@ -23,24 +23,33 @@ query: |
   FROM filebeat-nginx-access-*
   | WHERE event.category == "web"
     AND (
-      url.query RLIKE "(?i).*(union.*select|or.*1.*=.*1|;.*drop|;.*exec|'.*or.*'|\".*or.*\"|--|\\/\\*|xp_cmdshell).*"
-      OR http.request.body RLIKE "(?i).*(union.*select|or.*1.*=.*1|;.*drop|;.*exec|'.*or.*'|\".*or.*\"|--|\\/\\*|xp_cmdshell).*"
-      OR url.path RLIKE ".*'.*"
+      event.original RLIKE "(?i).*(union.*select|or.*1.*=.*1|;.*drop|;.*exec|'.*or.*'|\".*or.*\"|--|\/\*|xp_cmdshell|waitfor.*delay|benchmark|sleep\(|pg_sleep|extractvalue|updatexml|0x[0-9a-f]+|%27|%22|%2527).*"
+      OR event.original RLIKE "(?i).*(union.*select|or.*1.*=.*1|;.*drop|;.*exec|'.*or.*'|\".*or.*\"|--|\/\*|xp_cmdshell|waitfor.*delay|benchmark|sleep\(|pg_sleep|extractvalue|updatexml|0x[0-9a-f]+|%27|%22|%2527).*"
+      OR event.original RLIKE ".*('|%27|%2527|\"|%22).*"
     )
   | STATS attempt_count = COUNT(*),
           unique_ips = COUNT_DISTINCT(source.ip),
-          urls = VALUES(url.path),
-          queries = VALUES(url.query),
-          user_agents = VALUES(user_agent.original)
-    BY source.ip, url.path
+          urls = VALUES(event.original),
+          queries = VALUES(event.original),
+          user_agents = VALUES(event.original)
+    BY source.ip, event.original
   | WHERE attempt_count > 0
+  | EVAL injection_type = CASE(
+      queries RLIKE "(?i).*(waitfor|benchmark|sleep|pg_sleep).*", "Time-Based Blind SQLi",
+      queries RLIKE "(?i).*(union.*select).*", "UNION-Based SQLi",
+      queries RLIKE "(?i).*(extractvalue|updatexml).*", "XML-Based SQLi",
+      queries RLIKE "(?i).*(or.*1.*=.*1|'.*or.*').*", "Boolean-Based SQLi",
+      queries RLIKE "(?i).*;.*(drop|exec|delete).*", "Stacked Query SQLi",
+      "Generic SQLi Attempt"
+    )
   | EVAL risk_score = CASE(
       attempt_count > 10, 100,
-      queries RLIKE "(?i).*(union.*select|drop.*table).*", 95,
+      queries RLIKE "(?i).*(union.*select|drop.*table|exec.*cmd).*", 95,
+      injection_type == "Time-Based Blind SQLi", 90,
       attempt_count > 3, 85,
       70
     )
-  | KEEP source.ip, url.path, attempt_count, unique_ips, queries, user_agents, risk_score
+  | KEEP source.ip, event.original, attempt_count, unique_ips, injection_type, queries, user_agents, risk_score
   | SORT risk_score DESC
   | LIMIT 100
 enabled: false

@@ -4,6 +4,7 @@
 #//Threat scenario: Attacker creates scheduled task to maintain persistent access
 #//Data sources: Windows Security 4698, Linux cron job modifications
 #//ECS fields used: event.code, event.action, file.path, process.command_line
+#//Field validation: Verify all ECS fields exist in your indices before enabling
 #//Tuning notes: Allowlist known deployment tools, baseline scheduled maintenance tasks
 
 name: "Suspicious Scheduled Task Creation"
@@ -25,7 +26,7 @@ query: |
   FROM winlogbeat-*, auditbeat-*
   | WHERE event.code == "4698"
     OR (event.action IN ("created-file", "modified-file") AND file.path RLIKE "(?i).*(cron|at\\.allow|at\\.deny|crontab).*")
-  | EVAL task_action = COALESCE(winlog.event_data.TaskContent, process.command_line, file.path)
+  | EVAL task_action = COALESCE(event.original, process.command_line, file.path)
   | EVAL suspicious_task = CASE(
       task_action RLIKE "(?i).*(\\\\Temp\\\\|\\\\AppData\\\\|\/tmp\/|powershell|cmd\\.exe|wscript|cscript|mshta|rundll32).*", true,
       task_action RLIKE "(?i).*(http|ftp|download|invoke-webrequest|curl|wget).*", true,

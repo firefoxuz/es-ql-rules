@@ -3,7 +3,8 @@
 #//Requirement: 6
 #//Objective: Detect live PAN usage in development/test environments
 #//Data sources: Database logs, application logs
-#//ECS fields used: log.original, database.query, environment.name
+#//ECS fields used: event.original, event.original, environment.name
+#//Field validation: Verify these fields exist in your indices before enabling
 #//Tuning notes: Tag environments; monitor for INSERT with real PANs in non-prod
 name: "Production Cardholder Data in Test/Dev Environment"
 description: |
@@ -22,17 +23,17 @@ query: |
   FROM filebeat-*
   | WHERE (
       (event.dataset RLIKE ".*database.*"
-       AND (log.original RLIKE ".*\\b[3-6][0-9]{13,18}\\b.*"
-            OR database.query RLIKE ".*\\b[3-6][0-9]{13,18}\\b.*")
+       AND (event.original RLIKE ".*\\b[3-6][0-9]{13,18}\\b.*"
+            OR event.original RLIKE ".*\\b[3-6][0-9]{13,18}\\b.*")
        AND host.name RLIKE "(?i).*(dev|test|stage|qa|uat).*")
       OR
       (tags LIKE ["development", "testing"]
-       AND log.original RLIKE ".*card.*[3-6][0-9]{13,}.*")
+       AND event.original RLIKE ".*card.*[3-6][0-9]{13,}.*")
     )
-  | WHERE NOT log.original RLIKE "(?i).*(test[_]?data|dummy|fake|token).*"
+  | WHERE NOT event.original RLIKE "(?i).*(test[_]?data|dummy|fake|token).*"
   | STATS violation_count = COUNT(*),
           environments = VALUES(tags),
-          queries = VALUES(database.query)
+          queries = VALUES(event.original)
     BY host.name
   | WHERE violation_count > 0
   | EVAL risk_score = CASE(

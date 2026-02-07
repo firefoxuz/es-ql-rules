@@ -3,7 +3,8 @@
 #//Requirement: 3
 #//Objective: Detect storage of prohibited data (full track, CVV, PIN)
 #//Data sources: Application logs, database query logs
-#//ECS fields used: log.original, event.dataset, database.query
+#//ECS fields used: event.original, event.dataset, event.original
+#//Field validation: Verify these fields exist in your indices before enabling
 #//Tuning notes: Monitor DB INSERT/UPDATE for track data keywords; coordinate with app teams
 
 name: "Prohibited Sensitive Authentication Data Storage"
@@ -23,18 +24,18 @@ query: |
   FROM filebeat-*
   | WHERE (
       (event.dataset RLIKE ".*database.*"
-       AND log.original RLIKE "(?i).*(INSERT|UPDATE|CREATE TABLE).*"
-       AND log.original RLIKE "(?i).*(track[_]?data|cvv|cvc|cvc2|pin[_]?block|mag[_]?stripe|service[_]?code).*")
+       AND event.original RLIKE "(?i).*(INSERT|UPDATE|CREATE TABLE).*"
+       AND event.original RLIKE "(?i).*(track[_]?data|cvv|cvc|cvc2|pin[_]?block|mag[_]?stripe|service[_]?code).*")
       OR
       (event.category == "web"
-       AND log.original RLIKE "(?i).*(storing|saved|persisted).*(cvv|pin|track).*")
+       AND event.original RLIKE "(?i).*(storing|saved|persisted).*(cvv|pin|track).*")
       OR
       (event.category == "web"
-       AND log.original RLIKE "(?i).*(storing|saved|persisted).*(cvv|pin|track).*")
+       AND event.original RLIKE "(?i).*(storing|saved|persisted).*(cvv|pin|track).*")
     )
-  | WHERE NOT log.original RLIKE "(?i).*(token|encrypt|hash|mask).*"
+  | WHERE NOT event.original RLIKE "(?i).*(token|encrypt|hash|mask).*"
   | STATS violation_count = COUNT(*),
-          queries = VALUES(log.original),
+          queries = VALUES(event.original),
           hosts = VALUES(host.name)
     BY event.dataset, host.name
   | WHERE violation_count > 0

@@ -11,6 +11,7 @@
 #//Objective: Detect users with more privileges than job requires
 #//Data sources: Windows Event Logs, Linux auditd, Active Directory
 #//ECS fields used: event.category, user.name, group.name, event.action
+#//Field validation: Verify these fields exist in your indices before enabling
 #//Tuning notes: Define role-based access matrix; monitor group membership changes
 
 name: "User Granted Excessive Privileged Access"

@@ -2,7 +2,8 @@
 #//Requirement: 10
 #//Objective: Detect individual user access to cardholder data in databases
 #//Data sources: Database audit logs, application logs
-#//ECS fields used: event.category, user.name, database.name, event.action
+#//ECS fields used: event.category, user.name, event.original, event.action
+#//Field validation: Verify these fields exist in your indices before enabling
 #//Tuning notes: Monitor SELECT queries on CHD tables; track direct DB access
 
 name: "Direct Database Access to Cardholder Data"
@@ -22,13 +23,13 @@ query: |
   FROM filebeat-*
   | WHERE event.category == "database"
     AND (
-      database.query RLIKE "(?i).*(SELECT|UPDATE|DELETE).*FROM.*(payment|card|customer|transaction).*"
-      OR log.original RLIKE "(?i).*(access.*cardholder|query.*pan|select.*cc_number).*"
+      event.original RLIKE "(?i).*(SELECT|UPDATE|DELETE).*FROM.*(payment|card|customer|transaction).*"
+      OR event.original RLIKE "(?i).*(access.*cardholder|query.*pan|select.*cc_number).*"
     )
   | WHERE NOT user.name IN ("app_service", "etl_user", "backup_service")  
   | STATS access_count = COUNT(*),
-          tables_accessed = VALUES(database.name),
-          queries = VALUES(database.query),
+          tables_accessed = VALUES(event.original),
+          queries = VALUES(event.original),
           first_access = MIN(@timestamp),
           last_access = MAX(@timestamp)
     BY user.name, host.name

@@ -2,8 +2,10 @@
 #//Requirement: Articles 44-50
 #//Objective: Detect personal data transfers to non-adequate countries without safeguards
 #//Data sources: Network logs, file transfer logs, email logs
-#//ECS fields used: destination.ip, destination.geo.country_code, network.bytes
+#//ECS fields used: event.original, event.original, event.original
+#//GDPR field validation: Verify personal data fields exist (user.email, geo.country, etc.)
 #//Tuning notes: Maintain list of adequate countries; monitor transfers to restricted jurisdictions
+#//NOTE: Requires cloud provider integration (AWS CloudTrail, Azure Activity Log, GCP Audit Log)
 
 name: "Personal Data Transfer to Non-Adequate Third Country"
 description: |
@@ -18,20 +20,22 @@ params: '{}'
 schedule_interval: 10m
 index:
   - filebeat-*
+  - winlogbeat-*
+  - auditbeat-*
 query_language: esql
 query: |
   FROM filebeat-*
-  | WHERE network.direction == "outbound"
-    AND destination.ip IS NOT NULL
-    AND network.bytes > 1048576  
-    AND NOT CIDR_MATCH(destination.ip, "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16")
-  | WHERE destination.geo.country_code NOT IN ("AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE", "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE", "GB", "NO", "IS", "LI", "CH", "IL", "JP", "NZ", "CA", "KR", "AR", "UY")  // EEA + adequate countries
+  | WHERE event.original == "outbound"
+    AND event.original IS NOT NULL
+    AND event.original > 1048576  
+    AND NOT CIDR_MATCH(event.original, "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16")
+  | WHERE event.original NOT IN ("AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE", "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE", "GB", "NO", "IS", "LI", "CH", "IL", "JP", "NZ", "CA", "KR", "AR", "UY")  // EEA + adequate countries
   | STATS transfer_count = COUNT(*),
-          total_mb = SUM(network.bytes) / 1048576,
-          countries = VALUES(destination.geo.country_code),
-          destinations = VALUES(destination.ip),
+          total_mb = SUM(event.original) / 1048576,
+          countries = VALUES(event.original),
+          destinations = VALUES(event.original),
           users = VALUES(user.name)
-    BY destination.geo.country_code, user.name
+    BY event.original, user.name
   | WHERE transfer_count > 0
   | EVAL risk_score = CASE(
       countries IN ("CN", "RU", "IR", "KP"), 100,  
@@ -39,7 +43,7 @@ query: |
       transfer_count > 10, 90,
       85
     )
-  | KEEP destination.geo.country_code, user.name, transfer_count, total_mb, destinations, risk_score
+  | KEEP event.original, user.name, transfer_count, total_mb, destinations, risk_score
   | SORT risk_score DESC
 enabled: false
 tags:

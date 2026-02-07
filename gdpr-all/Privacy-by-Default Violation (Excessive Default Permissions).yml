@@ -2,8 +2,10 @@
 #//Requirement: Article 25
 #//Objective: Detect systems defaulting to maximum data collection
 #//Data sources: Application configuration logs, user registration logs
-#//ECS fields used: event.action, log.original, user.name
+#//ECS fields used: event.action, event.original, user.name
+#//GDPR field validation: Verify personal data fields exist (user.email, geo.country, etc.)
 #//Tuning notes: Monitor new account defaults; verify privacy-by-default settings
+#//NOTE: Requires data classification taxonomy (define which fields contain special category personal data)
 
 name: "Privacy-by-Default Violation (Excessive Default Permissions)"
 description: |
@@ -18,18 +20,20 @@ params: '{}'
 schedule_interval: 15m
 index:
   - filebeat-*
+  - winlogbeat-*
+  - auditbeat-*
 query_language: esql
 query: |
   FROM filebeat-*
   | WHERE event.action IN ("user_created", "account_registered", "signup")
     AND (
-      log.original RLIKE "(?i).*(default.*consent.*true|all.*marketing.*enabled|profile.*visibility.*public|share.*all.*data).*"
-      OR log.original RLIKE "(?i).*(pre.*checked|auto.*opt.*in|consent.*default.*yes).*"
+      event.original RLIKE "(?i).*(default.*consent.*true|all.*marketing.*enabled|profile.*visibility.*public|share.*all.*data).*"
+      OR event.original RLIKE "(?i).*(pre.*checked|auto.*opt.*in|consent.*default.*yes).*"
     )
-  | WHERE NOT log.original RLIKE "(?i).*(user.*selected|explicit.*choice|custom.*settings).*"
+  | WHERE NOT event.original RLIKE "(?i).*(user.*selected|explicit.*choice|custom.*settings).*"
   | STATS violation_count = COUNT(*),
           users_affected = VALUES(user.name),
-          default_settings = VALUES(log.original),
+          default_settings = VALUES(event.original),
           first_violation = MIN(@timestamp)
     BY host.name
   | WHERE violation_count > 0

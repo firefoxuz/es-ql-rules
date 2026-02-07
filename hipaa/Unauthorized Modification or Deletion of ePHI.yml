@@ -2,7 +2,8 @@
 #//Requirement: HIPAA Security Rule §164.312(c)(1) - Integrity
 #//Objective: Detect unauthorized modifications to ePHI
 #//Data sources: Database audit logs, file integrity monitoring, EHR logs
-#//ECS fields used: event.action, database.query, file.path, user.name
+#//ECS fields used: event.action, event.original, file.path, user.name
+#//Healthcare field validation: Verify EHR/EMR fields exist in your indices (event.original  # FIXME: patient.id not available, encounter.id, etc.)
 #//Tuning notes: Monitor UPDATE/DELETE operations; track unauthorized changes
 
 name: "Unauthorized Modification or Deletion of ePHI"
@@ -18,14 +19,17 @@ type: esql
 params: '{}'
 schedule_interval: 10m
 index:
+  - winlogbeat-*
+  - auditbeat-*
+  - filebeat-ehr-*
   - auditbeat-*
 query_language: esql
 query: |
   FROM auditbeat-*
   | WHERE (
       (event.category == "database"
-       AND database.query RLIKE "(?i).*(UPDATE|DELETE|DROP|TRUNCATE).*"
-       AND database.query RLIKE "(?i).*(patient|medical|chart|encounter|diagnosis|medication|allergy|vital|lab|radiology).*")
+       AND event.original RLIKE "(?i).*(UPDATE|DELETE|DROP|TRUNCATE).*"
+       AND event.original RLIKE "(?i).*(patient|medical|chart|encounter|diagnosis|medication|allergy|vital|lab|radiology).*")
       OR
       (event.category == "file"
        AND event.action IN ("modified", "deleted", "renamed")
@@ -35,7 +39,7 @@ query: |
   | STATS modification_events = COUNT(*),
           users = VALUES(user.name),
           operations = VALUES(event.action),
-          targets = VALUES(database.name),
+          targets = VALUES(event.original),
           files = VALUES(file.path)
     BY user.name, host.name
   | WHERE modification_events > 0

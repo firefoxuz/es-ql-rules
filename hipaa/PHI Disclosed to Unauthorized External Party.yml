@@ -2,7 +2,8 @@
 #//Requirement: HIPAA Privacy Rule §164.502(a) - Uses and Disclosures
 #//Objective: Detect unauthorized PHI disclosures outside permitted exceptions
 #//Data sources: Email logs, file transfer logs, fax logs, API logs
-#//ECS fields used: email.to, destination.ip, file.path, event.action
+#//ECS fields used: event.original, event.original, file.path, event.action
+#//Healthcare field validation: Verify EHR/EMR fields exist in your indices (event.original  # FIXME: patient.id not available, encounter.id, etc.)
 #//Tuning notes: Maintain authorized recipient list; monitor external disclosures
 
 name: "PHI Disclosed to Unauthorized External Party"
@@ -19,27 +20,30 @@ type: esql
 params: '{}'
 schedule_interval: 10m
 index:
+  - winlogbeat-*
+  - auditbeat-*
+  - filebeat-ehr-*
   - filebeat-*
 query_language: esql
 query: |
   FROM filebeat-*
   | WHERE (
       (event.dataset RLIKE "(?i).*mail.*"
-       AND email.to NOT RLIKE "(?i).*(hospital|clinic|health|medical|physician|doctor|insurance|gov|medicare|medicaid)\\..*"
-       AND (email.subject RLIKE "(?i).*(patient|medical.*record|diagnosis|lab.*result|prescription|discharge.*summary).*"
-            OR email.body RLIKE "(?i).*(patient.*name|mrn|dob|ssn|diagnosis).*"))
+       AND event.original NOT RLIKE "(?i).*(hospital|clinic|health|medical|physician|doctor|insurance|gov|medicare|medicaid)\\..*"
+       AND (event.original RLIKE "(?i).*(patient|medical.*record|diagnosis|lab.*result|prescription|discharge.*summary).*"
+            OR event.original RLIKE "(?i).*(patient.*name|mrn|dob|ssn|diagnosis).*"))
       OR
       (event.action RLIKE "(?i).*(transfer|send|upload|export).*"
        AND file.path RLIKE "(?i).*(patient|medical|phi|record|chart|ccda).*"
-       AND NOT CIDR_MATCH(destination.ip, "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"))
+       AND NOT CIDR_MATCH(event.original, "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"))
       OR
-      (url.path RLIKE "(?i).*/api/(export|patient|records).*"
-       AND NOT destination.ip RLIKE ".*(authorized.*partner|baa.*vendor).*")
+      (event.original RLIKE "(?i).*/api/(export|patient|records).*"
+       AND NOT event.original RLIKE ".*(authorized.*partner|baa.*vendor).*")
     )
-  | WHERE NOT log.original RLIKE "(?i).*(authorization|consent|baa|business.*associate|hipaa.*exception|tpo).*"
+  | WHERE NOT event.original RLIKE "(?i).*(authorization|consent|baa|business.*associate|hipaa.*exception|tpo).*"
   | STATS unauthorized_disclosures = COUNT(*),
-          recipients = VALUES(email.to),
-          destinations = VALUES(destination.ip),
+          recipients = VALUES(event.original),
+          destinations = VALUES(event.original),
           data_types = VALUES(file.name),
           users = VALUES(user.name)
     BY user.name, host.name
