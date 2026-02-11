@@ -1,0 +1,58 @@
+name: "Audio Capture Detection"
+description: |
+  Detects attempts to record audio using arecord or ecasound utilities.
+  Adversaries may use built-in tools to record audio for espionage.
+  Monitors execution of arecord with specific flags or memfd_create syscall by ecasound.
+type: esql
+params: '{}'
+schedule_interval: 10m
+index:
+  - auditbeat-*
+query_language: esql
+query: |
+  FROM auditbeat-*
+  /* auditd EXECVE or SYSCALL */
+  | WHERE event.dataset RLIKE "(?i)auditd"
+  /* selection 1: arecord execution */
+  | WHERE (
+      process.name == "arecord" 
+      AND (
+        COALESCE(process.command_line, "") RLIKE "(?i)-vv" 
+        OR COALESCE(process.command_line, "") RLIKE "(?i)-fdat"
+      )
+    )
+    /* selection 2: ecasound memfd_create */
+    OR (
+      process.executable RLIKE "/ecasound$" 
+      AND (
+        COALESCE(event.original, "") RLIKE "(?i)syscall=319" /* memfd_create */
+        OR COALESCE(event.original, "") RLIKE "(?i)syscall=memfd_create"
+      )
+    )
+  | STATS
+      event_count = COUNT(*),
+      users = VALUES(user.name),
+      processes = VALUES(process.name),
+      executables = VALUES(process.executable),
+      command_lines = VALUES(process.command_line),
+      hosts = VALUES(host.name),
+      raw_samples = VALUES(event.original)
+    BY host.name, user.name, bucket = DATE_TRUNC(20 minutes, @timestamp)
+  | WHERE event_count >= 1
+  | KEEP bucket, host.name, user.name, event_count, users, processes, executables, command_lines, hosts, raw_samples
+  | SORT event_count DESC
+enabled: false
+tags:
+  - attack.collection
+  - attack.t1123
+severity: low
+risk_score: 30
+references:
+  - "https://linux.die.net/man/1/arecord"
+  - "https://attack.mitre.org/techniques/T1123/"
+nist: ["SI-4", "AU-12"]
+pci_dss: ["10.2"]
+gdpr: ["Article 32.1.b"]
+mitre_attack:
+  TA0009:
+    T1123: []

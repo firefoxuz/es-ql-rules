@@ -1,0 +1,65 @@
+name: "System Firewall Service Stopped or Disabled"
+description: |
+  Detects stopping or disabling of system firewall services (firewalld, ufw, iptables).
+  Adversaries may disable firewalls to bypass network controls.
+  Monitors systemctl/service commands and Auditd SERVICE_STOP events.
+type: esql
+params: '{}'
+schedule_interval: 10m
+index:
+  - auditbeat-*
+query_language: esql
+query: |
+  FROM auditbeat-*
+  /* auditd EXECVE or SERVICE_STOP */
+  | WHERE event.dataset RLIKE "(?i)auditd"
+  /* selection 1: command execution (systemctl/service stop) */
+  | WHERE (
+      (
+        process.name IN ("systemctl", "service", "ufw", "firewall-cmd")
+        AND (
+          (
+            COALESCE(process.command_line, "") RLIKE "(?i)(stop|disable|kill)"
+            AND COALESCE(process.command_line, "") RLIKE "(?i)(firewalld|ufw|iptables|nftables)"
+          )
+          OR (
+            process.name == "ufw" AND COALESCE(process.command_line, "") RLIKE "(?i)disable"
+          )
+        )
+      )
+    )
+    /* selection 2: auditd SERVICE_STOP event */
+    OR (
+      event.type == "SERVICE_STOP"
+      AND (
+        COALESCE(event.original, "") RLIKE "(?i)unit=firewalld"
+        OR COALESCE(event.original, "") RLIKE "(?i)unit=ufw"
+        OR COALESCE(event.original, "") RLIKE "(?i)unit=iptables"
+      )
+    )
+  | STATS
+      event_count = COUNT(*),
+      users = VALUES(user.name),
+      processes = VALUES(process.name),
+      command_lines = VALUES(process.command_line),
+      hosts = VALUES(host.name),
+      raw_samples = VALUES(event.original)
+    BY host.name, user.name, bucket = DATE_TRUNC(20 minutes, @timestamp)
+  | WHERE event_count >= 1
+  | KEEP bucket, host.name, user.name, event_count, users, processes, command_lines, hosts, raw_samples
+  | SORT event_count DESC
+enabled: false
+tags:
+  - attack.defense-evasion
+  - attack.t1562.004
+severity: high
+risk_score: 70
+references:
+  - "https://attack.mitre.org/techniques/T1562/004/"
+  - "https://firewalld.org/documentation/man-pages/firewall-cmd.html"
+nist: ["SI-4", "AU-12", "SC-7"]
+pci_dss: ["10.2", "1.4"]
+gdpr: ["Article 32.1.b"]
+mitre_attack:
+  TA0005:
+    T1562: ["T1562.004"]

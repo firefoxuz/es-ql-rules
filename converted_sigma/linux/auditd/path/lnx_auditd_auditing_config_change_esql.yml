@@ -1,0 +1,44 @@
+name: "Auditing Configuration Changes Detection"
+description: |
+  Detects changes to auditd configuration files.
+  Adversaries may modify audit configurations to evade detection.
+  Monitors /etc/audit/auditd.conf for modifications.
+type: esql
+params: '{}'
+schedule_interval: 10m
+index:
+  - auditbeat-*
+query_language: esql
+query: |
+  FROM auditbeat-*
+  /* auditd PATH type events */
+  | WHERE event.action == "opened-file" OR event.dataset RLIKE "(?i)auditd"
+  /* selection: auditd configuration file */
+  | WHERE file.path == "/etc/audit/auditd.conf"
+  | STATS
+      event_count = COUNT(*),
+      users = VALUES(user.name),
+      processes = VALUES(process.name),
+      executables = VALUES(process.executable),
+      file_operations = VALUES(event.action),
+      hosts = VALUES(host.name),
+      raw_samples = VALUES(event.original)
+    BY host.name, user.name, bucket = DATE_TRUNC(20 minutes, @timestamp)
+  | WHERE event_count >= 1
+  | KEEP bucket, host.name, user.name, event_count, users, processes, executables, file_operations, hosts, raw_samples
+  | SORT event_count DESC
+enabled: false
+tags:
+  - attack.defense-evasion
+  - attack.t1562.006
+  - detection.threat-hunting
+severity: high
+risk_score: 75
+references:
+  - "https://attack.mitre.org/techniques/T1562/006/"
+nist: ["SI-4", "AU-12", "AU-6"]
+pci_dss: ["10.2", "10.5"]
+gdpr: ["Article 32.1.b"]
+mitre_attack:
+  TA0005:
+    T1562: ["T1562.006"]

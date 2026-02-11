@@ -1,11 +1,3 @@
-#//RULE-NIST-22 — Firewall Rule Modification (NIST SC-7, CM-6)
-#//Control Family: SC (System and Communications Protection), CM (Configuration Management)
-#//Objective: Detect unauthorized firewall rule changes
-#//Threat scenario: Attacker disables firewall or adds permissive rules for C2 access
-#//Data sources: Windows Security 4946/4947/4950, Linux iptables/ufw log changes
-#//ECS fields used: event.code, event.action, event.original, event.original
-#//Field validation: Verify all ECS fields exist in your indices before enabling
-#//Tuning notes: Allowlist known firewall management tools, baseline normal rule change frequency
 
 name: "Firewall Policy Modification"
 description: |

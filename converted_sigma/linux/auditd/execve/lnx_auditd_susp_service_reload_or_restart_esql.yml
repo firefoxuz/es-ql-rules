@@ -1,0 +1,37 @@
+name: "Suspicious Service Reload or Restart"
+description: |
+  Detects suspicious service reload or restart commands.
+  May indicate persistence mechanism or service manipulation.
+type: esql
+params: '{}'
+schedule_interval: 10m
+index:
+  - auditbeat-*
+query_language: esql
+query: |
+  FROM auditbeat-*
+  | WHERE event.action == "execve" OR (event.dataset RLIKE "(?i)auditd" AND event.type == "process_started")
+  | WHERE process.name IN ("systemctl", "service") 
+    AND COALESCE(process.command_line, "") RLIKE "(?i)(reload|restart)"
+  | STATS
+      event_count = COUNT(*),
+      users = VALUES(user.name),
+      processes = VALUES(process.name),
+      command_lines = VALUES(process.command_line),
+      hosts = VALUES(host.name)
+    BY host.name, user.name, bucket = DATE_TRUNC(20 minutes, @timestamp)
+  | WHERE event_count >= 5
+  | KEEP bucket, host.name, user.name, event_count, users, processes, command_lines, hosts
+  | SORT event_count DESC
+enabled: false
+tags:
+  - attack.persistence
+  - attack.t1543.002
+severity: low
+risk_score: 35
+nist: ["SI-4", "AU-12"]
+pci_dss: ["10.2"]
+gdpr: ["Article 32.1.b"]
+mitre_attack:
+  TA0003:
+    T1543: ["T1543.002"]

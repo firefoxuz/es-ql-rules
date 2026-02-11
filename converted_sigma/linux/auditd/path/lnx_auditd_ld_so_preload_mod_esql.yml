@@ -1,0 +1,53 @@
+name: "LD_SO_PRELOAD Modification Detection"
+description: |
+  Identifies modification of /etc/ld.so.preload for shared object injection.
+  This technique is used by attackers to load arbitrary code into processes.
+  ld.so.preload forces the dynamic linker to load specified libraries before any others.
+  This is a common persistence and privilege escalation technique on Linux.
+type: esql
+params: '{}'
+schedule_interval: 10m
+index:
+  - auditbeat-*
+query_language: esql
+query: |
+  FROM auditbeat-*
+  /* auditd PATH type events */
+  | WHERE event.action == "opened-file" OR event.dataset RLIKE "(?i)auditd"
+  /* selection: /etc/ld.so.preload file access */
+  | WHERE file.path == "/etc/ld.so.preload"
+  | STATS
+      event_count = COUNT(*),
+      users = VALUES(user.name),
+      processes = VALUES(process.name),
+      executables = VALUES(process.executable),
+      file_operations = VALUES(event.action),
+      hosts = VALUES(host.name),
+      raw_samples = VALUES(event.original)
+    BY host.name, user.name, bucket = DATE_TRUNC(20 minutes, @timestamp)
+  | WHERE event_count >= 1
+  | KEEP bucket, host.name, user.name, event_count, users, processes, executables, file_operations, hosts, raw_samples
+  | SORT event_count DESC
+enabled: false
+tags:
+  - attack.privilege-escalation
+  - attack.persistence
+  - attack.defense-evasion
+  - attack.t1574.006
+  - detection.threat-hunting
+severity: high
+risk_score: 80
+references:
+  - "https://github.com/redcanaryco/atomic-red-team/blob/f339e7da7d05f6057fdfcdd3742bfcf365fee2a9/atomics/T1574.006/T1574.006.md"
+  - "https://eqllib.readthedocs.io/en/latest/analytics/fd9b987a-1101-4ed3-bda6-a70300eaf57e.html"
+  - "https://attack.mitre.org/techniques/T1574/006/"
+nist: ["SI-4", "AU-12", "CM-7"]
+pci_dss: ["10.2", "2.2"]
+gdpr: ["Article 32.1.b"]
+mitre_attack:
+  TA0004:
+    T1574: ["T1574.006"]
+  TA0003:
+    T1574: ["T1574.006"]
+  TA0005:
+    T1574: ["T1574.006"]

@@ -1,0 +1,53 @@
+name: "Suspicious Linux Commands Detection"
+description: |
+  Detects relevant commands often related to malware or hacking activity on Linux systems.
+  This includes dangerous permission changes (chmod 777, setuid) and shell copying which are often used in privilege escalation.
+  Note: May generate false positives from legitimate admin activity. Review context carefully.
+type: esql
+params: '{}'
+schedule_interval: 10m
+index:
+  - auditbeat-*
+query_language: esql
+query: |
+  FROM auditbeat-*
+  /* auditd execve telemetry */
+  | WHERE event.action == "execve" OR (event.dataset RLIKE "(?i)auditd" AND event.type == "process_started")
+  /* selection: suspicious commands */
+  | WHERE (
+      /* cmd1: chmod 777 - world writable/executable */
+      (process.name == "chmod" AND COALESCE(process.command_line, "") RLIKE "(?i)\\b777\\b")
+      /* cmd2: chmod u+s - setuid bit */
+      OR (process.name == "chmod" AND COALESCE(process.command_line, "") RLIKE "(?i)u\\+s")
+      /* cmd3/cmd4: copying shells */
+      OR (process.name == "cp" AND COALESCE(process.command_line, "") RLIKE "(?i)/bin/(ksh|sh)")
+    )
+  | STATS
+      event_count = COUNT(*),
+      users = VALUES(user.name),
+      processes = VALUES(process.name),
+      command_lines = VALUES(process.command_line),
+      executables = VALUES(process.executable),
+      file_paths = VALUES(file.path),
+      hosts = VALUES(host.name),
+      raw_samples = VALUES(event.original)
+    BY host.name, user.name, bucket = DATE_TRUNC(20 minutes, @timestamp)
+  | WHERE event_count >= 1
+  | KEEP bucket, host.name, user.name, event_count, users, processes, command_lines, executables, file_paths, hosts, raw_samples
+  | SORT event_count DESC
+enabled: false
+tags:
+  - attack.execution
+  - attack.t1059.004
+  - detection.threat-hunting
+severity: medium
+risk_score: 60
+references:
+  - "Internal Research - mostly derived from exploit code including code in MSF"
+  - "https://attack.mitre.org/techniques/T1059/004/"
+nist: ["SI-4", "AU-12", "AC-6"]
+pci_dss: ["10.2", "7.1"]
+gdpr: ["Article 32.1.b"]
+mitre_attack:
+  TA0002:
+    T1059: ["T1059.004"]

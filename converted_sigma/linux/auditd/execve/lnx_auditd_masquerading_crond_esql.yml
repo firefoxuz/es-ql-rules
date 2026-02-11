@@ -1,0 +1,36 @@
+name: "Crond Masquerading Detection"
+description: |
+  Detects execution of crond from unusual locations.
+  Adversaries may masquerade malware as legitimate crond process.
+type: esql
+params: '{}'
+schedule_interval: 10m
+index:
+  - auditbeat-*
+query_language: esql
+query: |
+  FROM auditbeat-*
+  | WHERE event.action == "execve" OR (event.dataset RLIKE "(?i)auditd" AND event.type == "process_started")
+  | WHERE process.name == "crond" AND NOT (COALESCE(process.executable, "") RLIKE "(?i)^/(usr/)?sbin/crond")
+  | STATS
+      event_count = COUNT(*),
+      users = VALUES(user.name),
+      processes = VALUES(process.name),
+      executables = VALUES(process.executable),
+      hosts = VALUES(host.name)
+    BY host.name, user.name, bucket = DATE_TRUNC(20 minutes, @timestamp)
+  | WHERE event_count >= 1
+  | KEEP bucket, host.name, user.name, event_count, users, processes, executables, hosts
+  | SORT event_count DESC
+enabled: false
+tags:
+  - attack.persistence
+  - attack.t1036
+severity: high
+risk_score: 75
+nist: ["SI-4", "AU-12"]
+pci_dss: ["10.2"]
+gdpr: ["Article 32.1.b"]
+mitre_attack:
+  TA0003:
+    T1036: []
