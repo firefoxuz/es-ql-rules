@@ -1,0 +1,76 @@
+name: Kerberos Service Ticket Request - Kerberoasting
+description: |
+  Ushbu qoida credential access va lateral movement texnikalariga bog'liq bo'lib, `Kerberos Service Ticket Request - Kerberoasting` kontekstidagi shubhali Active Directory faoliyatini aniqlaydi.
+  Bu turdagi hodisa AD muhitida hujumchiga ruxsatsiz kirishni mustahkamlash, hisoblarni egallash yoki boshqaruv huquqlarini oshirish imkonini berishi mumkinligi sababli xavfli hisoblanadi.
+  Qonuniy holatlar sifatida rejalashtirilgan administrativ ishlar, change/deployment jarayonlari, IAM sinxronizatsiyasi yoki servis konfiguratsiya yangilanishlari uchrashi mumkin.
+  SOC triage bosqichlari:
+  - Hodisadagi `actor` va `target_user` (yoki target obyekt) ni aniq identifikatsiya qiling.
+  - O'zgarish/kirish uchun tasdiqlangan change ticket yoki deployment yozuvi borligini tekshiring.
+  - `src_ip` manzili, manba host va tarmoq segmentining legitimligini tekshiring.
+  - Ta'sirlangan akkaunt yoki obyektning guruh a'zoligi, ayniqsa imtiyozli guruhlar bilan bog'liqligini tekshiring.
+  - Noqonuniy faoliyat tasdiqlansa tezkor containment bajaring: manbani cheklang, credentiallarni yangilang va ta'sir doirasini izolyatsiya qiling.
+type: esql
+params: '{}'
+schedule_interval: 10m
+index:
+- winlogbeat-*
+query_language: esql
+query: |
+  FROM winlogbeat-*
+  | WHERE @timestamp >= NOW() - 15 minutes
+  | WHERE winlog.channel == "Security"
+  | EVAL hostn = winlog.computer_name
+  | EVAL actor = COALESCE(winlog.event_data.SubjectUserName, winlog.event_data.SubjectUserName)
+  | EVAL target_user = COALESCE(winlog.event_data.TargetUserName, winlog.event_data.SamAccountName)
+  | EVAL src_ip = COALESCE(winlog.event_data.IpAddress, winlog.event_data.IpAddress)
+  | WHERE hostn RLIKE "(?i)(WINDC|ADDC|-DC|DOMAINCONTROLLER)"
+  | WHERE NOT actor RLIKE ".*\\$$"
+  | WHERE event.code == "4769"
+  | EVAL 
+      requesting_user = COALESCE(winlog.event_data.SubjectUserName, winlog.event_data.TargetUserName, "Unknown"),
+      service_name = COALESCE(winlog.event_data.ServiceName, "Unknown"),
+      service_sid = COALESCE(winlog.event_data.ServiceSid, "Unknown"),
+      ticket_encryption = COALESCE(winlog.event_data.TicketEncryptionType, "Unknown"),
+      is_rc4 = CASE(ticket_encryption == "0x17", 1, 0),
+      source_ip = COALESCE(winlog.event_data.IpAddress, winlog.event_data.IpAddress, "Unknown")
+  /* Filter for successful TGS requests with RC4 or suspicious patterns */
+  | WHERE (
+      ticket_encryption == "0x17"  /* RC4-HMAC */
+      OR service_name NOT RLIKE "(?i)(\\$$|krbtgt)"  /* Exclude computer accounts and krbtgt */
+    )
+  /* Exclude common service accounts and computer accounts */
+  | WHERE NOT (service_name RLIKE "(?i)(\\$$|SYSTEM|LOCAL SERVICE|NETWORK SERVICE)")
+  | STATS 
+      ticket_requests = COUNT(*),
+      unique_services = COUNT_DISTINCT(service_name),
+      max_rc4 = MAX(is_rc4),
+      services_requested = VALUES(service_name),
+      encryption_types = VALUES(ticket_encryption),
+      source_ips = VALUES(source_ip),
+      first_request = MIN(@timestamp),
+      last_request = MAX(@timestamp)
+    BY winlog.computer_name, requesting_user, bucket = DATE_TRUNC(30 minutes, @timestamp)
+  | WHERE ticket_requests >= 3 OR unique_services >= 3
+  | EVAL 
+      attack_confidence = CASE(
+        unique_services >= 10 AND max_rc4 == 1, "Critical - Active Kerberoasting",
+        unique_services >= 5, "High - Potential Kerberoasting",
+        "Medium - Suspicious TGS Activity"
+      )
+  | KEEP bucket, winlog.computer_name, requesting_user, ticket_requests, unique_services,
+      services_requested, encryption_types, attack_confidence, first_request, last_request
+  | SORT ticket_requests DESC
+  | LIMIT 200
+enabled: false
+tags:
+  - attack.credential-access
+  - attack.t1558.003
+  - detection.emerging-threats
+severity: high
+risk_score: 85
+mitre_attack:
+  TA0006:
+    T1558: ["T1558.003"]
+nist: ["AU-2", "AU-12", "AC-7", "IA-2"]
+pci_dss: ["10.2.4", "10.2.5", "8.1.6"]
+gdpr: ["Article 32.1.a", "Article 32.2"]

@@ -1,0 +1,66 @@
+name: Active Directory Trust Enumeration Detected
+description: |
+  Ushbu qoida persistence va defense evasion texnikalariga bog'liq bo'lib, `Active Directory Trust Enumeration Detected` kontekstidagi shubhali Active Directory faoliyatini aniqlaydi.
+  Bu turdagi hodisa AD muhitida hujumchiga ruxsatsiz kirishni mustahkamlash, hisoblarni egallash yoki boshqaruv huquqlarini oshirish imkonini berishi mumkinligi sababli xavfli hisoblanadi.
+  Qonuniy holatlar sifatida rejalashtirilgan administrativ ishlar, change/deployment jarayonlari, IAM sinxronizatsiyasi yoki servis konfiguratsiya yangilanishlari uchrashi mumkin.
+  SOC triage bosqichlari:
+  - Hodisadagi `actor` va `target_user` (yoki target obyekt) ni aniq identifikatsiya qiling.
+  - O'zgarish/kirish uchun tasdiqlangan change ticket yoki deployment yozuvi borligini tekshiring.
+  - `src_ip` manzili, manba host va tarmoq segmentining legitimligini tekshiring.
+  - Ta'sirlangan akkaunt yoki obyektning guruh a'zoligi, ayniqsa imtiyozli guruhlar bilan bog'liqligini tekshiring.
+  - Noqonuniy faoliyat tasdiqlansa tezkor containment bajaring: manbani cheklang, credentiallarni yangilang va ta'sir doirasini izolyatsiya qiling.
+type: esql
+params: '{}'
+schedule_interval: 10m
+index:
+- winlogbeat-*
+query_language: esql
+query: |
+  FROM winlogbeat-*
+  | WHERE @timestamp >= NOW() - 15 minutes
+  | WHERE winlog.channel == "Security"
+  | EVAL hostn = winlog.computer_name
+  | EVAL actor = COALESCE(winlog.event_data.SubjectUserName, winlog.event_data.SubjectUserName)
+  | EVAL target_user = COALESCE(winlog.event_data.TargetUserName, winlog.event_data.SamAccountName)
+  | EVAL src_ip = COALESCE(winlog.event_data.IpAddress, winlog.event_data.IpAddress)
+  | WHERE hostn RLIKE "(?i)(WINDC|ADDC|-DC|DOMAINCONTROLLER)"
+  | WHERE NOT actor RLIKE ".*\\$$"
+  | WHERE event.code IN ("4662", "4768")
+  | EVAL 
+      accessing_user = COALESCE(winlog.event_data.SubjectUserName, winlog.event_data.SubjectUserName, "Unknown"),
+      object_name = COALESCE(winlog.event_data.ObjectName, "Unknown"),
+      object_type = COALESCE(winlog.event_data.ObjectType, "Unknown"),
+      service_name = COALESCE(winlog.event_data.ServiceName, "Unknown")
+  /* Look for trust enumeration patterns */
+  | WHERE (
+      /* LDAP queries to trustedDomain class */
+      object_type RLIKE "(?i)(trustedDomain|domainDNS)"
+      /* Kerberos requests to foreign domain */
+      OR service_name RLIKE "\\$@"
+    )
+  | STATS 
+      enum_attempts = COUNT(*),
+      objects_accessed = VALUES(object_name),
+      object_types = VALUES(object_type),
+      service_names = VALUES(service_name),
+      first_attempt = MIN(@timestamp),
+      last_attempt = MAX(@timestamp)
+    BY winlog.computer_name, accessing_user, bucket = DATE_TRUNC(1 hour, @timestamp)
+  | WHERE enum_attempts >= 3
+  | KEEP bucket, winlog.computer_name, accessing_user, enum_attempts,
+      objects_accessed, object_types, service_names, first_attempt, last_attempt
+  | SORT enum_attempts DESC
+  | LIMIT 200
+enabled: false
+tags:
+  - attack.discovery
+  - attack.t1482
+  - detection.reconnaissance
+severity: high
+risk_score: 75
+mitre_attack:
+  TA0007:
+    T1482: []
+nist: ["AU-2", "AU-12", "AC-7", "IA-2"]
+pci_dss: ["10.2.4", "10.2.5", "8.1.6"]
+gdpr: ["Article 32.1.a", "Article 32.2"]

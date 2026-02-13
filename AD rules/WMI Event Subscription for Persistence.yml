@@ -1,0 +1,69 @@
+name: WMI Event Subscription for Persistence
+description: |
+  Ushbu qoida persistence va lateral movement texnikalariga bog'liq bo'lib, `WMI Event Subscription for Persistence` kontekstidagi shubhali Active Directory faoliyatini aniqlaydi.
+  Bu turdagi hodisa AD muhitida hujumchiga ruxsatsiz kirishni mustahkamlash, hisoblarni egallash yoki boshqaruv huquqlarini oshirish imkonini berishi mumkinligi sababli xavfli hisoblanadi.
+  Qonuniy holatlar sifatida rejalashtirilgan administrativ ishlar, change/deployment jarayonlari, IAM sinxronizatsiyasi yoki servis konfiguratsiya yangilanishlari uchrashi mumkin.
+  SOC triage bosqichlari:
+  - Hodisadagi `actor` va `target_user` (yoki target obyekt) ni aniq identifikatsiya qiling.
+  - O'zgarish/kirish uchun tasdiqlangan change ticket yoki deployment yozuvi borligini tekshiring.
+  - `src_ip` manzili, manba host va tarmoq segmentining legitimligini tekshiring.
+  - Ta'sirlangan akkaunt yoki obyektning guruh a'zoligi, ayniqsa imtiyozli guruhlar bilan bog'liqligini tekshiring.
+  - Noqonuniy faoliyat tasdiqlansa tezkor containment bajaring: manbani cheklang, credentiallarni yangilang va ta'sir doirasini izolyatsiya qiling.
+type: esql
+params: '{}'
+schedule_interval: 10m
+index:
+- winlogbeat-*
+query_language: esql
+query: |
+  FROM winlogbeat-*
+  | WHERE @timestamp >= NOW() - 15 minutes
+  | WHERE winlog.channel == "Security"
+  | EVAL hostn = winlog.computer_name
+  | EVAL actor = COALESCE(winlog.event_data.SubjectUserName, winlog.event_data.SubjectUserName)
+  | EVAL target_user = COALESCE(winlog.event_data.TargetUserName, winlog.event_data.SamAccountName)
+  | EVAL src_ip = COALESCE(winlog.event_data.IpAddress, winlog.event_data.IpAddress)
+  | WHERE hostn RLIKE "(?i)(WINDC|ADDC|-DC|DOMAINCONTROLLER)"
+  | WHERE NOT actor RLIKE ".*\\$$"
+  | WHERE event.code IN ("5859", "5860", "5861")
+  | EVAL 
+      creator = COALESCE(winlog.event_data.SubjectUserName, winlog.event_data.SubjectUserName, "Unknown"),
+      operation = COALESCE(winlog.event_data.Operation, "Unknown"),
+      namespace = "Unknown",
+      event_type = CASE(
+        event.code == "5859", "WMI Filter Activity",
+        event.code == "5860", "WMI Consumer Activity", 
+        event.code == "5861", "WMI Binding Activity",
+        "Unknown"
+      )
+  /* Filter for creation operations */
+  | WHERE operation RLIKE "(?i)(Created|Modification|Binding)"
+  | STATS 
+      wmi_operations = COUNT(*),
+      operations = VALUES(operation),
+      event_types = VALUES(event_type),
+      namespaces = VALUES(namespace),
+      first_operation = MIN(@timestamp),
+      last_operation = MAX(@timestamp)
+    BY winlog.computer_name, creator, bucket = DATE_TRUNC(1 hour, @timestamp)
+  | WHERE wmi_operations >= 1
+  | KEEP bucket, winlog.computer_name, creator, wmi_operations, operations,
+      event_types, namespaces, first_operation, last_operation
+  | SORT wmi_operations DESC
+  | LIMIT 200
+enabled: false
+tags:
+  - attack.persistence
+  - attack.execution
+  - attack.t1546.003
+  - detection.emerging-threats
+severity: high
+risk_score: 75
+mitre_attack:
+  TA0003:
+    T1546: ["T1546.003"]
+  TA0002:
+    T1047: []
+nist: ["SI-4", "AU-12", "CM-7"]
+pci_dss: ["10.2.7", "11.4"]
+gdpr: ["Article 32.1.a"]
