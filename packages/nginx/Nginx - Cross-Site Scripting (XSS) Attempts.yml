@@ -1,0 +1,51 @@
+name: Nginx - Cross-Site Scripting (XSS) Attempts
+description: |
+  Ushbu qoida Nginx access log'da XSS attack pattern'larni aniqlaydi.
+  Bu client-side code injection urinishi belgisi (T1059).
+  Qonuniy holatlar: false positive, legitimate HTML/JavaScript in parameters.
+  SOC triage bosqichlari:
+  - XSS payload type'ni identifikatsiya qiling (reflected, stored, DOM-based)
+  - Target page va parameter'larni tahlil qiling
+  - Application input validation'ni tekshiring
+  - User session va cookie security'sini review qiling
+  - Immediate patching yoki WAF rule update zarurligini baholang
+type: esql
+params: '{}'
+schedule_interval: 10m
+index:
+- filebeat-nginx-*
+query_language: esql
+query: |
+  FROM filebeat-nginx-*
+  | WHERE @timestamp >= NOW() - 45 minutes
+  | WHERE data_stream.dataset == "nginx.access"
+  | WHERE url.original RLIKE "(?i)(<script|javascript:|onerror=|onload=|onclick=|<iframe|<object|<embed|eval\\(|alert\\(|prompt\\(|confirm\\(|document\\.cookie|document\\.write|window\\.location|\\.innerHTML|<img.*src=|<svg.*onload=)"
+  | STATS
+      event_count = COUNT(*),
+      urls = VALUES(url.original),
+      methods = VALUES(http.request.method),
+      status_codes = VALUES(http.response.status_code),
+      user_agents = VALUES(user_agent.original)
+    BY source.ip, bucket = DATE_TRUNC(5 minutes, @timestamp)
+  | WHERE event_count >= 3
+  | KEEP bucket, source.ip, event_count, urls, methods, status_codes, user_agents
+  | SORT event_count DESC
+  | LIMIT 100
+enabled: true
+tags:
+- attack.initial-access
+- attack.t1059
+- nginx
+- xss
+- code-injection
+severity: high
+risk_score: 75
+references:
+- "https://attack.mitre.org/techniques/T1059/"
+- "https://owasp.org/www-community/attacks/xss/"
+nist: ["SI-4", "SI-10"]
+pci_dss: ["6.5.7", "11.4"]
+gdpr: ["Article 35.7.d"]
+mitre_attack:
+  TA0001:
+    T1059: []

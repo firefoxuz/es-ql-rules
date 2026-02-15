@@ -1,0 +1,50 @@
+name: CheckPoint - Source IP Quarantine Events
+description: |
+  Ushbu qoida CheckPoint tomonidan quarantine qilingan source IP'larni monitoring qiladi.
+  Quarantine action malicious behavior tufayli qo'llaniladi va jiddiy xavf belgisi.
+  Qonuniy holatlar: compromised host, infected endpoint, policy violation.
+  SOC triage bosqichlari:
+  - Quarantine reason'ni aniqlang
+  - Source IP owner va device'ni identifikatsiya qiling
+  - Qaysi attack yoki infection trigger qilganini tekshiring
+  - Host isolation va remediation zarurligini baholang
+  - IOC'lar va related artifacts'ni to'plang
+  - Incident response jarayonini aktivlashtiring
+type: esql
+params: '{}'
+schedule_interval: 5m
+index:
+- checkpoint-*
+query_language: esql
+query: |
+  FROM filebeat-checkpoint-*
+  | WHERE @timestamp >= NOW() - 30 minutes
+  | WHERE checkpoint.fw_action == "Quarantine"
+  | STATS
+      event_count = COUNT(*),
+      dst_ips = VALUES(destination.ip),
+      attacks = VALUES(checkpoint.attack),
+      attack_info = VALUES(checkpoint.attack_info),
+      protection_names = VALUES(checkpoint.protection_name),
+      verdict = VALUES(checkpoint.verdict)
+    BY source.ip, bucket = DATE_TRUNC(5 minutes, @timestamp)
+  | WHERE event_count >= 1
+  | KEEP bucket, source.ip, event_count, dst_ips, attacks, attack_info, protection_names, verdict
+  | SORT event_count DESC
+  | LIMIT 100
+enabled: true
+tags:
+- attack.impact
+- checkpoint
+- quarantine
+- malware
+- host-isolation
+severity: critical
+risk_score: 90
+references:
+- "https://attack.mitre.org/tactics/TA0040/"
+nist: ["IR-4", "SI-4"]
+pci_dss: ["5.2", "11.4"]
+gdpr: ["Article 35.7.d"]
+mitre_attack:
+  TA0040: {}

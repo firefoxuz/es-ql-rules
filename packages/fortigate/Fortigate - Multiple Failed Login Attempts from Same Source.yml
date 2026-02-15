@@ -1,0 +1,48 @@
+name: Fortigate - Multiple Failed Login Attempts from Same Source
+description: |
+  Ushbu qoida Fortigate firewall'da bir xil manbadan ko'p marta muvaffaqiyatsiz login urinishlarini aniqlaydi.
+  Bu brute force hujum belgisi bo'lishi mumkin (MITRE ATT&CK T1110).
+  Qonuniy holatlar: parol unutish, autentifikatsiya xatolari.
+  SOC triage bosqichlari:
+  - Manba IP manzilini va user nomini tekshiring
+  - Login urinishlari orasidagi vaqt intervalini tahlil qiling
+  - Geo-location va IP reputation tekshiring
+  - Tashqi yoki ichki manba ekanligini aniqlang
+  - Muvaffaqiyatli login bo'lganmi yo'qmi tekshiring
+type: esql
+params: '{}'
+schedule_interval: 10m
+index:
+- fortigate-*
+query_language: esql
+query: |
+  FROM filebeat-fortigate-*
+  | WHERE @timestamp >= NOW() - 45 minutes
+  | WHERE fortinet.firewall.action == "login"
+  | WHERE fortinet.firewall.status == "failed"
+  | STATS
+      event_count = COUNT(*),
+      users = VALUES(user.name),
+      reasons = VALUES(fortinet.firewall.reason),
+      interfaces = VALUES(fortinet.firewall.ui)
+    BY source.ip, bucket = DATE_TRUNC(5 minutes, @timestamp)
+  | WHERE event_count >= 18
+  | KEEP bucket, source.ip, event_count, users, reasons, interfaces
+  | SORT event_count DESC
+  | LIMIT 100
+enabled: true
+tags:
+- attack.credential-access
+- attack.t1110
+- fortigate
+- authentication
+severity: high
+risk_score: 73
+references:
+- "https://attack.mitre.org/techniques/T1110/"
+nist: ["AC-7", "AU-6"]
+pci_dss: ["10.2.4", "10.2.5"]
+gdpr: ["Article 32.2"]
+mitre_attack:
+  TA0006:
+    T1110: []

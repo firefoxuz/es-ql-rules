@@ -1,0 +1,51 @@
+name: CheckPoint - Malicious Code Replacement Detected
+description: |
+  Ushbu qoida CheckPoint IPS tomonidan malicious code replacement hodisalarini aniqlaydi.
+  Bu active attack yoki malware injection urinishi belgisi (T1001 - Data Obfuscation).
+  Qonuniy holatlar: false positive, IPS test, security validation.
+  SOC triage bosqichlari:
+  - Malicious code turini va xususiyatlarini aniqlang
+  - Source va destination IP reputationini tekshiring
+  - Qaysi malware family yoki variant ekanligini aniqlang
+  - Attack vector va delivery method'ni tahlil qiling
+  - Boshqa compromise indicator'lari bormi tekshiring
+  - Incident response jarayonini boshlang
+type: esql
+params: '{}'
+schedule_interval: 5m
+index:
+- checkpoint-*
+query_language: esql
+query: |
+  FROM filebeat-checkpoint-*
+  | WHERE @timestamp >= NOW() - 30 minutes
+  | WHERE event.message RLIKE "(?i)Replace Malicious code"
+  | STATS
+      event_count = COUNT(*),
+      dst_ips = VALUES(destination.ip),
+      src_ips = VALUES(source.ip),
+      protocols = VALUES(network.protocol),
+      attack_info = VALUES(checkpoint.attack_info),
+      rules = VALUES(rule.name)
+    BY bucket = DATE_TRUNC(5 minutes, @timestamp)
+  | WHERE event_count >= 1
+  | KEEP bucket, event_count, src_ips, dst_ips, protocols, attack_info, rules
+  | SORT event_count DESC
+  | LIMIT 100
+enabled: true
+tags:
+- attack.defense-evasion
+- attack.t1001
+- checkpoint
+- malware
+- code-injection
+severity: critical
+risk_score: 95
+references:
+- "https://attack.mitre.org/techniques/T1001/"
+nist: ["SI-3", "SI-4"]
+pci_dss: ["5.1", "11.4"]
+gdpr: ["Article 35.7.d"]
+mitre_attack:
+  TA0005:
+    T1001: []

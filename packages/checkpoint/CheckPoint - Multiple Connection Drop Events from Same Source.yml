@@ -1,0 +1,48 @@
+name: CheckPoint - Multiple Connection Drop Events from Same Source
+description: |
+  Ushbu qoida bir xil manbadan qisqa vaqt ichida ko'p connection drop hodisalarini aniqlaydi.
+  Bu port scanning, network reconnaissance yoki brute force urinishi belgisi bo'lishi mumkin.
+  Qonuniy holatlar: service monitoring, health checks, legitimate application behavior.
+  SOC triage bosqichlari:
+  - Drop reason'larni tahlil qiling (checkpoint.drop_reason)
+  - Target port'lar va service'larni tekshiring
+  - Source IP geo-location va reputation'ini tekshiring
+  - Pattern'ni identify qiling (sequential ports, specific services)
+  - Related successful connection'lar bormi tekshiring
+type: esql
+params: '{}'
+schedule_interval: 10m
+index:
+- checkpoint-*
+query_language: esql
+query: |
+  FROM filebeat-checkpoint-*
+  | WHERE @timestamp >= NOW() - 45 minutes
+  | WHERE checkpoint.fw_action == "Drop"
+  | STATS
+      event_count = COUNT(*),
+      dst_ips = VALUES(destination.ip),
+      dst_ports = VALUES(destination.port),
+      drop_reasons = VALUES(checkpoint.drop_reason),
+      protocols = VALUES(network.protocol),
+      zones = VALUES(observer.ingress.zone)
+    BY source.ip, bucket = DATE_TRUNC(5 minutes, @timestamp)
+  | WHERE event_count >= 20
+  | KEEP bucket, source.ip, event_count, dst_ips, dst_ports, drop_reasons, protocols, zones
+  | SORT event_count DESC
+  | LIMIT 100
+enabled: true
+tags:
+- attack.discovery
+- attack.reconnaissance
+- checkpoint
+- network-scan
+severity: medium
+risk_score: 60
+references:
+- "https://attack.mitre.org/tactics/TA0043/"
+nist: ["SC-7", "SI-4"]
+pci_dss: ["1.4", "10.6.1"]
+gdpr: ["Article 35.7.d"]
+mitre_attack:
+  TA0043: {}

@@ -1,0 +1,50 @@
+name: Nginx - Suspicious or Malicious User Agents
+description: |
+  Ushbu qoida Nginx access log'da suspicious yoki malicious user agent'larni aniqlaydi.
+  Bu automated scanning tools, malware, yoki attacker reconnaissance belgisi.
+  Qonuniy holatlar: security scanning tools, monitoring services, legitimate bots.
+  SOC triage bosqichlari:
+  - User agent string'ni threat intelligence bilan compare qiling
+  - Associated IP reputation tekshiring
+  - Request pattern va behavior tahlil qiling
+  - Known scanning tools yoki malware signature bormi aniqlang
+  - Blocking yoki monitoring intensification zarurligini baholang
+type: esql
+params: '{}'
+schedule_interval: 15m
+index:
+- filebeat-nginx-*
+query_language: esql
+query: |
+  FROM filebeat-nginx-*
+  | WHERE @timestamp >= NOW() - 1 hour
+  | WHERE data_stream.dataset == "nginx.access"
+  | WHERE user_agent.original RLIKE "(?i)(sqlmap|nikto|nmap|masscan|metasploit|burp|acunetix|nessus|openvas|w3af|havij|pangolin|ZmEu|dirbuster|python-requests/(?:1\\.|2\\.)|wget|curl/[0-9]\\.[0-9]|\\(\\)|<script|exec|/bin/bash)"
+  | STATS
+      event_count = COUNT(*),
+      user_agents = VALUES(user_agent.original),
+      urls = VALUES(url.original),
+      methods = VALUES(http.request.method),
+      status_codes = VALUES(http.response.status_code)
+    BY source.ip, bucket = DATE_TRUNC(15 minutes, @timestamp)
+  | WHERE event_count >= 1
+  | KEEP bucket, source.ip, event_count, user_agents, urls, methods, status_codes
+  | SORT event_count DESC
+  | LIMIT 100
+enabled: true
+tags:
+- attack.reconnaissance
+- attack.t1595
+- nginx
+- user-agent
+- scanning-tools
+severity: high
+risk_score: 70
+references:
+- "https://attack.mitre.org/techniques/T1595/"
+nist: ["SI-4", "SC-7"]
+pci_dss: ["11.4"]
+gdpr: ["Article 35.7.d"]
+mitre_attack:
+  TA0043:
+    T1595: []

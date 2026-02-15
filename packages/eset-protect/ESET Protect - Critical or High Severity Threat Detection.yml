@@ -1,0 +1,52 @@
+name: ESET Protect - Critical or High Severity Threat Detection
+description: |
+  Ushbu qoida ESET tomonidan critical yoki high severity threat detection'larni monitoring qiladi.
+  Bu advanced threat, targeted attack yoki severe compromise belgisi.
+  Qonuniy holatlar: rare false positives, aggressive PUA detection.
+  SOC triage bosqichlari:
+  - Threat name va type'ni threat intelligence bilan correlate qiling
+  - Detection context - file, process, network communication
+  - Response effectiveness (cleaned, quarantined, blocked) tekshiring
+  - System-wide compromise indicators qidiring
+  - Immediate incident response zarurligini baholang
+  - Executive notification consideration
+type: esql
+params: '{}'
+schedule_interval: 5m
+index:
+- filebeat-eset_protect-*
+query_language: esql
+query: |
+  FROM filebeat-eset_protect-*
+  | WHERE @timestamp >= NOW() - 30 minutes
+  | WHERE data_stream.dataset == "eset_protect.detection"
+  | WHERE eset_protect.detection.severity_level RLIKE "(?i)(critical|high|error|fatal)"
+  | STATS
+      event_count = COUNT(*),
+      detection_names = VALUES(eset_protect.detection.display_name),
+      categories = VALUES(eset_protect.detection.category),
+      object_names = VALUES(eset_protect.detection.object_name),
+      object_hashes = VALUES(eset_protect.detection.object_hash_sha1),
+      response_actions = VALUES(eset_protect.detection.responses.description),
+      users = VALUES(eset_protect.detection.context.user_name),
+      devices = VALUES(eset_protect.detection.context.device_uuid)
+    BY bucket = DATE_TRUNC(10 minutes, @timestamp)
+  | WHERE event_count >= 1
+  | KEEP bucket, event_count, detection_names, categories, object_names, object_hashes, response_actions, users, devices
+  | SORT event_count DESC
+  | LIMIT 100
+enabled: true
+tags:
+- attack.execution
+- eset
+- critical-threat
+- high-severity
+severity: critical
+risk_score: 95
+references:
+- "https://attack.mitre.org/tactics/TA0002/"
+nist: ["SI-3", "IR-4", "IR-5"]
+pci_dss: ["5.1", "5.2", "10.6.1"]
+gdpr: ["Article 35.7.d"]
+mitre_attack:
+  TA0002: {}

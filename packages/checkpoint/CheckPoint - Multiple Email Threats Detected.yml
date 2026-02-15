@@ -1,0 +1,53 @@
+name: CheckPoint - Multiple Email Threats Detected
+description: |
+  Ushbu qoida CheckPoint email security blade tomonidan aniqlangan ko'p threat'larni monitoring qiladi.
+  Email vector orqali malware, phishing yoki spam attack'lar.
+  Qonuniy holatlar: false positive, legitimate attachments misclassified.
+  SOC triage bosqichlari:
+  - Email sender va recipient'larni identifikatsiya qiling
+  - Malware type, hash va verdict'ni tekshiring
+  - Email subject va content'ni tahlil qiling
+  - Related IOC'lar va campaign indicator'larini qidiring
+  - User awareness va remediation action'lar zarurligini baholang
+type: esql
+params: '{}'
+schedule_interval: 15m
+index:
+- checkpoint-*
+query_language: esql
+query: |
+  FROM filebeat-checkpoint-*
+  | WHERE @timestamp >= NOW() - 1 hour
+  | WHERE checkpoint.email_control IS NOT NULL
+  | WHERE checkpoint.verdict == "Malicious" OR checkpoint.email_spam_category == "phishing"
+  | STATS
+      event_count = COUNT(*),
+      senders = VALUES(email.from.address),
+      recipients = VALUES(email.to.address),
+      subjects = VALUES(email.subject),
+      verdicts = VALUES(checkpoint.verdict),
+      file_names = VALUES(file.name),
+      file_hashes = VALUES(file.hash.md5)
+    BY bucket = DATE_TRUNC(15 minutes, @timestamp)
+  | WHERE event_count >= 3
+  | KEEP bucket, event_count, senders, recipients, subjects, verdicts, file_names, file_hashes
+  | SORT event_count DESC
+  | LIMIT 100
+enabled: true
+tags:
+- attack.initial-access
+- attack.t1566
+- checkpoint
+- email-security
+- phishing
+- malware
+severity: high
+risk_score: 80
+references:
+- "https://attack.mitre.org/techniques/T1566/"
+nist: ["SI-3", "SI-8"]
+pci_dss: ["5.1", "5.2"]
+gdpr: ["Article 35.7.d"]
+mitre_attack:
+  TA0001:
+    T1566: []

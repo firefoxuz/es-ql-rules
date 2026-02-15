@@ -1,0 +1,51 @@
+name: Nginx - Directory Traversal Attack Attempts
+description: |
+  Ushbu qoida Nginx access log'da directory/path traversal pattern'larni aniqlaydi.
+  Bu unauthorized file access urinishi belgisi (T1083).
+  Qonuniy holatlar: legitimate relative paths, misconfigured applications.
+  SOC triage bosqichlari:
+  - Traversal path va target file'ni tahlil qiling
+  - HTTP response code - file access successful bo'lganmi tekshiring
+  - Web server configuration va file permissions'ni review qiling
+  - Sensitive file'larga access bo'lganmi aniqlang
+  - Containment va remediation action'lar zarurligini baholang
+type: esql
+params: '{}'
+schedule_interval: 10m
+index:
+- filebeat-nginx-*
+query_language: esql
+query: |
+  FROM filebeat-nginx-*
+  | WHERE @timestamp >= NOW() - 45 minutes
+  | WHERE data_stream.dataset == "nginx.access"
+  | WHERE url.original RLIKE "(?i)(\\.\\./|\\.\\.\\.\\\\|\\.\\.%2[fF]|%2[eE]%2[eE]%2[fF]|\\.\\.\\\\|/etc/passwd|/etc/shadow|/windows/win\\.ini|/boot\\.ini|c:\\\\windows|config\\.php|wp-config|database\\.yml)"
+  | STATS
+      event_count = COUNT(*),
+      urls = VALUES(url.original),
+      methods = VALUES(http.request.method),
+      status_codes = VALUES(http.response.status_code),
+      user_agents = VALUES(user_agent.original)
+    BY source.ip, bucket = DATE_TRUNC(5 minutes, @timestamp)
+  | WHERE event_count >= 3
+  | KEEP bucket, source.ip, event_count, urls, methods, status_codes, user_agents
+  | SORT event_count DESC
+  | LIMIT 100
+enabled: true
+tags:
+- attack.initial-access
+- attack.t1083
+- nginx
+- path-traversal
+- directory-traversal
+severity: critical
+risk_score: 80
+references:
+- "https://attack.mitre.org/techniques/T1083/"
+- "https://owasp.org/www-community/attacks/Path_Traversal"
+nist: ["SI-4", "CM-7"]
+pci_dss: ["6.5.8", "11.4"]
+gdpr: ["Article 35.7.d"]
+mitre_attack:
+  TA0007:
+    T1083: []

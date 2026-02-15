@@ -1,0 +1,50 @@
+name: Nginx - Suspicious HTTP 5xx Server Error Spike
+description: |
+  Ushbu qoida Nginx'da qisqa vaqt ichida ko'p 5xx server error'larni aniqlaydi.
+  Bu DoS attack, application vulnerability exploitation yoki service degradation belgisi.
+  Qonuniy holatlar: legitimate traffic spike, backend service outage, deployment issues.
+  SOC triage bosqichlari:
+  - Error type distribution'ni tahlil qiling (500, 502, 503, 504)
+  - Backend application logs bilan correlate qiling
+  - Resource exhaustion (CPU, memory, connections) bormi tekshiring
+  - Malicious traffic yoki legitimate load spike ekanligini aniqlang
+  - Incident response va service restoration zarurligini baholang
+type: esql
+params: '{}'
+schedule_interval: 10m
+index:
+- filebeat-nginx-*
+query_language: esql
+query: |
+  FROM filebeat-nginx-*
+  | WHERE @timestamp >= NOW() - 30 minutes
+  | WHERE data_stream.dataset == "nginx.access"
+  | WHERE http.response.status_code >= 500 AND http.response.status_code < 600
+  | STATS
+      event_count = COUNT(*),
+      status_codes = VALUES(http.response.status_code),
+      urls = VALUES(url.original),
+      methods = VALUES(http.request.method),
+      unique_sources = COUNT_DISTINCT(source.ip)
+    BY bucket = DATE_TRUNC(5 minutes, @timestamp)
+  | WHERE event_count >= 50
+  | KEEP bucket, event_count, status_codes, urls, methods, unique_sources
+  | SORT event_count DESC
+  | LIMIT 100
+enabled: true
+tags:
+- attack.impact
+- attack.t1499
+- nginx
+- server-error
+- availability
+severity: high
+risk_score: 65
+references:
+- "https://attack.mitre.org/techniques/T1499/"
+nist: ["SC-5", "SI-4"]
+pci_dss: ["10.6.1"]
+gdpr: ["Article 35.7.d"]
+mitre_attack:
+  TA0040:
+    T1499: []

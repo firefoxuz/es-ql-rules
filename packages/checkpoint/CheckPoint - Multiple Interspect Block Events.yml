@@ -1,0 +1,48 @@
+name: CheckPoint - Multiple Interspect Block Events
+description: |
+  Ushbu qoida CheckPoint Interspect tomonidan bir xil manbadan ko'p block hodisalarini aniqlaydi.
+  Bu IPS/IDS detection yoki malicious activity belgisi.
+  Qonuniy holatlar: false positive, legitimate traffic misclassified.
+  SOC triage bosqichlari:
+  - Block qilingan attack signature'larni tekshiring
+  - Protection name va type'ni aniqlang
+  - Source reputation va history'sini tekshiring
+  - Attack severity va impact'ini baholang
+  - Blocking effectiveness'ni validate qiling
+type: esql
+params: '{}'
+schedule_interval: 10m
+index:
+- checkpoint-*
+query_language: esql
+query: |
+  FROM filebeat-checkpoint-*
+  | WHERE @timestamp >= NOW() - 45 minutes
+  | WHERE checkpoint.fw_action == "Block"
+  | STATS
+      event_count = COUNT(*),
+      dst_ips = VALUES(destination.ip),
+      attacks = VALUES(checkpoint.attack),
+      protection_names = VALUES(checkpoint.protection_name),
+      protection_types = VALUES(checkpoint.protection_type),
+      severities = VALUES(event.severity)
+    BY source.ip, bucket = DATE_TRUNC(5 minutes, @timestamp)
+  | WHERE event_count >= 10
+  | KEEP bucket, source.ip, event_count, dst_ips, attacks, protection_names, protection_types, severities
+  | SORT event_count DESC
+  | LIMIT 100
+enabled: true
+tags:
+- attack.initial-access
+- checkpoint
+- ips
+- intrusion-detection
+severity: high
+risk_score: 75
+references:
+- "https://attack.mitre.org/tactics/TA0001/"
+nist: ["SI-4", "DE.CM-1"]
+pci_dss: ["11.4"]
+gdpr: ["Article 35.7.d"]
+mitre_attack:
+  TA0001: {}

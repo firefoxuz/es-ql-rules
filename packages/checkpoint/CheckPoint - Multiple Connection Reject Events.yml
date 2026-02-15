@@ -1,0 +1,48 @@
+name: CheckPoint - Multiple Connection Reject Events
+description: |
+  Ushbu qoida CheckPoint firewall'da bir xil manbadan ko'p reject hodisalarini aniqlaydi.
+  Reject action ICMP destination-unreachable xabarini yuboradi va bu non-standard communication belgisi bo'lishi mumkin (T1095).
+  Qonuniy holatlar: tarmoq konfiguratsiya muammolari, service discovery, legitimate connection attempts.
+  SOC triage bosqichlari:
+  - Manba va destination IP'larni identifikatsiya qiling
+  - Reject qilingan port va service'larni tahlil qiling
+  - Pattern va frequency'ni tekshiring
+  - Network policy bilan mos kelishini tekshiring
+  - Scanning yoki reconnaissance faoliyat belgisi bormi aniqlang
+type: esql
+params: '{}'
+schedule_interval: 10m
+index:
+- checkpoint-*
+query_language: esql
+query: |
+  FROM filebeat-checkpoint-*
+  | WHERE @timestamp >= NOW() - 45 minutes
+  | WHERE checkpoint.fw_action == "Reject"
+  | STATS
+      event_count = COUNT(*),
+      dst_ips = VALUES(destination.ip),
+      dst_ports = VALUES(destination.port),
+      protocols = VALUES(network.protocol),
+      rules = VALUES(rule.name)
+    BY source.ip, bucket = DATE_TRUNC(5 minutes, @timestamp)
+  | WHERE event_count >= 15
+  | KEEP bucket, source.ip, event_count, dst_ips, dst_ports, protocols, rules
+  | SORT event_count DESC
+  | LIMIT 100
+enabled: true
+tags:
+- attack.discovery
+- attack.t1095
+- checkpoint
+- network-denial
+severity: high
+risk_score: 73
+references:
+- "https://attack.mitre.org/techniques/T1095/"
+nist: ["SC-7", "SI-4"]
+pci_dss: ["1.2.1", "10.6.1"]
+gdpr: ["Article 35.7.d"]
+mitre_attack:
+  TA0007:
+    T1095: []

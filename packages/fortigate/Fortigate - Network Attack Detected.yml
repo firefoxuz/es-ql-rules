@@ -1,0 +1,50 @@
+name: Fortigate - Network Attack Detected
+description: |
+  Ushbu qoida Fortigate IPS tomonidan aniqlangan tarmoq hujumlarini monitoring qiladi.
+  Detected action bilan hujum aniqlanganini, lekin to'xtatilmaganini bildiradi.
+  Qonuniy holatlar: false positive, test trafigi, vulnerability scanning.
+  SOC triage bosqichlari:
+  - Attack turini va attack ID'ni aniqlang
+  - Manba va destination IP manzillarini tahlil qiling
+  - Attack signature va severity'ni tekshiring
+  - Network traffic pattern'ini tahlil qiling
+  - Muvaffaqiyatli exploit bo'lganmi tekshiring
+  - Zarur bo'lsa blocking rule qo'shing
+type: esql
+params: '{}'
+schedule_interval: 10m
+index:
+- fortigate-*
+query_language: esql
+query: |
+  FROM filebeat-fortigate-*
+  | WHERE @timestamp >= NOW() - 15 minutes
+  | WHERE fortinet.firewall.action == "detected"
+  | WHERE fortinet.firewall.attack IS NOT NULL
+  | WHERE fortinet.firewall.type == "anomaly" OR fortinet.firewall.subtype == "ips"
+  | STATS
+      event_count = COUNT(*),
+      attacks = VALUES(fortinet.firewall.attack),
+      attack_ids = VALUES(fortinet.firewall.attackid),
+      severities = VALUES(fortinet.firewall.severity),
+      protocols = VALUES(network.protocol),
+      dst_ports = VALUES(destination.port)
+    BY source.ip, destination.ip, bucket = DATE_TRUNC(5 minutes, @timestamp)
+  | KEEP bucket, source.ip, destination.ip, event_count, attacks, attack_ids, severities, protocols, dst_ports
+  | SORT event_count DESC
+  | LIMIT 100
+enabled: true
+tags:
+- attack.impact
+- fortigate
+- ips
+- network-attack
+severity: critical
+risk_score: 90
+references:
+- "https://www.fortinet.com/support"
+nist: ["DE-CM-1", "SI-4"]
+pci_dss: ["11.4"]
+gdpr: ["Article 35.7.d"]
+mitre_attack:
+  TA0040: {}

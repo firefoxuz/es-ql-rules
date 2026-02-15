@@ -1,0 +1,50 @@
+name: Nginx - Invalid URI with Extremely Long Filename
+description: |
+  Ushbu qoida Nginx'da juda uzun filename bilan invalid URI request'larni aniqlaydi.
+  Bu buffer overflow yoki path traversal attack urinishi belgisi bo'lishi mumkin.
+  Qonuniy holatlar: misconfigured client, legitimate long URL, application bug.
+  SOC triage bosqichlari:
+  - Request URI length va structure'ni tahlil qiling
+  - Buffer overflow yoki path traversal pattern'i bormi tekshiring
+  - Source IP va attack intent'ni baholang
+  - Web server va application version vulnerability'sini tekshiring
+  - Similar attack pattern'lar bormi qidiring
+type: esql
+params: '{}'
+schedule_interval: 15m
+index:
+- filebeat-nginx-*
+query_language: esql
+query: |
+  FROM filebeat-nginx-*
+  | WHERE @timestamp >= NOW() - 1 hour
+  | WHERE data_stream.dataset == "nginx.error"
+  | WHERE message RLIKE "(?i)failed \\(36: File name too long\\)"
+  | STATS
+      event_count = COUNT(*),
+      urls = VALUES(url.original),
+      methods = VALUES(http.request.method),
+      user_agents = VALUES(user_agent.original),
+      hosts = VALUES(host.name)
+    BY source.ip, bucket = DATE_TRUNC(10 minutes, @timestamp)
+  | WHERE event_count >= 5
+  | KEEP bucket, source.ip, event_count, urls, methods, user_agents, hosts
+  | SORT event_count DESC
+  | LIMIT 100
+enabled: true
+tags:
+- attack.initial-access
+- nginx
+- invalid-request
+- buffer-overflow
+- path-traversal
+severity: high
+risk_score: 68
+references:
+- "https://attack.mitre.org/techniques/T1190/"
+nist: ["SI-10", "AC-4"]
+pci_dss: ["10.2.4", "6.5.1"]
+gdpr: ["Article 35.7.d"]
+mitre_attack:
+  TA0001:
+    T1190: []

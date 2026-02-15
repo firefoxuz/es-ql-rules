@@ -1,0 +1,50 @@
+name: Fortigate - HTTP Unknown Tunneling Detected
+description: |
+  Ushbu qoida HTTP protokoli orqali suspicious tunneling faoliyatini aniqlaydi.
+  Bu data exfiltration yoki C2 communication belgisi bo'lishi mumkin (T1071).
+  Qonuniy holatlar: VPN client, proxy, legitimate tunnel apps.
+  SOC triage bosqichlari:
+  - Manba va destination IP'larni tekshiring
+  - Tunneling pattern va frequency'ni tahlil qiling
+  - Associated process va application'ni aniqlang
+  - Data transfer hajmini tekshiring
+  - Threat intelligence bilan correlate qiling
+type: esql
+params: '{}'
+schedule_interval: 10m
+index:
+- fortigate-*
+query_language: esql
+query: |
+  FROM filebeat-fortigate-*
+  | WHERE @timestamp >= NOW() - 45 minutes
+  | WHERE event.message RLIKE "(?i)http_decoder: HTTP\\.Unknown\\.Tunnelling"
+  | WHERE fortinet.firewall.subtype == "ips"
+  | STATS
+      event_count = COUNT(*),
+      dst_ips = VALUES(destination.ip),
+      dst_ports = VALUES(destination.port),
+      policies = VALUES(rule.id),
+      profiles = VALUES(fortinet.firewall.profile)
+    BY source.ip, bucket = DATE_TRUNC(5 minutes, @timestamp)
+  | WHERE event_count >= 18
+  | KEEP bucket, source.ip, event_count, dst_ips, dst_ports, policies, profiles
+  | SORT event_count DESC
+  | LIMIT 100
+enabled: true
+tags:
+- attack.command-and-control
+- attack.t1071
+- fortigate
+- tunneling
+- data-exfiltration
+severity: high
+risk_score: 75
+references:
+- "https://attack.mitre.org/techniques/T1071/"
+nist: ["SC-7", "SI-4"]
+pci_dss: ["10.6.1"]
+gdpr: ["Article 35.7.d"]
+mitre_attack:
+  TA0011:
+    T1071: []
