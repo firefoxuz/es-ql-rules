@@ -63,7 +63,7 @@ references:
   - "https://ss64.com/nt/set.html"
 nist: ["AU-12", "SI-4", "CM-6"]
 pci_dss: ["10.2"]
-gdpr: ["Article 32.1.b"]
+gdpr: ["32.1.b"]
 mitre_attack:
   TA0002:
     T1059: []

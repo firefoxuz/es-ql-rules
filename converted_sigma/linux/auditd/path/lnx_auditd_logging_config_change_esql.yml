@@ -39,7 +39,7 @@ references:
   - "https://attack.mitre.org/techniques/T1562/006/"
 nist: ["SI-4", "AU-12", "AU-6"]
 pci_dss: ["10.2", "10.5"]
-gdpr: ["Article 32.1.b"]
+gdpr: ["32.1.b"]
 mitre_attack:
   TA0005:
     T1562: ["T1562.006"]

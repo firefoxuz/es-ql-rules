@@ -1,0 +1,61 @@
+name: Tomcat - SQL Injection Attempt in URL
+description: |
+  Ushbu qoida HTTP so'rov URL'larida SQL injection pattern'larini aniqlaydi.
+  Bu ma'lumotlar bazasiga ruxsatsiz kirish yoki ma'lumot o'g'irlash 
+  urinishi bo'lishi mumkin (T1190, T1059).
+  Qonuniy holatlar: Juda kam (pentest, security scanner).
+  SOC triage bosqichlari:
+  - URL va query string'ni to'liq ko'ring
+  - Response code va size'ni tekshiring (200 + katta size = xavfli)
+  - WAF loglarini tekshiring (bloklangan yoki o'tganmi?)
+  - DB server loglarini tekshiring
+  - Manba IP reputation'ini tekshiring
+type: esql
+params: '{}'
+schedule_interval: 5m
+index:
+  - filebeat-tomcat-*
+query_language: esql
+query: |
+  FROM filebeat-tomcat-*
+  | WHERE @timestamp >= NOW() - 15 minutes
+  | WHERE data_stream.dataset == "tomcat.access"
+  | WHERE rsa.web.urlpage LIKE "*SELECT*"
+     OR rsa.web.urlpage LIKE "*UNION*"
+     OR rsa.web.urlpage LIKE "*INSERT*"
+     OR rsa.web.urlpage LIKE "*DROP*"
+     OR rsa.web.urlpage LIKE "*1=1*"
+     OR rsa.web.urlpage LIKE "*OR+1*"
+     OR rsa.web.urlpage LIKE "*%27*"
+     OR rsa.web.p_url LIKE "*UNION+SELECT*"
+     OR rsa.web.p_url LIKE "*'+OR+'*"
+  | STATS
+      event_count = COUNT(*),
+      attack_urls = VALUES(rsa.web.urlpage),
+      response_codes = VALUES(rsa.misc.result_code),
+      user_agents = VALUES(rsa.misc.client),
+      target_hosts = VALUES(rsa.network.host_dst)
+    BY source.ip, bucket = DATE_TRUNC(5 minutes, @timestamp)
+  | WHERE event_count >= 1
+  | KEEP bucket, source.ip, event_count, attack_urls, response_codes, user_agents, target_hosts
+  | SORT event_count DESC
+  | LIMIT 100
+enabled: true
+tags:
+  - attack.initial-access
+  - attack.t1190
+  - attack.t1059
+  - tomcat
+  - sql-injection
+  - web-attack
+severity: critical
+risk_score: 88
+references:
+  - "https://attack.mitre.org/techniques/T1190/"
+  - "https://owasp.org/www-community/attacks/SQL_Injection"
+nist: ["SI-10", "AC-3"]
+pci_dss: ["6.5.1"]
+gdpr: ["32.2"]
+mitre_attack:
+  TA0001:
+    T1190: []

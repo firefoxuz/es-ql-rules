@@ -54,5 +54,5 @@ severity: high
 risk_score: 75
 nist: ["AC-17", "AU-6", "AU-12", "CM-6"]
 pci_dss: ["10.2.7", "10.2", "2.2"]
-gdpr: ["Article 32.1.a"]
+gdpr: ["32.1.a"]
 mitre_attack: []

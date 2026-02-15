@@ -71,7 +71,7 @@ references:
   - "45 CFR §164.312(a)(2)(iv) - Encryption"
   - "OCR Guidance on Removable Media"
 nist: ["MP-5"]
-gdpr: ["Article 32"]
+gdpr: ["32"]
 pci_dss: ["9.6"]
 hipaa: ["164.310.d.1"]
 mitre_attack:

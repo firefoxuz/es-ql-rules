@@ -62,7 +62,7 @@ references:
   - "45 CFR §164.508(a)(2) - Psychotherapy Notes"
   - "45 CFR §164.501 - Definitions (Psychotherapy Notes)"
 nist: ["AC-3"]
-gdpr: ["Article 9"]
+gdpr: ["9"]
 pci_dss: []
 hipaa: ["164.508.a.2"]
 mitre_attack:

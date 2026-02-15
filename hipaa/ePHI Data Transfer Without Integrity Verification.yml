@@ -66,7 +66,7 @@ references:
   - "45 CFR §164.312(c)(2) - Mechanism to Authenticate ePHI"
   - "45 CFR §164.312(e)(2)(i) - Integrity Controls for Transmission"
 nist: ["SC-8"]
-gdpr: ["Article 32"]
+gdpr: ["32"]
 pci_dss: ["4.1"]
 hipaa: ["164.312.c.2"]
 mitre_attack:

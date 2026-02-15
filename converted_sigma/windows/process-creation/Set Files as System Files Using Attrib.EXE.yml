@@ -59,7 +59,7 @@ references:
   - "https://unit42.paloaltonetworks.com/unit42-sure-ill-take-new-combojack-malware-alters-clipboards-steal-cryptocurrency/"
 nist: ["AU-6", "SI-4"]
 pci_dss: ["10.2"]
-gdpr: ["Article 32.1.a"]
+gdpr: ["32.1.a"]
 mitre_attack:
   TA0005:
     T1564: ["T1564.001"]

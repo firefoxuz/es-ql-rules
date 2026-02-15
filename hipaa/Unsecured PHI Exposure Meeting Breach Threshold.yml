@@ -80,7 +80,7 @@ references:
   - "45 CFR §164.404 - Notification to Individuals"
   - "OCR Breach Notification Rule Guidance"
 nist: ["IR-6"]
-gdpr: ["Article 33"]
+gdpr: ["33"]
 pci_dss: []
 hipaa: ["164.402"]
 mitre_attack:

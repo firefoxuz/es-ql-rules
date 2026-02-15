@@ -50,7 +50,7 @@ references:
 - "https://attack.mitre.org/techniques/T1041/"
 nist: ["SC-7", "AC-4"]
 pci_dss: ["3.4", "10.6.1"]
-gdpr: ["Article 32", "Article 35.7.d"]
+gdpr: ["32", "35.7.d"]
 mitre_attack:
   TA0010:
     T1048: []

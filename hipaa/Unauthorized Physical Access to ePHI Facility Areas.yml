@@ -64,7 +64,7 @@ references:
   - "45 CFR §164.310(a)(1) - Facility Access Controls"
   - "45 CFR §164.310(a)(2)(iii) - Access Control and Validation Procedures"
 nist: ["PE-3"]
-gdpr: ["Article 32"]
+gdpr: ["32"]
 pci_dss: ["9.1.1"]
 hipaa: ["164.310.a.1"]
 mitre_attack:

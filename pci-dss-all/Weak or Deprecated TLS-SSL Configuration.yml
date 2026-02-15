@@ -60,7 +60,7 @@ references:
   - "PCI DSS v3.1 Requirement 4.1"
   - "PCI SSC TLS guidance"
 nist: ["SC-8"]
-gdpr: ["Article 32"]
+gdpr: ["32"]
 pci_dss: ["4.1", "4.1.1"]
 mitre_attack:
   TA0009: 

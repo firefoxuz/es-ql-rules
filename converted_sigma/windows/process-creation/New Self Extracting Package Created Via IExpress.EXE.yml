@@ -64,7 +64,7 @@ references:
   - "https://www.virustotal.com/gui/file/602f4ae507fa8de57ada079adff25a6c2a899bd25cd092d0af7e62cdb619c93c/behavior"
 nist: ["SI-4", "AU-12"]
 pci_dss: ["10.2"]
-gdpr: ["Article 32.1.b"]
+gdpr: ["32.1.b"]
 mitre_attack:
   TA0005:
     T1218: []

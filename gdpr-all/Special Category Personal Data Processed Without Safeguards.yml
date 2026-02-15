@@ -61,7 +61,7 @@ references:
   - "GDPR Article 9 - Processing of Special Categories of Personal Data"
   - "GDPR Recital 51 - Sensitive Data"
 nist: ["IP-3"]
-gdpr: ["Article 9"]
+gdpr: ["9"]
 pci_dss: []
 mitre_attack:
   T0009:

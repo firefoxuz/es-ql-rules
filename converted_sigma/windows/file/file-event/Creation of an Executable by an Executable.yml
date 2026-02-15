@@ -171,7 +171,7 @@ references:
   - "Internal Research"
 nist: ["SI-4", "AU-12"]
 pci_dss: ["10.2"]
-gdpr: ["Article 32.1.b"]
+gdpr: ["32.1.b"]
 mitre_attack:
   TA0042:
     T1587: ["T1587.001"]

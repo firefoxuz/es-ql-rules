@@ -66,7 +66,7 @@ references:
   - "45 CFR §164.308(b)(1) - BA Contract Requirements"
   - "HITECH Act §13404 - BA Liability"
 nist: ["SA-9"]
-gdpr: ["Article 28"]
+gdpr: ["28"]
 pci_dss: ["12.8"]
 hipaa: ["164.308.b", "164.504.e"]
 mitre_attack:

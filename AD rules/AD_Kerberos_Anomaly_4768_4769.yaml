@@ -48,4 +48,4 @@ mitre_attack:
     T1558: [T1558.003]
 nist: ["AU-2", "AU-12", "AC-7", "IA-2"]
 pci_dss: ["10.2.4", "10.2.5", "8.1.6"]
-gdpr: ["Article 32.1.a", "Article 32.2"]
+gdpr: ["32.1.a", "32.2"]

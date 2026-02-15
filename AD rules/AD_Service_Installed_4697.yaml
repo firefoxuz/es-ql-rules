@@ -47,4 +47,4 @@ mitre_attack:
     T1543: [T1543.003]
 nist: ["SI-4", "AU-12", "CM-7"]
 pci_dss: ["10.2.7", "11.4"]
-gdpr: ["Article 32.1.a"]
+gdpr: ["32.1.a"]

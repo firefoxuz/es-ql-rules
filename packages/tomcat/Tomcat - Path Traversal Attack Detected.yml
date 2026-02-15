@@ -1,0 +1,57 @@
+name: Tomcat - Path Traversal Attack Detected
+description: |
+  Ushbu qoida HTTP so'rovlarda "../", "%2e%2e", "%252e" kabi path traversal 
+  pattern'larini aniqlaydi. Muvaffaqiyatli bo'lsa, server fayllariga 
+  ruxsatsiz kirish mumkin (T1083, T1005).
+  Qonuniy holatlar: URL encoding bilan bog'liq app xatolari (juda kam).
+  SOC triage bosqichlari:
+  - So'rov URL'ini to'liq tekshiring (rsa.web.urlpage)
+  - HTTP response code'ni tekshiring (200 = critical!)
+  - Manba IP'ni threat intel bilan solishtiring
+  - Tomcat access log'dagi response size'ni tekshiring
+  - Target file/directory aniqlanganligini tekshiring
+type: esql
+params: '{}'
+schedule_interval: 5m
+index:
+  - filebeat-tomcat-*
+query_language: esql
+query: |
+  FROM filebeat-tomcat-*
+  | WHERE @timestamp >= NOW() - 15 minutes
+  | WHERE data_stream.dataset == "tomcat.access"
+  | WHERE rsa.web.urlpage LIKE "*../*"
+     OR rsa.web.urlpage LIKE "*%2e%2e%*"
+     OR rsa.web.urlpage LIKE "*%252e*"
+     OR rsa.web.p_url LIKE "*../*"
+     OR rsa.web.p_url LIKE "*%2e%2e*"
+  | STATS
+      event_count = COUNT(*),
+      urls = VALUES(rsa.web.urlpage),
+      response_codes = VALUES(rsa.misc.result_code),
+      user_agents = VALUES(rsa.misc.client),
+      response_sizes = VALUES(rsa.misc.result)
+    BY source.ip, bucket = DATE_TRUNC(5 minutes, @timestamp)
+  | WHERE event_count >= 1
+  | KEEP bucket, source.ip, event_count, urls, response_codes, user_agents, response_sizes
+  | SORT event_count DESC
+  | LIMIT 100
+enabled: true
+tags:
+  - attack.discovery
+  - attack.t1083
+  - attack.t1005
+  - tomcat
+  - path-traversal
+  - lfi
+severity: critical
+risk_score: 90
+references:
+  - "https://attack.mitre.org/techniques/T1083/"
+  - "https://owasp.org/www-community/attacks/Path_Traversal"
+nist: ["AC-3", "SI-10"]
+pci_dss: ["6.5.8"]
+gdpr: ["32.2"]
+mitre_attack:
+  TA0007:
+    T1083: []

@@ -43,6 +43,6 @@ references:
 - "https://attack.mitre.org/tactics/TA0001/"
 nist: ["SI-4", "DE.CM-1"]
 pci_dss: ["11.4"]
-gdpr: ["Article 35.7.d"]
+gdpr: ["35.7.d"]
 mitre_attack:
   TA0001: {}

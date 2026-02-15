@@ -68,7 +68,7 @@ references:
   - "45 CFR §164.312(a)(2)(i) - Unique User Identification"
   - "45 CFR §164.308(a)(5)(ii)(C) - Log-in Monitoring"
 nist: ["IA-2"]
-gdpr: ["Article 32"]
+gdpr: ["32"]
 pci_dss: ["8.5"]
 hipaa: ["164.312.a.2.i"]
 mitre_attack:

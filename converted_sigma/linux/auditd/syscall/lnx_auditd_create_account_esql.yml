@@ -37,7 +37,7 @@ references:
   - "https://attack.mitre.org/techniques/T1136/001/"
 nist: ["SI-4", "AU-12", "AC-2"]
 pci_dss: ["10.2", "8.1"]
-gdpr: ["Article 32.1.b"]
+gdpr: ["32.1.b"]
 mitre_attack:
   TA0003:
     T1136: ["T1136.001"]

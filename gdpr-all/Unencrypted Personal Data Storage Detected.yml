@@ -53,7 +53,7 @@ references:
   - "GDPR Article 32(1)(a) - Encryption and Pseudonymisation"
   - "GDPR Article 5(1)(f) - Integrity and Confidentiality"
 nist: ["SC-28"]
-gdpr: ["Article 32.1.a"]
+gdpr: ["32.1.a"]
 pci_dss: ["3", "3.4"]
 mitre_attack:
   TA0009:

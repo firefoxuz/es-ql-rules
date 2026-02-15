@@ -31,7 +31,7 @@ severity: low
 risk_score: 30
 nist: ["SI-4", "AU-12"]
 pci_dss: ["10.2"]
-gdpr: ["Article 32.1.b"]
+gdpr: ["32.1.b"]
 mitre_attack:
   TA0005:
     T1222: ["T1222.002"]

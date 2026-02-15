@@ -60,7 +60,7 @@ references:
   - "45 CFR §164.524 - Access of Individuals to PHI"
   - "45 CFR §164.524(b)(2) - 30-Day Timeframe"
 nist: ["IP-4"]
-gdpr: ["Article 15"]
+gdpr: ["15"]
 pci_dss: ["7.1"]
 hipaa: ["164.524"]
 mitre_attack: []

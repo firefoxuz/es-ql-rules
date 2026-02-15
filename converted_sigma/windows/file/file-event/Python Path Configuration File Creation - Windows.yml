@@ -52,7 +52,7 @@ references:
   - "https://docs.python.org/3/library/site.html"
 nist: ["SI-4", "AU-12", "CM-7"]
 pci_dss: ["10.2"]
-gdpr: ["Article 32.1.b"]
+gdpr: ["32.1.b"]
 mitre_attack:
   TA0002:
     T1059: ["T1059.006"]

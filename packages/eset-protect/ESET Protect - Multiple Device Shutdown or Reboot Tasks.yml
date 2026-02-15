@@ -45,7 +45,7 @@ references:
 - "https://attack.mitre.org/techniques/T1529/"
 nist: ["AC-2", "AC-6"]
 pci_dss: ["7.1", "10.2.2"]
-gdpr: ["Article 35.7.d"]
+gdpr: ["35.7.d"]
 mitre_attack:
   TA0040:
     T1529: []

@@ -48,7 +48,7 @@ references:
 - "https://attack.mitre.org/techniques/T1189/"
 nist: ["SI-4", "SC-7"]
 pci_dss: ["6.5.10", "10.6.1"]
-gdpr: ["Article 35.7.d"]
+gdpr: ["35.7.d"]
 mitre_attack:
   TA0001:
     T1566: []

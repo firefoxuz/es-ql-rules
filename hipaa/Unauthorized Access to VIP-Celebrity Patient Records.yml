@@ -63,7 +63,7 @@ references:
   - "45 CFR §164.514(d) - Minimum Necessary"
   - "OCR Resolution Agreements - Snooping Cases"
 nist: ["AC-3"]
-gdpr: ["Article 32"]
+gdpr: ["32"]
 pci_dss: []
 hipaa: ["164.502.a"]
 mitre_attack:

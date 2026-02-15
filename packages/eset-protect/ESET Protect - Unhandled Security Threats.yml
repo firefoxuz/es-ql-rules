@@ -47,7 +47,7 @@ references:
 - "https://attack.mitre.org/techniques/T1547/"
 nist: ["SI-3", "IR-4"]
 pci_dss: ["5.2", "10.6.1"]
-gdpr: ["Article 35.7.d"]
+gdpr: ["35.7.d"]
 mitre_attack:
   TA0003:
     T1547: []

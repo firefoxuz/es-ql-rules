@@ -44,7 +44,7 @@ references:
 - "https://attack.mitre.org/techniques/T1595/"
 nist: ["SI-4", "SC-7"]
 pci_dss: ["11.4"]
-gdpr: ["Article 35.7.d"]
+gdpr: ["35.7.d"]
 mitre_attack:
   TA0043:
     T1595: []

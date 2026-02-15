@@ -59,7 +59,7 @@ references:
   - "GDPR Article 45 - Adequacy Decisions"
   - "GDPR Article 46 - Appropriate Safeguards"
 nist: ["AC-20"]
-gdpr: ["Article 44-46"]
+gdpr: ["44-46"]
 pci_dss: []
 mitre_attack:
   TA0010: 

@@ -46,4 +46,4 @@ mitre_attack:
     T1531: []
 nist: ["AC-2", "AU-12", "IA-4"]
 pci_dss: ["8.1.1", "8.1.2", "10.2.5"]
-gdpr: ["Article 32.1.a"]
+gdpr: ["32.1.a"]

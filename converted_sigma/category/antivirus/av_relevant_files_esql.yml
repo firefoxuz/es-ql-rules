@@ -45,7 +45,7 @@ references:
   - "https://www.nextron-systems.com/?s=antivirus"
 nist: ["SI-4", "AU-12", "SI-3", "CM-7"]
 pci_dss: ["10.2", "5.1", "11.4"]
-gdpr: ["Article 32.1.b"]
+gdpr: ["32.1.b"]
 mitre_attack:
   TA0042:
     T1588: []

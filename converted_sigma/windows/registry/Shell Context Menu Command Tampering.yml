@@ -50,7 +50,7 @@ references:
   - "https://mrd0x.com/sentinelone-persistence-via-menu-context/"
 nist: ["AU-6", "SI-4", "CM-6"]
 pci_dss: ["10.2"]
-gdpr: ["Article 32.1.a"]
+gdpr: ["32.1.a"]
 mitre_attack:
   TA0003:
     T1547: []

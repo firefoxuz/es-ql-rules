@@ -87,7 +87,7 @@ references:
   - "GDPR Article 32(1)(b) - Confidentiality, Integrity, Availability"
   - "GDPR Article 32(2) - Risk Assessment"
 nist: ["AC-3"]
-gdpr: ["Article 32.1.b"]
+gdpr: ["32.1.b"]
 pci_dss: ["7.1"]
 mitre_attack:
   TA0001: 

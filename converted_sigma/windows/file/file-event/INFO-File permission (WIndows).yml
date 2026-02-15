@@ -39,5 +39,5 @@ references:
   - "https://www.elastic.co/guide/en/ecs/current/ecs-event.html"
 nist: ["AU-12"]
 pci_dss: ["10.2"]
-gdpr: ["Article 32.1.a"]
+gdpr: ["32.1.a"]
 mitre_attack: {}

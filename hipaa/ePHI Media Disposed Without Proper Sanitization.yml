@@ -63,7 +63,7 @@ references:
   - "NIST SP 800-88 - Media Sanitization Guidelines"
   - "OCR Guidance on Disposal of PHI"
 nist: ["MP-6"]
-gdpr: ["Article 32"]
+gdpr: ["32"]
 pci_dss: ["9.8"]
 hipaa: ["164.310.d.2.i"]
 mitre_attack:

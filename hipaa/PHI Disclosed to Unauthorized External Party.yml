@@ -70,7 +70,7 @@ references:
   - "45 CFR §164.502(a) - Uses and Disclosures of PHI"
   - "45 CFR §164.508 - Uses/Disclosures Requiring Authorization"
 nist: ["AC-4"]
-gdpr: ["Article 6"]
+gdpr: ["6"]
 pci_dss: []
 hipaa: ["164.502.a"]
 mitre_attack:

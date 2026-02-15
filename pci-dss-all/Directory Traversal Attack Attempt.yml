@@ -70,7 +70,7 @@ references:
   - "PCI DSS v3.1 Requirement 6.5.8"
   - "OWASP Top 10 A5:2017"
 nist: ["SI-10"]
-gdpr: ["Article 32"]
+gdpr: ["32"]
 pci_dss: ["6.5.8"]
 mitre_attack:
   TA0007:

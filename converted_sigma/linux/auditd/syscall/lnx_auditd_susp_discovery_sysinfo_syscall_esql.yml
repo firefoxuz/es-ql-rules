@@ -39,7 +39,7 @@ references:
   - "https://man7.org/linux/man-pages/man2/sysinfo.2.html"
 nist: ["SI-4", "AU-12"]
 pci_dss: ["10.2"]
-gdpr: ["Article 32.1.b"]
+gdpr: ["32.1.b"]
 mitre_attack:
   TA0007:
     T1082: []

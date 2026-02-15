@@ -2,7 +2,7 @@
 # Effective Date: May 25, 2018
 # Scope: Processing of personal data of EU/EEA data subjects
 
-Article 5:
+5:
   chapter: 'I - General Provisions'
   name: Principles relating to processing of personal data
   
@@ -41,7 +41,7 @@ Article 5:
   name: Accountability
   description: Controller shall be responsible for and able to demonstrate compliance with principles
 
-Article 6:
+6:
   chapter: 'II - Principles'
   name: Lawfulness of processing
 
@@ -75,7 +75,7 @@ Article 6:
   name: Legitimate interests
   description: Processing is necessary for legitimate interests pursued by controller or third party
 
-Article 7:
+7:
   chapter: 'II - Principles'
   name: Conditions for consent
 
@@ -99,7 +99,7 @@ Article 7:
   name: Freely given assessment
   description: Account shall be taken of whether performance of contract is conditional on consent
 
-Article 8:
+8:
   chapter: 'II - Principles'
   name: Conditions applicable to child's consent
 
@@ -113,7 +113,7 @@ Article 8:
   name: Parental consent
   description: Where child is below age, processing lawful only if consent given by holder of parental responsibility
 
-Article 9:
+9:
   chapter: 'II - Principles'
   name: Processing of special categories of personal data
 
@@ -172,7 +172,7 @@ Article 9:
   name: Archiving exception
   description: Processing necessary for archiving purposes in public interest, scientific or historical research, or statistical purposes
 
-Article 12:
+12:
   chapter: 'III - Rights of Data Subject'
   name: Transparent information, communication and modalities
 
@@ -201,7 +201,7 @@ Article 12:
   name: Refusal requirements
   description: Where controller does not take action, shall inform data subject of reasons and possibility of lodging complaint
 
-Article 13:
+13:
   chapter: 'III - Rights of Data Subject'
   name: Information to be provided where data collected from data subject
 
@@ -260,7 +260,7 @@ Article 13:
   name: Automated decision-making
   description: Existence of automated decision-making including profiling and meaningful information about logic involved
 
-Article 14:
+14:
   chapter: 'III - Rights of Data Subject'
   name: Information where data not obtained from data subject
 
@@ -284,7 +284,7 @@ Article 14:
   name: Provide information before disclosure
   description: If disclosure to another recipient envisaged, at latest when data first disclosed
 
-Article 15:
+15:
   chapter: 'III - Rights of Data Subject'
   name: Right of access by the data subject
 
@@ -298,7 +298,7 @@ Article 15:
   name: Copy of data
   description: Controller shall provide copy of personal data undergoing processing
 
-Article 16:
+16:
   chapter: 'III - Rights of Data Subject'
   name: Right to rectification
 
@@ -307,7 +307,7 @@ Article 16:
   name: Rectification of inaccurate data
   description: Data subject shall have right to obtain rectification of inaccurate personal data and completion of incomplete data
 
-Article 17:
+17:
   chapter: 'III - Rights of Data Subject'
   name: Right to erasure (right to be forgotten)
 
@@ -346,7 +346,7 @@ Article 17:
   name: Inform other controllers
   description: Where controller has made data public, shall inform other controllers to erase links, copies or replications
 
-Article 18:
+18:
   chapter: 'III - Rights of Data Subject'
   name: Right to restriction of processing
 
@@ -370,7 +370,7 @@ Article 18:
   name: Pending objection verification
   description: Data subject has objected to processing pending verification of legitimate grounds
 
-Article 20:
+20:
   chapter: 'III - Rights of Data Subject'
   name: Right to data portability
 
@@ -384,7 +384,7 @@ Article 20:
   name: Direct transmission
   description: Right to have data transmitted directly from one controller to another where technically feasible
 
-Article 21:
+21:
   chapter: 'III - Rights of Data Subject'
   name: Right to object
 
@@ -403,7 +403,7 @@ Article 21:
   name: Inform about objection right
   description: Right to object shall be explicitly brought to attention of data subject at latest at first communication
 
-Article 22:
+22:
   chapter: 'III - Rights of Data Subject'
   name: Automated individual decision-making, including profiling
 
@@ -432,7 +432,7 @@ Article 22:
   name: Right to human intervention
   description: Right to obtain human intervention, express point of view and contest decision
 
-Article 25:
+25:
   chapter: 'IV - Controller and Processor'
   name: Data protection by design and by default
 
@@ -446,7 +446,7 @@ Article 25:
   name: Data protection by default
   description: Ensure that by default only personal data necessary for each specific purpose are processed
 
-Article 26:
+26:
   chapter: 'IV - Controller and Processor'
   name: Joint controllers
 
@@ -460,7 +460,7 @@ Article 26:
   name: Essence of arrangement available
   description: Essence of arrangement shall be made available to data subject
 
-Article 28:
+28:
   chapter: 'IV - Controller and Processor'
   name: Processor
 
@@ -519,7 +519,7 @@ Article 28:
   name: Make available information for audits
   description: Makes available all information necessary to demonstrate compliance and allow for audits
 
-Article 30:
+30:
   chapter: 'IV - Controller and Processor'
   name: Records of processing activities
 
@@ -568,7 +568,7 @@ Article 30:
   name: Processor record keeping
   description: Processor shall maintain record of categories of processing activities
 
-Article 32:
+32:
   chapter: 'IV - Controller and Processor'
   name: Security of processing
 
@@ -607,7 +607,7 @@ Article 32:
   name: Adherence to codes and certification
   description: Adherence to approved code of conduct or certification mechanism may be used to demonstrate compliance
 
-Article 33:
+33:
   chapter: 'IV - Controller and Processor'
   name: Notification of personal data breach to supervisory authority
 
@@ -631,7 +631,7 @@ Article 33:
   name: Document all breaches
   description: Controller shall document all personal data breaches
 
-Article 34:
+34:
   chapter: 'IV - Controller and Processor'
   name: Communication of personal data breach to data subject
 
@@ -650,7 +650,7 @@ Article 34:
   name: Exceptions to communication
   description: Not required if: appropriate technical protection applied, subsequent measures ensure high risk no longer likely, or disproportionate effort
 
-Article 35:
+35:
   chapter: 'IV - Controller and Processor'
   name: Data protection impact assessment
 
@@ -669,7 +669,7 @@ Article 35:
   name: DPIA shall contain
   description: Systematic description of processing and purposes, assessment of necessity and proportionality, assessment of risks, and measures to address risks
 
-Article 36:
+36:
   chapter: 'IV - Controller and Processor'
   name: Prior consultation
 
@@ -678,7 +678,7 @@ Article 36:
   name: Consult supervisory authority
   description: Controller shall consult supervisory authority prior to processing where DPIA indicates high risk absent measures to mitigate
 
-Article 37:
+37:
   chapter: 'IV - Controller and Processor'
   name: Designation of data protection officer
 
@@ -697,7 +697,7 @@ Article 37:
   name: Publish DPO contact details
   description: Controller and processor shall publish contact details of DPO and communicate to supervisory authority
 
-Article 38:
+38:
   chapter: 'IV - Controller and Processor'
   name: Position of data protection officer
 
@@ -716,7 +716,7 @@ Article 38:
   name: No instructions regarding tasks
   description: DPO shall not receive instructions regarding exercise of tasks and shall not be dismissed for performing tasks
 
-Article 39:
+39:
   chapter: 'IV - Controller and Processor'
   name: Tasks of data protection officer
 
@@ -745,7 +745,7 @@ Article 39:
   name: Act as contact point
   description: Act as contact point for supervisory authority on processing issues
 
-Article 44:
+44:
   chapter: 'V - Transfers'
   name: General principle for transfers
 
@@ -754,7 +754,7 @@ Article 44:
   name: Transfers subject to other provisions
   description: Transfer to third country or international organisation only if controller and processor comply with conditions in Chapter V
 
-Article 45:
+45:
   chapter: 'V - Transfers'
   name: Transfers on basis of adequacy decision
 
@@ -768,7 +768,7 @@ Article 45:
   name: Adequacy assessment factors
   description: Commission shall assess rule of law, human rights, data protection legislation, supervisory authorities, and international commitments
 
-Article 46:
+46:
   chapter: 'V - Transfers'
   name: Transfers subject to appropriate safeguards
 
@@ -807,7 +807,7 @@ Article 46:
   name: Certification mechanism
   description: Approved certification mechanism with binding enforceable commitments
 
-Article 49:
+49:
   chapter: 'V - Transfers'
   name: Derogations for specific situations
 
@@ -836,7 +836,7 @@ Article 49:
   name: Vital interests derogation
   description: Transfer necessary to protect vital interests where data subject incapable of giving consent
 
-Article 58:
+58:
   chapter: 'VI - Supervisory Authorities'
   name: Powers
 
@@ -850,7 +850,7 @@ Article 58:
   name: Corrective powers
   description: Issue warnings and reprimands, order compliance, order operations limited or banned, and impose administrative fines
 
-Article 77:
+77:
   chapter: 'VIII - Remedies, Liability and Penalties'
   name: Right to lodge complaint
 
@@ -859,7 +859,7 @@ Article 77:
   name: Lodge complaint with supervisory authority
   description: Every data subject shall have right to lodge complaint with supervisory authority if considers processing infringes GDPR
 
-Article 82:
+82:
   chapter: 'VIII - Remedies, Liability and Penalties'
   name: Right to compensation
 
@@ -868,7 +868,7 @@ Article 82:
   name: Right to compensation for damage
   description: Person who suffered material or non-material damage as result of infringement shall have right to receive compensation
 
-Article 83:
+83:
   chapter: 'VIII - Remedies, Liability and Penalties'
   name: General conditions for imposing administrative fines
 
@@ -886,38 +886,3 @@ Article 83:
   article: '83'
   name: Upper tier fines up to €20M or 4%
   description: Infringements of Articles 5, 6, 7, 9, 12-22, 44-49, 58 subject to fines up to €20M or 4% of annual worldwide turnover
-
-Recital 32:
-  recital: '32'
-  name: Consent requirements
-  description: Consent should be given by clear affirmative act establishing freely given, specific, informed and unambiguous indication
-
-Recital 39:
-  recital: '39'
-  name: Personal data of deceased persons
-  description: Regulation does not apply to data of deceased persons; Member States may provide for rules
-
-Recital 42:
-  recital: '42'
-  name: Withdrawal of consent
-  description: It should be as easy to withdraw as to give consent
-
-Recital 51:
-  recital: '51'
-  name: Special protection for sensitive data
-  description: Personal data revealing racial or ethnic origin, political opinions, religious or philosophical beliefs should be subject to specific protection
-
-Recital 68:
-  recital: '68'
-  name: Data portability format
-  description: To further strengthen control over own data, right to data portability in structured, commonly used, machine-readable and interoperable format
-
-Recital 78:
-  recital: '78'
-  name: Privacy by default
-  description: Protection of rights and freedoms and legitimate interests requires technical and organisational measures ensuring by default only necessary personal data processed
-
-Recital 85:
-  recital: '85'
-  name: Breach notification timeline
-  description: Personal data breach should be notified to supervisory authority without undue delay and where feasible within 72 hours

@@ -54,7 +54,7 @@ references:
   - "https://attack.mitre.org/techniques/T1190/"
 nist: ["SI-4", "AU-12", "AC-3", "SC-7"]
 pci_dss: ["10.2", "6.5.1", "10.3"]
-gdpr: ["Article 32.1.b"]
+gdpr: ["32.1.b"]
 mitre_attack:
   TA0010:
     T1190: []

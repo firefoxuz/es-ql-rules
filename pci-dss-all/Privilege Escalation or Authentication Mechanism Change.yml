@@ -60,7 +60,7 @@ risk_score: 85
 references:
   - "PCI DSS v3.1 Requirement 10.2.5"
 nist: ["AU-12"]
-gdpr: ["Article 32"]
+gdpr: ["32"]
 pci_dss: ["10.2.5"]
 mitre_attack:
   TA0004:

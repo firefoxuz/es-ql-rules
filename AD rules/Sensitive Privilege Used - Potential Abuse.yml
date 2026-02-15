@@ -69,4 +69,4 @@ mitre_attack:
     T1003: []
 nist: ["AU-6", "AU-9", "SI-4"]
 pci_dss: ["10.2.7", "10.5"]
-gdpr: ["Article 32.1.a", "Article 32.2"]
+gdpr: ["32.1.a", "32.2"]

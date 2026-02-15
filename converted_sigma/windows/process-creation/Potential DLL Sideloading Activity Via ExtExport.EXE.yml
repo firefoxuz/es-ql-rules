@@ -45,7 +45,7 @@ references:
   - "https://www.welivesecurity.com/2020/03/05/guildma-devil-drives-electric/"
 nist: ["SI-4", "AU-12"]
 pci_dss: ["10.2"]
-gdpr: ["Article 32.1.b"]
+gdpr: ["32.1.b"]
 mitre_attack:
   TA0005:
     T1218: []

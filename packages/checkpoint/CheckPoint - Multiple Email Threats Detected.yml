@@ -47,7 +47,7 @@ references:
 - "https://attack.mitre.org/techniques/T1566/"
 nist: ["SI-3", "SI-8"]
 pci_dss: ["5.1", "5.2"]
-gdpr: ["Article 35.7.d"]
+gdpr: ["35.7.d"]
 mitre_attack:
   TA0001:
     T1566: []

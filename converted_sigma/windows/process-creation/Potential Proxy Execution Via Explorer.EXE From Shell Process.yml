@@ -46,7 +46,7 @@ references:
   - "https://app.any.run/tasks/9a8fd563-4c54-4d0a-9ad8-1fe08339cbc3/"
 nist: ["SI-4", "AU-12"]
 pci_dss: ["10.2"]
-gdpr: ["Article 32.1.b"]
+gdpr: ["32.1.b"]
 mitre_attack:
   TA0005:
     T1218: []

@@ -47,7 +47,7 @@ references:
   - "https://web.archive.org/web/20200128160046/https://twitter.com/reegun21/status/1222093798009790464"
 nist: ["SI-4", "AU-12"]
 pci_dss: ["10.2"]
-gdpr: ["Article 32.1.b"]
+gdpr: ["32.1.b"]
 mitre_attack:
   TA0011:
     T1105: []

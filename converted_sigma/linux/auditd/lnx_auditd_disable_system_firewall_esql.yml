@@ -59,7 +59,7 @@ references:
   - "https://firewalld.org/documentation/man-pages/firewall-cmd.html"
 nist: ["SI-4", "AU-12", "SC-7"]
 pci_dss: ["10.2", "1.4"]
-gdpr: ["Article 32.1.b"]
+gdpr: ["32.1.b"]
 mitre_attack:
   TA0005:
     T1562: ["T1562.004"]

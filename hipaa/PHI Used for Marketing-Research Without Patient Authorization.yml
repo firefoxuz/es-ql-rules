@@ -69,7 +69,7 @@ references:
   - "45 CFR §164.501 - Marketing Definition"
   - "45 CFR §164.502(a)(5)(ii) - Research Exception"
 nist: ["IP-1"]
-gdpr: ["Article 6"]
+gdpr: ["6"]
 pci_dss: ["7.1"]
 hipaa: ["164.508"]
 mitre_attack:

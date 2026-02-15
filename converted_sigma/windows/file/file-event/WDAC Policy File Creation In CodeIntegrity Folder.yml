@@ -51,7 +51,7 @@ references:
   - "https://www.virustotal.com/gui/file/d2a4f52a9923336f119a52e531bbb1e66f18322fd8efa9af1a64b94f4d36dc97"
 nist: ["SI-4", "AU-12", "CM-6"]
 pci_dss: ["10.2"]
-gdpr: ["Article 32.1.b"]
+gdpr: ["32.1.b"]
 mitre_attack:
   TA0005:
     T1562: ["T1562.001"]

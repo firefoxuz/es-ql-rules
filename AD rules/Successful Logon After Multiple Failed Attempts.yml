@@ -54,7 +54,7 @@ references:
   - "https://attack.mitre.org/techniques/T1110/"
 nist: ["IA-5", "SI-4", "AU-6"]
 pci_dss: ["8.2.1", "10.2.4", "10.2.5"]
-gdpr: ["Article 32.1.b"]
+gdpr: ["32.1.b"]
 mitre_attack:
   TA0001:
     T1078: []

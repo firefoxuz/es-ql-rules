@@ -66,7 +66,7 @@ references:
   - "45 CFR §164.502(b) - Minimum Necessary Standard"
   - "45 CFR §164.514(d) - Minimum Necessary Requirements"
 nist: ["AC-6"]
-gdpr: ["Article 5.1.c"]
+gdpr: ["5.1.c"]
 pci_dss: ["7.1"]
 hipaa: ["164.502.b, 164.514.d"]
 mitre_attack:

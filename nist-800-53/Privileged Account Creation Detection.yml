@@ -60,7 +60,7 @@ references:
   - "NIST SP 800-53 Rev.5 AC-2: Account Management"
   - "MITRE ATT&CK T1136: Create Account"
 nist: ["AC-2"]
-gdpr: ["Article 32 - Security of Processing"]
+gdpr: ["32"]
 pci_dss: ["8.1.4"]
 hipaa: ["164.308.a.3.ii.A"]
 mitre_attack:

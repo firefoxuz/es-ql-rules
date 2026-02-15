@@ -39,7 +39,7 @@ references:
   - "https://localtonet.com/"
 nist: ["SI-4", "AU-12"]
 pci_dss: ["10.2", "1.3"]
-gdpr: ["Article 32.1.b"]
+gdpr: ["32.1.b"]
 mitre_attack:
   TA0011:
     T1572: []

@@ -47,7 +47,7 @@ references:
   - "https://dear-territory-023.notion.site/WebDav-Share-Testing-e4950fa0c00149c3aa430d779b9b1d0f?pvs=4"
 nist: ["SI-4", "AU-12", "CM-7"]
 pci_dss: ["10.2"]
-gdpr: ["Article 32.1.b"]
+gdpr: ["32.1.b"]
 mitre_attack:
   TA0001:
     T1566: []

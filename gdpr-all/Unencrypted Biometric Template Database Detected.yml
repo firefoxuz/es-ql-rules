@@ -57,7 +57,7 @@ references:
   - "GDPR Article 32(1)(a) - Encryption"
   - "ISO/IEC 24745 - Biometric Information Protection"
 nist: ["SC-28"]
-gdpr: ["Articles 9, 32"]
+gdpr: ["9", "32"]
 pci_dss: ["3.4"]
 mitre_attack:
   TA0009:

@@ -63,7 +63,7 @@ references:
   - "45 CFR §164.524 - Access to PHI"
   - "ONC Certification Requirements"
 nist: ["CP-2"]
-gdpr: ["Article 15"]
+gdpr: ["15"]
 pci_dss: ["12.8"]
 hipaa: ["164.524"]
 mitre_attack:

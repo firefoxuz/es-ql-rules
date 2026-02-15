@@ -37,7 +37,7 @@ references:
   - "https://github.com/h3xduck/TripleCross"
 nist: ["SI-4", "AU-12", "AC-6"]
 pci_dss: ["10.2", "7.1"]
-gdpr: ["Article 32.1.b"]
+gdpr: ["32.1.b"]
 mitre_attack:
   TA0003:
     T1053: ["T1053.003"]

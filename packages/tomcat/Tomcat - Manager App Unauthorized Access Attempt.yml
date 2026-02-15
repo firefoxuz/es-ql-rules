@@ -1,0 +1,59 @@
+name: Tomcat - Manager App Unauthorized Access Attempt
+description: |
+  Ushbu qoida Tomcat Manager, Host Manager va admin interfeyslarga 
+  kirish urinishlarini aniqlaydi. Bu privilege escalation yoki 
+  webshell deploy qilish urinishi bo'lishi mumkin (T1078, T1505.003).
+  Qonuniy holatlar: DevOps deployment, app server management.
+  SOC triage bosqichlari:
+  - Manba IP'ni authorized admin IP ro'yxati bilan solishtiring
+  - Business hours'da bo'ldimi tekshiring
+  - Response code'ni tekshiring (200 = juda xavfli!)
+  - So'nggi deploy operatsiyalari bilan solishtiring
+  - WAF yoki firewall loglarini tekshiring
+type: esql
+params: '{}'
+schedule_interval: 5m
+index:
+  - filebeat-tomcat-*
+query_language: esql
+query: |
+  FROM filebeat-tomcat-*
+  | WHERE @timestamp >= NOW() - 15 minutes
+  | WHERE data_stream.dataset == "tomcat.access"
+  | WHERE rsa.web.urlpage LIKE "/manager/*"
+     OR rsa.web.urlpage LIKE "/host-manager/*"
+     OR rsa.web.urlpage LIKE "/admin/*"
+     OR rsa.web.urlpage LIKE "/manager/html*"
+     OR rsa.web.urlpage LIKE "/manager/text*"
+  | STATS
+      event_count = COUNT(*),
+      accessed_paths = VALUES(rsa.web.urlpage),
+      response_codes = VALUES(rsa.misc.result_code),
+      user_agents = VALUES(rsa.misc.client),
+      methods = VALUES(rsa.web.p_web_method),
+      auth_users = VALUES(rsa.identity.user_role)
+    BY source.ip, bucket = DATE_TRUNC(5 minutes, @timestamp)
+  | WHERE event_count >= 3
+  | KEEP bucket, source.ip, event_count, accessed_paths, response_codes, user_agents, methods, auth_users
+  | SORT event_count DESC
+  | LIMIT 50
+enabled: true
+tags:
+  - attack.privilege-escalation
+  - attack.t1078
+  - attack.persistence
+  - attack.t1505.003
+  - tomcat
+  - manager
+  - admin-access
+severity: high
+risk_score: 82
+references:
+  - "https://attack.mitre.org/techniques/T1078/"
+  - "https://attack.mitre.org/techniques/T1505/003/"
+nist: ["AC-6", "AU-2"]
+pci_dss: ["7.1", "8.3"]
+gdpr: ["32.1"]
+mitre_attack:
+  TA0004:
+    T1078: []

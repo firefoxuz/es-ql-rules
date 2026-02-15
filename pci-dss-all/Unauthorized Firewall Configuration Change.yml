@@ -64,7 +64,7 @@ risk_score: 75
 references:
   - "PCI DSS v3.1 Requirement 1.1.1, 1.1.7"
 nist: ["SC-7"]
-gdpr: ["Article 32"]
+gdpr: ["32"]
 pci_dss: ["1.1.1", "1.1.7", "1.1.2"]
 mitre_attack:
   TA0005:

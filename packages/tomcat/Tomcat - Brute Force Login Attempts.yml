@@ -1,0 +1,51 @@
+name: Tomcat - Brute Force Login Attempts
+description: |
+  Ushbu qoida qisqa vaqt ichida bir xil manba IP'dan ko'p marta 401/403 HTTP 
+  xatoliklarini aniqlaydi. Bu credential stuffing yoki brute-force hujum 
+  belgisi bo'lishi mumkin (T1110).
+  Qonuniy holatlar: expired session, misconfigured app, bot crawlers.
+  SOC triage bosqichlari:
+  - Manba IP'ni threat intel bilan solishtiring
+  - User-agent string'ni tekshiring (bot yoki oddiy browser?)
+  - Target URL pattern'ini tahlil qiling (login endpoint?)
+  - Geo-location va business hours bilan solishtiring
+  - Keyingi muvaffaqiyatli login borligini tekshiring
+type: esql
+params: '{}'
+schedule_interval: 5m
+index:
+  - filebeat-tomcat-*
+query_language: esql
+query: |
+  FROM filebeat-tomcat-*
+  | WHERE @timestamp >= NOW() - 15 minutes
+  | WHERE data_stream.dataset == "tomcat.access"
+  | WHERE rsa.misc.result_code IN ("401", "403")
+  | STATS
+      event_count = COUNT(*),
+      target_urls = VALUES(rsa.web.urlpage),
+      user_agents = VALUES(rsa.misc.client),
+      methods = VALUES(rsa.web.p_web_method),
+      dst_hosts = VALUES(rsa.network.host_dst)
+    BY source.ip, bucket = DATE_TRUNC(5 minutes, @timestamp)
+  | WHERE event_count >= 20
+  | KEEP bucket, source.ip, event_count, target_urls, user_agents, methods, dst_hosts
+  | SORT event_count DESC
+  | LIMIT 100
+enabled: true
+tags:
+  - attack.credential-access
+  - attack.t1110
+  - tomcat
+  - brute-force
+  - authentication
+severity: high
+risk_score: 75
+references:
+  - "https://attack.mitre.org/techniques/T1110/"
+nist: ["AC-7", "SI-3"]
+pci_dss: ["6.5.10", "8.1.6"]
+gdpr: ["32.1"]
+mitre_attack:
+  TA0006:
+    T1110: []

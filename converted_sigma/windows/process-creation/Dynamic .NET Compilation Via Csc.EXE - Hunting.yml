@@ -42,7 +42,7 @@ references:
   - "https://twitter.com/gN3mes1s/status/1206874118282448897"
 nist: ["SI-4"]
 pci_dss: ["10.2"]
-gdpr: ["Article 32.1.b"]
+gdpr: ["32.1.b"]
 mitre_attack:
   TA0005:
     T1027: ["T1027.004"]

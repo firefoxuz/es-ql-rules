@@ -45,7 +45,7 @@ references:
   - "https://github.com/redcanaryco/atomic-red-team/blob/f339e7da7d05f6057fdfcdd3742bfcf365fee2a9/atomics/T1071.001/T1071.001.md#atomic-test-2---malicious-user-agents---cmd"
 nist: ["SC-7", "SI-4", "AU-12"]
 pci_dss: ["10.2"]
-gdpr: ["Article 32.1.b"]
+gdpr: ["32.1.b"]
 mitre_attack:
   TA0011:
     T1071: ["T1071.001"]

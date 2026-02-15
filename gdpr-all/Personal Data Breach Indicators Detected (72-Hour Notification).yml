@@ -73,7 +73,7 @@ references:
   - "GDPR Article 33 - Notification of Personal Data Breach to Supervisory Authority"
   - "GDPR Article 34 - Communication to Data Subject"
 nist: ["IR-6"]
-gdpr: ["Article 33"]
+gdpr: ["33"]
 pci_dss: ["12.10"]
 mitre_attack:
   TA0010: 

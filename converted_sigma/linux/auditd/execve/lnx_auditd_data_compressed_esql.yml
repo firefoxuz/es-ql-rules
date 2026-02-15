@@ -42,7 +42,7 @@ references:
   - "https://attack.mitre.org/techniques/T1560/001/"
 nist: ["SI-4", "AU-12"]
 pci_dss: ["10.2"]
-gdpr: ["Article 32.1.b"]
+gdpr: ["32.1.b"]
 mitre_attack:
   TA0009:
     T1560: ["T1560.001"]

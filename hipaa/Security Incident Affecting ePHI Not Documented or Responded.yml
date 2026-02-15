@@ -68,7 +68,7 @@ references:
   - "45 CFR §164.308(a)(6) - Security Incident Procedures"
   - "45 CFR §164.308(a)(6)(ii) - Response and Reporting"
 nist: ["IR-4"]
-gdpr: ["Article 33"]
+gdpr: ["33"]
 pci_dss: ["12.10"]
 hipaa: ["164.308.a.6"]
 mitre_attack:

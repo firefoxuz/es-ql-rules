@@ -54,7 +54,7 @@ references:
   - "GDPR Articles 44-46 - International Transfers"
   - "EDPB Guidelines on Supplementary Measures"
 nist: ["SC-7"]
-gdpr: ["Articles 44-46"]
+gdpr: ["44-46"]
 pci_dss: []
 mitre_attack:
   TA0010:

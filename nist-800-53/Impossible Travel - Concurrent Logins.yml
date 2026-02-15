@@ -66,7 +66,7 @@ references:
   - "NIST SP 800-53 Rev.5 AC-2: Account Management"
   - "MITRE ATT&CK T1078: Valid Accounts"
 nist: ["AC-2", "IA-2"]
-gdpr: ["Article 32"]
+gdpr: ["32"]
 mitre_attack:
   TA0001:
     T1078: []

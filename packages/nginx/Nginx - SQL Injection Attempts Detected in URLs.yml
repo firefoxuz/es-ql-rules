@@ -45,7 +45,7 @@ references:
 - "https://owasp.org/www-community/attacks/SQL_Injection"
 nist: ["SI-4", "SI-10"]
 pci_dss: ["6.5.1", "11.4"]
-gdpr: ["Article 35.7.d"]
+gdpr: ["35.7.d"]
 mitre_attack:
   TA0001:
     T1190: []

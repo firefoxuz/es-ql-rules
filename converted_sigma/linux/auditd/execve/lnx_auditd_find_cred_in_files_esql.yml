@@ -41,7 +41,7 @@ references:
   - "https://attack.mitre.org/techniques/T1552/001/"
 nist: ["SI-4", "AU-12", "IA-5"]
 pci_dss: ["10.2", "8.2.1"]
-gdpr: ["Article 32.1.b"]
+gdpr: ["32.1.b"]
 mitre_attack:
   TA0006:
     T1552: ["T1552.001"]

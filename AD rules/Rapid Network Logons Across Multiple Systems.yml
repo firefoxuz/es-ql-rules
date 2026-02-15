@@ -73,4 +73,4 @@ mitre_attack:
     T1550: ["T1550.002"]
 nist: ["AC-17", "AU-2", "AU-12", "SI-4"]
 pci_dss: ["10.2.5", "8.1.6"]
-gdpr: ["Article 32.1.a"]
+gdpr: ["32.1.a"]

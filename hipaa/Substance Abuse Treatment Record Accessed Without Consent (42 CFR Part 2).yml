@@ -61,7 +61,7 @@ references:
   - "SAMHSA Part 2 Guidance"
   - "45 CFR §164.502 - HIPAA Coordination"
 nist: ["AC-3"]
-gdpr: ["Article 9"]
+gdpr: ["9"]
 pci_dss: []
 hipaa: ["Coordinates with 42 CFR Part 2"]
 mitre_attack:

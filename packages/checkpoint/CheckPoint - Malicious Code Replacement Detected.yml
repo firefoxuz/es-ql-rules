@@ -45,7 +45,7 @@ references:
 - "https://attack.mitre.org/techniques/T1001/"
 nist: ["SI-3", "SI-4"]
 pci_dss: ["5.1", "11.4"]
-gdpr: ["Article 35.7.d"]
+gdpr: ["35.7.d"]
 mitre_attack:
   TA0005:
     T1001: []

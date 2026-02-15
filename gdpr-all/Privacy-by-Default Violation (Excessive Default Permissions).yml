@@ -58,6 +58,6 @@ references:
   - "GDPR Article 25(2) - Data Protection by Default"
   - "GDPR Recital 78 - Default Settings"
 nist: ["IP-1"]
-gdpr: ["Article 25.2"]
+gdpr: ["25.2"]
 pci_dss: []
 mitre_attack: []

@@ -45,6 +45,6 @@ references:
 - "https://attack.mitre.org/tactics/TA0040/"
 nist: ["IR-4", "SI-4"]
 pci_dss: ["5.2", "11.4"]
-gdpr: ["Article 35.7.d"]
+gdpr: ["35.7.d"]
 mitre_attack:
   TA0040: {}

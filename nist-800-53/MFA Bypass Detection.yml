@@ -56,7 +56,7 @@ references:
   - "NIST SP 800-53 Rev.5 IA-2: Identification and Authentication"
   - "MITRE ATT&CK T1078: Valid Accounts"
 nist: ["IA-2"]
-gdpr: ["Article 32"]
+gdpr: ["32"]
 pci_dss: ["8.3"]
 mitre_attack:
   TA0005:

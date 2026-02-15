@@ -40,7 +40,7 @@ references:
   - "https://www.elastic.co/security-labs/a-peek-behind-the-bpfdoor"
 nist: ["SI-4", "AU-12"]
 pci_dss: ["10.2", "11.4"]
-gdpr: ["Article 32.1.b"]
+gdpr: ["32.1.b"]
 mitre_attack:
   TA0011:
     T1071: []

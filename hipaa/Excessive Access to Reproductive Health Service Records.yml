@@ -62,7 +62,7 @@ references:
   - "45 CFR §164.514(d) - Minimum Necessary"
   - "State Privacy Laws - Reproductive Health"
 nist: ["AC-3"]
-gdpr: ["Article 9"]
+gdpr: ["9"]
 pci_dss: []
 hipaa: ["164.502, 164.514.d"]
 mitre_attack:

@@ -61,7 +61,7 @@ references:
   - "GDPR Article 32(1)(a) - Pseudonymisation and Encryption"
   - "GDPR Recital 78 - Pseudonymisation"
 nist: ["SC-28"]
-gdpr: ["Article 32.1.a"]
+gdpr: ["32.1.a"]
 pci_dss: ["3"]
 mitre_attack:
   TA0009:

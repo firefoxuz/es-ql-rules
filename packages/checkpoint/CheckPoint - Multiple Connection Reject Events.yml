@@ -42,7 +42,7 @@ references:
 - "https://attack.mitre.org/techniques/T1095/"
 nist: ["SC-7", "SI-4"]
 pci_dss: ["1.2.1", "10.6.1"]
-gdpr: ["Article 35.7.d"]
+gdpr: ["35.7.d"]
 mitre_attack:
   TA0007:
     T1095: []

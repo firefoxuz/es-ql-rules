@@ -45,7 +45,7 @@ references:
 - "https://attack.mitre.org/techniques/T1078/"
 nist: ["AC-17", "IA-2"]
 pci_dss: ["8.2", "10.2.5"]
-gdpr: ["Article 32.2"]
+gdpr: ["32.2"]
 mitre_attack:
   TA0001:
     T1078: []

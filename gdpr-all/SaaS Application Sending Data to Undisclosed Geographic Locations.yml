@@ -60,7 +60,7 @@ references:
   - "GDPR Article 28 - Processor Obligations"
   - "GDPR Article 46 - Transfer Safeguards"
 nist: ["SC-38"]
-gdpr: ["Article 28"]
+gdpr: ["28"]
 pci_dss: ["12.8"]
 mitre_attack:
   TA0011:

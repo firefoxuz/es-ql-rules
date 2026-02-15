@@ -47,6 +47,6 @@ references:
 - "https://attack.mitre.org/tactics/TA0002/"
 nist: ["SI-3", "IR-4", "IR-5"]
 pci_dss: ["5.1", "5.2", "10.6.1"]
-gdpr: ["Article 35.7.d"]
+gdpr: ["35.7.d"]
 mitre_attack:
   TA0002: {}
