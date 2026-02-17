@@ -1,0 +1,45 @@
+name: Windows Succession login attempt
+description: |
+  Ushbu qoida Active Directory muhitida `Windows Succession login attempt` kontekstidagi shubhali Active Directory faoliyatini aniqlaydi.
+type: esql
+params: '{}'
+schedule_interval: 10m
+index:
+- winlogbeat-*
+query_language: esql
+query: |
+  FROM logs-winlog*
+  | WHERE event.code == "4624"
+  | EVAL
+      username   = winlog.event_data.TargetUserName,
+      user_sid   = winlog.event_data.TargetUserSid,
+      src_ip     = winlog.event_data.IpAddress,
+      logon_type = winlog.event_data.LogonType,
+      status     = winlog.event_data.Status
+  | STATS
+      failure_count = COUNT(*),
+      source_ips    = VALUES(src_ip),
+      logon_types   = VALUES(logon_type),
+      first_seen    = MIN(@timestamp),
+      last_seen     = MAX(@timestamp)
+    BY
+      username,
+      host.name
+  | SORT failure_count DESC
+  
+  | LIMIT 200
+enabled: false
+tags:
+  - attack.lateral-movement
+  - attack.t1021
+  - attack.t1550.002
+  - detection.emerging-threats
+severity: high
+risk_score: 85
+mitre_attack:
+  TA0008:
+    T1021: []
+    T1550: ["T1550.002"]
+nist: ["AC-17", "AU-2", "AU-12", "SI-4"]
+pci_dss: ["10.2.5", "8.1.6"]
+gdpr: ["32.1.a"]
